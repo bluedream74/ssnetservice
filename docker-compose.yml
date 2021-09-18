@@ -1,0 +1,79 @@
+version: '2'
+
+services:
+    application:
+        container_name: business_search_application
+        image: debian
+        volumes:
+            - ./:/var/www/laravel
+    workspace:
+        container_name: business_search_workspace
+        restart: always
+        image: framgia/laravel-workspace
+        volumes_from:
+            - application
+        tty: true
+    php-fpm:
+        container_name: business_search_php-fpm
+        restart: always
+        image: framgia/laravel-php-fpm
+        volumes_from:
+            - application
+            - data
+        expose:
+            - "9000"
+        ports:
+            - "9101:9000"
+        links:
+            - workspace
+    nginx:
+        container_name: business_search_nginx
+        restart: always
+        image: framgia/laravel-nginx
+        volumes_from:
+            - data
+            - application
+        ports:
+            - "8011:80"
+        links:
+            - php-fpm
+    data:
+        container_name: business_search_data
+        image: debian
+        volumes:
+            - .docker/mysql:/var/lib/mysql
+            - .docker/data:/data
+            - .docker/logs/nginx:/var/log/nginx
+            - .docker/logs/php-fpm:/var/log/php-fpm
+            - .docker/logs/mysql:/var/log/mysql
+
+    mysql:
+        container_name: business_search_mysql
+        restart: always
+        image: mysql:5.7
+        command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        volumes:
+            - ./.docker/provision/mysql/init:/docker-entrypoint-initdb.d
+        volumes_from:
+            - data
+        expose:
+            - "3306"
+        ports:
+            - "3317:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: business_search_phpmyadmin
+        environment:
+            - PMA_ARBITRARY=1
+            - PMA_HOST=business_search_mysql
+            - PMA_USER=root
+            - PMA_PASSWORD=root
+            - PMA_PORT=3306
+        links:
+            - mysql
+        ports:
+            - 8091:80
+        volumes:
+            - /sessions
