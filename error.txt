@@ -200,3 +200,17 @@ Call to undefined method Symfony\Component\DomCrawler\Field\InputFormField::getT
 Call to undefined method Symfony\Component\DomCrawler\Field\InputFormField::getType()   -------------start----------2021-09-17 13:48:01
 Call to undefined method Symfony\Component\DomCrawler\Field\TextareaFormField::getType()   -------------start----------2021-09-17 13:48:01
 The current node list is empty.   -------------start----------2021-09-17 15:43:01
+The current node list is empty.   -------------start----------2021-09-19 15:44:24
+The current node list is empty.   -------------start----------2021-09-19 15:44:24
+The current node list is empty.   -------------start----------2021-09-19 15:44:24
+The current node list is empty.   -------------start----------2021-09-19 15:44:24
+The current node list is empty.   -------------start----------2021-09-19 15:44:24
+The current node list is empty.   -------------start----------2021-09-19 15:44:24
+The current node list is empty.   -------------start----------2021-09-19 15:44:24
+The current node list is empty.   -------------start----------2021-09-19 15:44:24
+The current node list is empty.   -------------start----------2021-09-19 16:33:19
+The current node list is empty.   -------------start----------2021-09-19 16:33:19
+The current node list is empty.   -------------start----------2021-09-19 16:33:19
+The current node list is empty.   -------------start----------2021-09-19 16:33:19
+The current node list is empty.   -------------start----------2021-09-19 16:33:19
+The current node list is empty.   -------------start----------2021-09-19 16:33:19

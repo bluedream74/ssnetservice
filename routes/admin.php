@@ -30,6 +30,7 @@ Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
 
   Route::post('batchCheck', 'DashboardController@batchCheck')->name('batchCheck');
   // Route::post('sendContact', 'DashboardController@sendContact')->name('sendContact');
+  
 
   Route::get('contact', 'DashboardController@contact')->name('contact');
   Route::get('contact/{contact}/show', 'DashboardController@contactShow')->name('contact.show');
@@ -53,6 +54,12 @@ Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
   Route::post('/delete/duplicate', 'CompanyController@deleteDuplicate')->name('delete.duplicate');
   Route::post('/delete/email/bulk', 'CompanyController@deleteEmail')->name('delete.email');
   Route::post('/company/delete', 'CompanyController@deleteCompany')->name('company.delete');
+
+  Route::post('/{company}/edit/url', 'CompanyController@editURL')->name('company.edit.url');
+  Route::post('/{company}/add/url', 'CompanyController@addURL')->name('company.add.url');
+
+  Route::post('/{company}/edit/contacturl', 'CompanyController@editContacturl')->name('company.edit.contacturl');
+  Route::post('/{company}/add/contacturl', 'CompanyController@addContacturl')->name('company.add.contacturl');
 
   Route::get('/config', 'DashboardController@configIndex')->name('config.index');
   Route::post('/config', 'DashboardController@updateConfig')->name('config.update');

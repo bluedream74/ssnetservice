@@ -13,7 +13,51 @@
       </div>
       <div class="row mb-3">
         <label class="col-sm-4">URL</label>
-        <div class="col-sm-8 pre-wrap">{{ $company->url }}</div>
+        <div class="col-sm-8 pre-wrap">
+          @if(isset($company->url)&&($company->url !== ""))
+          <div class="table-responsive">
+            <table class="table table-striped">
+                <tr>
+                  <td>{{ $company->url }}</td>
+                  <td class="text-right"><button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#url-edit-modal" data-id="{{ $company->id }}">編集</button></td>
+                </tr>
+            </table>
+          </div>
+          @else
+          <div class="table-responsive">
+            <table class="table table-striped">
+                <tr>
+                  <td></td>
+                  <td class="text-right"><button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#url-modal" data-id="{{ $company->id }}">追加</button></td>
+                </tr>
+            </table>
+          </div>
+          @endif
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label class="col-sm-4">問い合わせURL</label>
+        <div class="col-sm-8 pre-wrap">
+          @if(isset($company->contact_form_url)&&($company->contact_form_url !== ""))
+          <div class="table-responsive">
+            <table class="table table-striped">
+                <tr>
+                  <td>{{ $company->contact_form_url }}</td>
+                  <td class="text-right"><button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#contact-form-edit-modal" data-id="{{ $company->id }}">編集</button></td>
+                </tr>
+            </table>
+          </div>
+          @else
+          <div class="table-responsive">
+            <table class="table table-striped">
+                <tr>
+                  <td>{{ $company->contact_form_url }}</td>
+                  <td class="text-right"><button type="button" class="btn btn-sm btn-primary " data-toggle="modal" data-target="#contact-form-modal" data-id="{{ $company->id }}">追加</button></td>
+                </tr>
+            </table>
+          </div>
+          @endif
+        </div>
       </div>
       <div class="row mb-3">
         <label class="col-sm-4">カテゴリ</label>
@@ -57,6 +101,102 @@
             <label class="col-sm-12">電話番号</label>
             <div class="col-sm-12 form-group">
               {{ Form::text('phone', old('phone'), ['class' => 'form-control']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">追加</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+
+  <div class="modal fade" id="url-edit-modal">
+    {{ Form::open(['route' => ['admin.company.edit.url', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>URL編集</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">URL</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::text('url', old('url',$company->url), ['class' => 'form-control']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">編集</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+
+  <div class="modal fade" id="url-modal">
+    {{ Form::open(['route' => ['admin.company.add.url', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>URL追加</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">URL</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::text('url', old('url',$company->url), ['class' => 'form-control']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">追加</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+
+  <div class="modal fade" id="contact-form-edit-modal">
+    {{ Form::open(['route' => ['admin.company.edit.contacturl', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>問い合わせURL編集</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">URL</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::text('contact_form_url', old('contact_form_url',$company->contact_form_url), ['class' => 'form-control']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">編集</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+
+  <div class="modal fade" id="contact-form-modal">
+    {{ Form::open(['route' => ['admin.company.add.contacturl', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>問い合わせURL追加</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">URL</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::text('contact_form_url', old('contact_form_url',$company->contact_form_url), ['class' => 'form-control']) }}
             </div>
           </div>
         </div>

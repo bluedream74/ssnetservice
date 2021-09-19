@@ -26,9 +26,9 @@ class CreateContactsTable extends Migration
             $table->string('postalCode1',20)->nullable();
             $table->string('postalCode2',20)->nullable();
             $table->string('address',50)->nullable();
-            $table->integer('phoneNumber1')->nullable();
-            $table->integer('phoneNumber2')->nullable();
-            $table->integer('phoneNumber3')->nullable();
+            $table->string('phoneNumber1')->nullable();
+            $table->string('phoneNumber2')->nullable();
+            $table->string('phoneNumber3')->nullable();
             $table->timestamps();
         });
     }
