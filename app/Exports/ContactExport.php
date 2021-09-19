@@ -40,7 +40,7 @@ class ContactExport implements FromCollection, WithHeadings, WithMapping
 
   public function headings(): array
   {
-    return ["カテゴリ", "会社名", "URL",  "電話番号", "ステータス"];
+    return ["カテゴリ", "会社名", "お問い合わせフォームのURL",  "電話番号", "ステータス"];
   }
 
   /**
@@ -56,7 +56,13 @@ class ContactExport implements FromCollection, WithHeadings, WithMapping
     $res[] = $company->contact_form_url;
     // $res[] = $CompanyContact->email;
     $res[] = $company->phones()->count() > 0 ? $company->phones()->first()->phone : '';
-    $res[] = $CompanyContact->is_delivered;
+    if($CompanyContact->is_delivered == 1) {
+      $res[] = "送信失敗";
+    } else if($CompanyContact->is_delivered == 2){
+      $res[] = "配信済み";
+    } else if($CompanyContact->is_delivered == 0){
+      $res[] = "送信予定";
+    }
     return $res;
   }
 

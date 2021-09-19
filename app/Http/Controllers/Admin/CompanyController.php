@@ -55,6 +55,43 @@ class CompanyController extends BaseController
     return back()->with(['system.message.success' => '追加しました。']);
   }
 
+  public function editURL(Company $company)
+  {
+    $company->update([
+      'url'   => request()->get('url')
+    ]);
+
+    return back()->with(['system.message.success' => '編集されました。']);
+  }
+
+  public function addURL(Company $company)
+  {
+    $company->update([
+      'url'   => request()->get('url')
+    ]);
+
+    return back()->with(['system.message.success' => '追加しました。']);
+  }
+
+  public function editContacturl(Company $company)
+  {
+    
+    $company->update([
+      'contact_form_url'   => request()->get('contact_form_url')
+    ]);
+
+    return back()->with(['system.message.success' => '編集されました。']);
+  }
+
+  public function addContacturl(Company $company)
+  {
+    $company->update([
+      'contact_form_url'   => request()->get('contact_form_url')
+    ]);
+
+    return back()->with(['system.message.success' => '追加しました。']);
+  }
+  
   public function removePhone(Company $company)
   {
     $company->phones()->where('id', request()->get('id'))->delete();

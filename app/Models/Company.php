@@ -16,7 +16,6 @@ class Company extends Model
         'url',
         'contact_form_url',
         'source',
-        'is_origin_email',
         'status',
         'area'
     ];

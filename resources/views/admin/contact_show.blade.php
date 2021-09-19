@@ -1,5 +1,23 @@
 @extends('layouts.admin.app')
-
+<style>
+  .bd-example-modal-lg .modal-dialog{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .essential {
+      color:red;
+      font-size:16px;
+  }
+  .bd-example-modal-lg .modal-dialog .modal-content{
+    background-color: transparent;
+    border: none;
+  }
+  select {
+      padding :.375rem 0.25rem !important;
+  }
+  </style>
 @section('content_header_label')
     <h3 class="m-0">フォーム一覧</h3>
 @stop
@@ -76,7 +94,7 @@
             <div class="row mb-3">
                 <label class="col-sm-4">ステータス</label>
                 <div class="col-sm-4">
-                    {{ Form::select('status', ['Delivery' => '配信済み', 'Failed' => '送信失敗'], Request::get('status'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'status']) }}
+                    {{ Form::select('status', ['2' => '配信済み', '1' => '送信失敗'], Request::get('status'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'status']) }}
                 </div>
                 <div class="col-sm-4">
                     {{ Form::submit('検索', ['class' => 'btn btn-sm btn-primary']) }}
@@ -87,7 +105,7 @@
                 <thead>
                     <tr>
                         <th style="max-width: 400px;">会社名</th>
-                        <th style="max-width: 400px;">URL</th>
+                        <th style="max-width: 400px;">お問い合わせフォームのURL</th>
                         <th style="max-width: 400px;">電話番号</th>
                         <th style="max-width: 400px;">ステータス</th>
                     </tr>
@@ -129,37 +147,79 @@
     {{ Form::close() }}
 
     <div class="modal fade" id="email-modal" style="z-index: 9999;">
-        {{ Form::open(['route' => ['admin.contact.show.send', $contact], 'method' => 'POST', 'id' => 'contactForm', 'files' => true]) }}
-        {{ Form::hidden('status', Request::get('status'), ['id' => 'status_id']) }}
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <label>メール作成</label>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <label class="col-sm-12">タイトル</label>
-                        <div class="col-sm-12 form-group">
-                            {{ Form::text('title', old('title'), ['class' => 'form-control', 'id' => 'title']) }}
-                        </div>
-                        <label class="col-sm-12">内容</label>
-                        <div class="col-sm-12 form-group">
-                            {{ Form::textarea('content', old('content'), ['class' => 'form-control', 'rows' => 10, 'id' => 'content']) }}
-                        </div>
-                        <label class="col-sm-12">添付ファイル</label>
-                        <div class="col-sm-12 form-group">
-                            <input type="file" name="attachment" class="form-control" />
+            {{ Form::open(['route' => ['admin.contact.show.send', $contact], 'method' => 'POST', 'id' => 'contactForm', 'files' => true]) }}
+            {{ Form::hidden('status', Request::get('status'), ['id' => 'status_id']) }}
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <label>フォーム作成</label>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <label class="col-sm-12">名前<span class="essential">*</span></label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-6">{{ Form::text('surname', old('surname'), ['class' => 'form-control', 'id' => 'surname']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('lastname', old('lastname'), ['class' => 'form-control', 'id' => 'lastname']) }}</div>
+                            </div>
+
+                            <label class="col-sm-12">フリガナ</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-6">{{ Form::text('fu_surname', old('fu_surname'), ['class' => 'form-control', 'id' => 'fu_surname']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('fu_lastname', old('fu_lastname'), ['class' => 'form-control', 'id' => 'fu_lastname']) }}</div>
+                            </div>
+
+                            <label class="col-sm-12">会社名<span class="essential">*</span></label>
+                            <div class="col-sm-12 form-group">
+                                {{ Form::text('company', old('company'), ['class' => 'form-control','id' => 'company']) }}
+                            </div>
+
+                            <label class="col-sm-12">メールアドレス<span class="essential">*</span></label>
+                            <div class="col-sm-12 form-group">
+                                {{ Form::email('email', old('email'), ['class' => 'form-control','id' => 'email']) }}
+                            </div>
+
+                            <label class="col-sm-12">題名<span class="essential">*</span></label>
+                            <div class="col-sm-12 form-group">
+                                {{ Form::text('title', old('title'), ['class' => 'form-control','id' => 'title']) }}
+                            </div>
+
+                            <label class="col-sm-12">内容<span class="essential">*</span></label>
+                            <div class="col-sm-12 form-group">
+                                {{ Form::textarea('content', old('content'), ['class' => 'form-control', 'rows' => 7, 'id' => 'content']) }}
+                            </div>
+
+                            <label class="col-sm-12">郵便番号</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-6">{{ Form::text('postalCode1', old('postalcode1'), ['class' => 'form-control','id' => 'address1']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('postalCode2', old('postalcode2'), ['class' => 'form-control','id' => 'address1']) }}</div>
+                            </div>
+
+                            <label class="col-sm-12">住所</label>
+                            <div class="col-sm-12 form-group">
+                                {{ Form::text('address', old('address'), ['class' => 'form-control','id' => 'address']) }}
+                            </div>
+
+                            <label class="col-sm-12">電話番号</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-4">{{ Form::number('phoneNumber1', old('phoneNumber1'), ['class' => 'form-control','id' => 'phoneNumber1']) }}</div>
+                                <div class="col-sm-4">{{ Form::number('phoneNumber2', old('phoneNumber2'), ['class' => 'form-control','id' => 'phoneNumber2']) }}</div>
+                                <div class="col-sm-4">{{ Form::number('phoneNumber3', old('phoneNumber3'), ['class' => 'form-control','id' => 'phoneNumber3']) }}</div>
+                            </div>
+                           
+                            <!-- <label class="col-sm-12">添付ファイル</label>
+                            <div class="col-sm-12 form-group">
+                                <input type="file" name="attachment" class="form-control" />
+                            </div> -->
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary pull-right" id="btnSend">送信</button>
-                    <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary pull-right" id="btnSend">送信</button>
+                        <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+                    </div>
                 </div>
             </div>
+            {{ Form::close() }}
         </div>
-        {{ Form::close() }}
-    </div>
 @stop
 
 @section('scripts')
@@ -170,7 +230,7 @@
         })
 
         $('#btnSend').click(function() {
-            if ($("#title").val() === '' || $('#content').val() === '') {
+            if ( $("#surname").val() ==='' || $("#lastname").val() ==='' || $("#mailaddress").val() ==='' || $("#title").val() === '' || $('#content').val() === '' ) {
                 alert('内容を入力してください。')
                 return;
             }

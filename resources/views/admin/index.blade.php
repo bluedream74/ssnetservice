@@ -50,10 +50,10 @@
                         <label>電話番号</label>
                         {{ Form::select('phone', [1 => 'ある', 2 => '無い'], Request::get('phone'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
                     </div>
-                    <!-- <div class="col-sm-3">
-                        <label>オリジナル</label>
-                        {{ Form::select('origin', [1 => 'メール有り', 2 => 'メール無し'], Request::get('origin'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
-                    </div> -->
+                    <div class="col-sm-3">
+                        <label>問い合わせURL</label>
+                        {{ Form::select('origin', [1 => 'ある', 2 => '無い'], Request::get('origin'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                    </div>
                     <div class="col-sm-12 mt-3">
                         {{ Form::submit('検索する', ['class' => 'btn btn-primary pl-4 pr-4 mr-3']) }}
                         <a href="{{ route('admin.dashboard') }}" class="btn btn-warning">リセット</a>
@@ -74,7 +74,11 @@
                         <label class="col-sm-2">Total: {{ $companies->total() }}</label>
                         <div class="col-sm-10 text-right">
                             <!-- <button type="button" class="btn btn-sm btn-default mr-3 btn-delete-email">無効なメールアドレスを一括削除</button> -->
-                            <button type="button" class="btn btn-sm btn-primary mr-3" id="batchCheck">問い合わせフォームを一括チェック</button>
+                            @if (config('values.check_contact_form') == "0")
+                                <button type="button" class="btn btn-sm btn-primary mr-3" id="batchCheck">問い合わせフォームを一括チェック</button>
+                            @else
+                                <button type="button" class="btn btn-sm btn-danger mr-3" id="batchCheck">問い合わせフォームを一括チェック中を中断</button>
+                            @endif
                             <button type="button" class="btn btn-sm btn-primary mr-3 btn-warning" data-toggle="modal" data-target="#email-modal">フォーム作成</button>
                             <button type="button" class="btn btn-sm btn-info mr-3 btn-duplicate-delete">重複をチェックして削除</button>
                             <button type="button" class="btn btn-sm btn-warning mr-3 btn-reset">送信済みを一括リセット</button>
@@ -126,7 +130,7 @@
                     </tbody>
                 </table>
                 @else
-<br><br>
+                    <br><br>
                     <h4 class="text-center mt-3">会社はヒットしませんでした。</h4> 
                 @endif
             </div>
@@ -213,7 +217,7 @@
             </div>
             {{ Form::close() }}
         </div>
-        <div class="modal fade" id="email-modal" style="z-index: 9999;">
+        <div class="modal fade" style="z-index: 9999;">
             {{ Form::open(['route' => 'admin.batchCheck', 'method' => 'POST', 'id' => 'batchCheck_Form', 'files' => true]) }}
             @foreach (Request::all() as $key => $value)
                 {{ Form::hidden($key, $value) }}
@@ -258,7 +262,6 @@
         })
 
         $('#batchCheck').click(function() {
-            $('#showLoading').click();
             $('#batchCheck_Form').submit();
         })
 
