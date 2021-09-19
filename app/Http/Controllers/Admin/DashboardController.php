@@ -307,6 +307,13 @@ class DashboardController extends BaseController
         }
     }
     
+    public function envChange() {
+        $key = 'CHECK_CONTACT_FORM';
+        $this->upsert($key, 0);
+        Artisan::call('config:cache');
+        Artisan::call('queue:restart');
+        usleep(100);
+    }
     
     private function getHTMLContent($url)
     {
