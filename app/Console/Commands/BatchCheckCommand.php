@@ -110,6 +110,9 @@ class BatchCheckCommand extends Command
                 }
             }else {
 
+                $controller = new DashboardController();
+                $controller->envChange();
+
             }
             return 0;
         }

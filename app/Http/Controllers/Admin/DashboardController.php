@@ -312,7 +312,7 @@ class DashboardController extends BaseController
         $this->upsert($key, 0);
         Artisan::call('config:cache');
         Artisan::call('queue:restart');
-        usleep(100);
+        usleep(500);
     }
     
     private function getHTMLContent($url)
