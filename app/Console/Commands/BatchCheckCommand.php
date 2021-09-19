@@ -112,6 +112,9 @@ class BatchCheckCommand extends Command
                 $controller = new DashboardController();
                 $key = 'CHECK_CONTACT_FORM';
                 $controller->upsert($key, 0);
+		Artisan::call('config:cache');
+                Artisan::call('queue:restart');
+                usleep(100);
             }
             return 0;
         }
