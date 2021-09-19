@@ -53,67 +53,71 @@ class BatchCheckCommand extends Command
             $companies = Company::where('check_contact_form',0)->get();
             
             $sent = 0;
-            foreach($companies as $company) {
-                try {
-                    $sent++;
-                    Company::where('id',$company->id)->update(['check_contact_form'=>1]);
-                    if(isset($company->contact_form_url)&&(!empty($company->contact_form_url))){
-                        if ($sent >= $limit) {
-                            return 0;
+            if(sizeof($companies)>0){
+                foreach($companies as $company) {
+                    try {
+                        $sent++;
+                        Company::where('id',$company->id)->update(['check_contact_form'=>1]);
+                        if(isset($company->contact_form_url)&&(!empty($company->contact_form_url))){
+                            if ($sent >= $limit) {
+                                return 0;
+                            }else {
+                                continue;
+                            }
                         }else {
-                            continue;
-                        }
-                    }else {
-                        $topPageUrl = $this->getTopUrl($company->url);
-                        $check_url = $this->checkTopContactForm($topPageUrl);
-                        
-                        if(isset($check_url)&&($check_url)){
-                            Company::where('id',$company->id)->update(['contact_form_url'=>$check_url]);
-                        }else {
+                            $topPageUrl = $this->getTopUrl($company->url);
+                            $check_url = $this->checkTopContactForm($topPageUrl);
                             
-                            if($this->checkSubContactForm($topPageUrl.'/contact')){
-                                Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact']);
-                                continue;
-                            }
-                            if($this->checkSubContactForm($topPageUrl.'/contact.php')){
-                                Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact.php']);
-                                continue;
-                            }
-                            if($this->checkSubContactForm($topPageUrl.'/contact.html')){
-                                Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact.html']);
-                                continue;
-                            }
-                            if($this->checkSubContactForm($topPageUrl.'/inquiry')){
-                                Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry']);
-                                continue;
-                            }
-                            if($this->checkSubContactForm($topPageUrl.'/inquiry.php')){
-                                Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry.php']);
-                                continue;
-                            }
-                            if($this->checkSubContactForm($topPageUrl.'/inquiry.html')){
-                                Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry.html']);
-                                continue;
+                            if(isset($check_url)&&($check_url)){
+                                Company::where('id',$company->id)->update(['contact_form_url'=>$check_url]);
+                            }else {
+                                
+                                if($this->checkSubContactForm($topPageUrl.'/contact')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact']);
+                                    continue;
+                                }
+                                if($this->checkSubContactForm($topPageUrl.'/contact.php')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact.php']);
+                                    continue;
+                                }
+                                if($this->checkSubContactForm($topPageUrl.'/contact.html')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact.html']);
+                                    continue;
+                                }
+                                if($this->checkSubContactForm($topPageUrl.'/inquiry')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry']);
+                                    continue;
+                                }
+                                if($this->checkSubContactForm($topPageUrl.'/inquiry.php')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry.php']);
+                                    continue;
+                                }
+                                if($this->checkSubContactForm($topPageUrl.'/inquiry.html')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry.html']);
+                                    continue;
+                                }
                             }
                         }
+                        
+                    }catch (\Throwable $e) {
+                        $myfile = fopen("company.txt", "a") or die("Unable to open file!");
+                        fwrite($myfile, $e->getMessage()."error   -------------start----------".$date."\r\n");
+                        fclose($myfile);
+                        continue;
                     }
-                    
-                }catch (\Throwable $e) {
-                    $myfile = fopen("company.txt", "a") or die("Unable to open file!");
-                    fwrite($myfile, $e->getMessage()."error   -------------start----------".$date."\r\n");
-                    fclose($myfile);
-                    continue;
+        
+                    if ($sent >= $limit) return 0;
                 }
-    
-                if ($sent >= $limit) return 0;
+            }else {
+                $controller = new DashboardController();
+                $key = 'CHECK_CONTACT_FORM';
+                $controller->upsert($key, 0);
             }
-
             return 0;
         }
         
         return 0;
     }
-
 
     
     private function getTopUrl($companyurl) {
