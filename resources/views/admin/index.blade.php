@@ -74,7 +74,7 @@
                         <label class="col-sm-2">Total: {{ $companies->total() }}</label>
                         <div class="col-sm-10 text-right">
                             <!-- <button type="button" class="btn btn-sm btn-default mr-3 btn-delete-email">無効なメールアドレスを一括削除</button> -->
-                            @if (config('values.check_contact_form') == "0")
+                            @if (config('values.check_contact_form') === "0")
                                 <button type="button" class="btn btn-sm btn-primary mr-3" id="batchCheck">問い合わせフォームを一括チェック</button>
                             @else
                                 <button type="button" class="btn btn-sm btn-danger mr-3" id="batchCheck">問い合わせフォームを一括チェック中を中断</button>
