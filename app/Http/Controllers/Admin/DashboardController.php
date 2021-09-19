@@ -7,7 +7,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use App\Models\Source;
-use App\Models\USER;
 use App\Models\Contact;
 use Illuminate\Support\Arr;
 use App\Exports\CompanyExport;
