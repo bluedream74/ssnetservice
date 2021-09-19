@@ -109,7 +109,8 @@ class BatchCheckCommand extends Command
                     if ($sent >= $limit) return 0;
                 }
             }else {
-                
+                $controller = new DashboardController();
+                $controller->envChange();
             }
             return 0;
         }
