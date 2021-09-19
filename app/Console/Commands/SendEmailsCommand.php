@@ -193,12 +193,12 @@ class SendEmailsCommand extends Command
                                 $data[$key] = $contact->title;
                             }
                            if(strpos($key,'textarea')!==false || strpos($key,'body')!==false || strpos($key,'content')!==false || strpos($key,'message')!==false ) {
- 			       $content = str_replace('%company_name%', $company->name, $contact->content);
+                                $content = str_replace('%company_name%', $company->name, $contact->content);
 
-			       $content = nl2br($content);
-                               $data[$key] = $content;
+                                $content = nl2br($content);
+                                $data[$key] = $content;
                               
-                               $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+                                $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                            }
                            if($phone_count ==1 && (strpos($key,'tel')!==false || strpos($key,'電話番号')!==false)) {
                                 $data[$key] = $contact->phoneNumber1.$contact->phoneNumber2.$contact->phoneNumber3;

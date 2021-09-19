@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use App\Models\Source;
+use App\Models\USER;
 use App\Models\Contact;
 use Illuminate\Support\Arr;
 use App\Exports\CompanyExport;
@@ -92,9 +93,14 @@ class DashboardController extends BaseController
             }
         }
 
-        // if (!empty($value = Arr::get($attributes, 'origin'))) {
-        //     $query->where('is_origin_email', $value);
-        // }
+        if (!empty($value = Arr::get($attributes, 'origin'))) {
+            if($value==1) {
+                $query->whereNotNull('contact_form_url');
+            }
+            if($value==2) {
+                $query->whereNull('contact_form_url');
+            }
+        }
         
         return $query;
     }
@@ -175,7 +181,7 @@ class DashboardController extends BaseController
                         $company['phones'] = [];
                         $company['emails'] = [];
                         
-                        $company['is_origin_email'] = 1;
+                       
                         $siteUrl = str_replace("http://", "", str_replace("https://", "", $company['url']));
                         $siteUrl = explode("/", $siteUrl)[0];
                         $siteUrl = str_replace("www.", "", $siteUrl);
@@ -244,7 +250,6 @@ class DashboardController extends BaseController
                             'source'    => request()->get('source'),
                         ], [
                             'url'       => $result['url'],
-                            'is_origin_email'   => $result['is_origin_email'],
                             'area'      => $result['area']
                         ]);
 
@@ -285,96 +290,25 @@ class DashboardController extends BaseController
     }
 
     public function batchCheck(){
-
-        $query = $this->makeQuery(request()->all());
-        
-        $companies = $query->get();
-    
-        foreach($companies as $company) {
-            try {
-                $topPageUrl = $this->getTopUrl($company->url);
-                $check_url = $this->checkTopContactForm($topPageUrl);
-                if($check_url){
-                    Company::where('id',$company->id)->update(['contact_form_url'=>$check_url]);
-                }else {
-                    if($this->checkSubContactForm($topPageUrl.'/contact')){
-                        Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact']);
-                        continue;
-                    }
-                    if($this->checkSubContactForm($topPageUrl.'/contact.php')){
-                        Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact.php']);
-                        continue;
-                    }
-                    if($this->checkSubContactForm($topPageUrl.'/contact.html')){
-                        Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact.html']);
-                        continue;
-                    }
-                    if($this->checkSubContactForm($topPageUrl.'/inquiry')){
-                        Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry']);
-                        continue;
-                    }
-                    if($this->checkSubContactForm($topPageUrl.'/inquiry.php')){
-                        Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry.php']);
-                        continue;
-                    }
-                    if($this->checkSubContactForm($topPageUrl.'/inquiry.html')){
-                        Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry.html']);
-                        continue;
-                    }
-                }
-            }catch (\Throwable $e) {
-                continue;
-            }
+        $CHECK_CONTACT_FORM = config('values.check_contact_form');
+        $key = 'CHECK_CONTACT_FORM';
+        if($CHECK_CONTACT_FORM=="0"){
+            $this->upsert($key, 1);
+            Artisan::call('config:cache');
+            Artisan::call('queue:restart');
+            usleep(100);
+            Company::where('check_contact_form',1)->update(['check_contact_form'=>0]);
+            return back()->with(['system.message.info' => "一括チェックしています。"]);
+        }else {
+            $this->upsert($key, 0);
+            Artisan::call('config:cache');
+            Artisan::call('queue:restart');
+            usleep(100);
+            return back()->with(['system.message.info' => "一括チェックが停止されました。"]);
         }
-        return back();
     }
     
-    private function getTopUrl($companyurl) {
-        $topurl='';
-        $url=explode('://',$companyurl);
-        if(isset($url)){
-            $topurl = explode('/',$url[1])[0];
-            $topurl = $url[0].'://'.$topurl;
-        }
-        return $topurl;
-    }
-    private function checkTopContactForm($url) {
-        $client = new Client();
-        $crawler = $client->request('GET', $url);
-	if($crawler->selectLink('お問い合わせ')){
-                return $crawler->selectLink('お問い合わせ')->link()->getUri();
-            }
-            if($crawler->selectLink('メールでお問い合わせ')){
-                return $crawler->selectLink('メールでお問い合わせ')->link()->getUri();
-            }
-            if($crawler->selectLink('お問合せ')){
-                return $crawler->selectLink('お問合せ')->link()->getUri();
-            }
-            if($crawler->selectLink('問い合わせ')){
-                return $crawler->selectLink('問い合わせ')->link()->getUri();
-            }
-            if($crawler->selectLink('問合せ')){
-                return $crawler->selectLink('問合せ')->link()->getUri();
-            }
-        $form = $crawler->filter('form input');
-        if(isset($form)&&(!empty($form->getNode(0)))){
-            return $url;
-        }else{
-            
-            return false;
-        }
-    }
-
-    private function checkSubContactForm($url) {
-        $client = new Client();
-        $crawler = $client->request('GET', $url);
-        $form = $crawler->filter('form');
-        if(isset($form)&&(!empty($form->getNode(0)))){
-            return true;
-        }else{
-            return false;
-        }
-    }
+    
     private function getHTMLContent($url)
     {
         try {
@@ -533,8 +467,6 @@ class DashboardController extends BaseController
                         ->with(['system.message.info' => "未対応会社はありません。"]);
             }
 
-            
-
             $contact = Contact::create([
                 'surname'           => request()->get('surname'),
                 'lastname'          => request()->get('lastname'),
@@ -575,10 +507,6 @@ class DashboardController extends BaseController
         return back()
                 ->with(['system.message.success' => "送信しています。"]);
 
-
-        
-            
-            
        
     }
 
@@ -586,14 +514,7 @@ class DashboardController extends BaseController
     {
         $query = $contact->companies();
         if (!empty($value = Arr::get(request()->all(), 'status'))) {
-            $query = $query->whereHas('company', function ($query) use ($value, $contact) {
-                return $query->whereHas('emails', function ($query) use ($value, $contact) {
-                    if ($value == 'Not') {
-                        return $query->whereIn('email', \App\Models\NotificationLog::where('contact_id', $contact->id)->whereNull('status')->pluck('email'));
-                    }
-                    return $query->whereIn('email', \App\Models\NotificationLog::where('contact_id', $contact->id)->where('status', $value)->pluck('email'));
-                });
-            });
+            $query->where('is_delivered',$value);
         }
         $companies = $query->paginate(20);
 
@@ -607,30 +528,25 @@ class DashboardController extends BaseController
         try {
             $query = $contact->companies();
             if (!empty($value = Arr::get(request()->all(), 'status'))) {
-                $query = $query->whereHas('company', function ($query) use ($value, $contact) {
-                    return $query->whereHas('emails', function ($query) use ($value, $contact) {
-                        if ($value == 'Not') {
-                            return $query->whereIn('email', \App\Models\NotificationLog::where('contact_id', $contact->id)->whereNull('status')->pluck('email'));
-                        }
-                        return $query->whereIn('email', \App\Models\NotificationLog::where('contact_id', $contact->id)->where('status', $value)->pluck('email'));
-                    });
-                });
+                $query->where('is_delivered',$value);
             }
             $companies = $query->get();
 
-            $attachment = request()->file('attachment');
-            $filename = null;
-            if (isset($attachment)) {
-                $time = Str::random(16);
-                $filename = "/attachments/{$time}." . $attachment->getClientOriginalExtension();
-                Storage::disk('public')->put($filename, file_get_contents($attachment));
-            }
-
             $contact = Contact::create([
-                'title'         => request()->get('title'),
-                'content'       => request()->get('content'),
-                'sender_name'   => request()->get('sender_name'),
-                'attachment'    => $filename
+                'surname'           => request()->get('surname'),
+                'lastname'          => request()->get('lastname'),
+                'fu_surname'        => request()->get('fu_surname'),
+                'fu_lastname'       => request()->get('fu_lastname'),
+                'email'             => request()->get('email'),
+                'title'             => request()->get('title'),
+                'content'           => request()->get('content'),
+                'postalCode1'       => request()->get('postalCode1'),
+                'postalCode2'       => request()->get('postalCode2'),
+                'address'           => request()->get('address'),
+                'phoneNumber1'      => request()->get('phoneNumber1'),
+                'phoneNumber2'      => request()->get('phoneNumber2'),
+                'phoneNumber3'      => request()->get('phoneNumber3'),
+                'company'           => request()->get('company')
             ]);
 
             $total = 0;
@@ -639,7 +555,7 @@ class DashboardController extends BaseController
                 $contact->companies()->create([
                     'company_id'        => $company->id
                 ]);
-                $total += $company->valid_emails()->count();
+                $total++;
             }
 
             $contact->update([
@@ -649,7 +565,6 @@ class DashboardController extends BaseController
             \DB::commit();
         } catch (\Throwable $e) {
             \DB::rollBack();
-            \Log::error($e->getMessage());
 
             return back()
                 ->with(['system.message.danger' => "送信できませんでした。"]);
