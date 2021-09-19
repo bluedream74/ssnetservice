@@ -19,7 +19,7 @@ class CreateCompaniesTable extends Migration
             $table->string('url')->nullable();
             $table->string('contact_form_url')->nullable();
             $table->string('source')->nullable();
-            $table->tinyInteger('is_origin_email')->default(1);
+            $table->tinyInteger('check_contact_form')->default(0);
             $table->timestamps();
         });
     }

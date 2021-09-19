@@ -25,7 +25,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command("send:emails")->everyMinute()->runInBackground();
-        // $schedule->command("verify:email")->everyTenMinutes()->runInBackground();
+        $schedule->command("batch:check")->everyMinute()->runInBackground();
     }
 
     /**

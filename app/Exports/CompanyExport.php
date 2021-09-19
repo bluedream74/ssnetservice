@@ -26,7 +26,7 @@ class CompanyExport implements FromCollection, WithHeadings, WithMapping
 
     public function headings(): array
     {
-        return ["カテゴリ", "会社名", "URL","お問い合わせフォームのURL", "エリア", "ステータス","電話番号"];
+        return ["カテゴリ", "会社名", "URL","お問い合わせフォームのURL", "エリア", "電話番号"];
     }
 
     /**
@@ -40,8 +40,6 @@ class CompanyExport implements FromCollection, WithHeadings, WithMapping
         $res[] = $company->url;
         $res[] = $company->contact_form_url;
         $res[] = $company->area;
-        $res[] = $company->status;
-
 
         foreach ($company->phones as $phone) {
             $res[] = $phone->phone;
