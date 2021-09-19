@@ -109,18 +109,14 @@ class BatchCheckCommand extends Command
                     if ($sent >= $limit) return 0;
                 }
             }else {
-                $controller = new DashboardController();
-                $key = 'CHECK_CONTACT_FORM';
-                $controller->upsert($key, 0);
-		Artisan::call('config:cache');
-                Artisan::call('queue:restart');
-                usleep(100);
+
             }
             return 0;
         }
         
         return 0;
     }
+
 
     
     private function getTopUrl($companyurl) {
