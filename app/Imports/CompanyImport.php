@@ -55,8 +55,7 @@ class CompanyImport implements ToCollection
                     } 
                 }
             } catch (\Throwable $e) {
-                echo "<script>alert(CSVファイルのアップロードに失敗しました);</script>";
-                return 0;
+                
             }
         }
     }
