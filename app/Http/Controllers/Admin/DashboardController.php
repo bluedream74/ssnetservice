@@ -888,7 +888,7 @@ class DashboardController extends BaseController
             Excel::import(new CompanyImport, request()->file('file'));
 
         } catch (\Throwable $e) {
-            return back()->with(['system.message.error' => __('正しいファイルをアップロードしてください。')]);
+            return back()->with(['system.message.error' => __('CSVファイルのアップロードに失敗しました')]);
         }
         
         return back()->with(['system.message.success' => __(':itemが完了しました。', ['item' => __('アップロード(CSV)')])]);
