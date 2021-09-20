@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Goutte\Client;
+use Illuminate\Support\Facades\Artisan;
 
 
 class BatchCheckCommand extends Command
@@ -109,10 +110,11 @@ class BatchCheckCommand extends Command
                     if ($sent >= $limit) return 0;
                 }
             }else {
-
-                $controller = new DashboardController();
-                $controller->envChange();
-
+                $key = 'CHECK_CONTACT_FORM';
+                $this->upsert($key, 0);
+                Artisan::call('config:cache');
+                Artisan::call('queue:restart');
+                usleep(500);
             }
             return 0;
         }
@@ -120,6 +122,19 @@ class BatchCheckCommand extends Command
         return 0;
     }
 
+    private function upsert($key, $value)
+    {
+        $envFilePath = app()->environmentFilePath();
+        $contents = file_get_contents($envFilePath);
+        if (preg_match("/ /", $value)) {
+            $value = '"'.$value.'"';
+        }
+        if (preg_match("/^{$key}=[^\n\r]*/m", $contents)) {
+            file_put_contents($envFilePath, preg_replace("/^{$key}=[^\n\r]*/m", $key.'='.$value, $contents));
+        } else {
+            file_put_contents($envFilePath, $contents . "\n{$key}={$value}");
+        }
+    }
 
     
     private function getTopUrl($companyurl) {
