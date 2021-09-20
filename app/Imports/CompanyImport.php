@@ -37,8 +37,24 @@ class CompanyImport implements ToCollection
                 }
                 if (isset($category)) {
                     $parse = parse_url($row[2]);
-                    $host = str_replace('www.', '', $parse['host']);
-                    if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
+                    if(isset($parse['host'])) {
+                        $host = str_replace('www.', '', $parse['host']);
+                        if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
+                            $company = Company::create([
+                                'source'        => $row[0],
+                                'name'          => $row[1],
+                                'url'           => $row[2],
+                                'contact_form_url'           => $row[3],
+                                'area'          => $row[4]
+                            ]);
+    
+                            if (isset($row[5]) && $row[5] != '') {
+                                $company->phones()->updateOrCreate([
+                                    'phone'         => $row[5]
+                                ]);
+                            }
+                        } 
+                    }else {
                         $company = Company::create([
                             'source'        => $row[0],
                             'name'          => $row[1],
@@ -52,11 +68,14 @@ class CompanyImport implements ToCollection
                                 'phone'         => $row[5]
                             ]);
                         }
-                    } 
+                    }
+                   
                 }
-            } catch (\Throwable $e) {
                 
+            } catch (\Throwable $e) {
+                continue;
             }
+           
         }
     }
 }
