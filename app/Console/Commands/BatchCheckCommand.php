@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Goutte\Client;
 use Illuminate\Support\Facades\Artisan;
+// use Symfony\Component\Console\Output\ConsoleOutput;
 
 
 class BatchCheckCommand extends Command
@@ -46,6 +47,7 @@ class BatchCheckCommand extends Command
     public function handle()
     {
         $check_contact_form = config('values.check_contact_form');
+        // $output = new ConsoleOutput();
         if($check_contact_form=="1"){
             $limit = intval(config('values.mail_limit'));
 
@@ -58,6 +60,7 @@ class BatchCheckCommand extends Command
                 foreach($companies as $company) {
                     try {
                         $sent++;
+                        // $output->writeln("<info>sent count</info>".$sent);
                         Company::where('id',$company->id)->update(['check_contact_form'=>1]);
                         if(isset($company->contact_form_url)&&(!empty($company->contact_form_url))){
                             if ($sent >= $limit) {
@@ -68,7 +71,7 @@ class BatchCheckCommand extends Command
                         }else {
                             $topPageUrl = $this->getTopUrl($company->url);
                             $check_url = $this->checkTopContactForm($topPageUrl);
-                            
+                            // $output->writeln("<info>env</info>".$check_url);
                             if(isset($check_url)&&($check_url)){
                                 Company::where('id',$company->id)->update(['contact_form_url'=>$check_url]);
                             }else {
@@ -97,13 +100,18 @@ class BatchCheckCommand extends Command
                                     Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry.html']);
                                     continue;
                                 }
+                                if($this->checkSubContactForm($topPageUrl.'/form')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/form']);
+                                    continue;
+                                }
+                                if($this->checkSubContactForm($topPageUrl.'/toiawase')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/toiawase']);
+                                    continue;
+                                }
                             }
                         }
                         
                     }catch (\Throwable $e) {
-                        $myfile = fopen("company.txt", "a") or die("Unable to open file!");
-                        fwrite($myfile, $e->getMessage()."error   -------------start----------".$date."\r\n");
-                        fclose($myfile);
                         continue;
                     }
         
@@ -149,18 +157,50 @@ class BatchCheckCommand extends Command
     private function checkTopContactForm($url) {
         $client = new Client();
         $crawler = $client->request('GET', $url);
-        if($crawler->selectLink('お問い合わせ')){
-            return $crawler->selectLink('お問い合わせ')->link()->getUri();
+        try {
+            if($crawler->selectLink('お問い合わせ')->link()){
+                return $crawler->selectLink('お問い合わせ')->link()->getUri();
+            }
+        }catch(\Throwable $e){
+            
         }
-        if($crawler->selectLink('お問合せ')){
-            return $crawler->selectLink('お問合せ')->link()->getUri();
+        try {
+            if($crawler->selectLink('お問合せ')->link()){
+                return $crawler->selectLink('お問合せ')->link()->getUri();
+            }
+        }catch(\Throwable $e){
+            
         }
-        if($crawler->selectLink('問い合わせ')){
-            return $crawler->selectLink('問い合わせ')->link()->getUri();
+        
+        try {
+            if($crawler->selectLink('問い合わせ')->link()){
+                return $crawler->selectLink('問い合わせ')->link()->getUri();
+            }
+        }catch(\Throwable $e){
+            
         }
-        if($crawler->selectLink('問合せ')){
-            return $crawler->selectLink('問合せ')->link()->getUri();
+        try {
+            if($crawler->selectLink('問合せ')->link()){
+                return $crawler->selectLink('問合せ')->link()->getUri();
+            }
+        }catch(\Throwable $e){
+            
         }
+        try {
+            if($crawler->selectLink('Contact')->link()){
+                return $crawler->selectLink('Contact')->link()->getUri();
+            }
+        }catch(\Throwable $e){
+            
+        }
+        try {
+            if($crawler->selectLink('CONTACT')->link()){
+                return $crawler->selectLink('CONTACT')->link()->getUri();
+            }
+        }catch(\Throwable $e){
+            
+        }
+     
         $form = $crawler->filter('form input');
         try{
             if(isset($form)&&(!empty($form->getNode(0)))){
