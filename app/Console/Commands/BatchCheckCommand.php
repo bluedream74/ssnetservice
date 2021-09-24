@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Goutte\Client;
 use Illuminate\Support\Facades\Artisan;
-// use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 
 class BatchCheckCommand extends Command
@@ -47,7 +47,7 @@ class BatchCheckCommand extends Command
     public function handle()
     {
         $check_contact_form = config('values.check_contact_form');
-        // $output = new ConsoleOutput();
+        $output = new ConsoleOutput();
         if($check_contact_form=="1"){
             $limit = intval(config('values.mail_limit'));
 
@@ -200,14 +200,31 @@ class BatchCheckCommand extends Command
         }catch(\Throwable $e){
             
         }
-     
-        $form = $crawler->filter('form input');
-        try{
-            if(isset($form)&&(!empty($form->getNode(0)))){
-                return $url;
-            }else{
-                return false;
+        try {
+            if($crawler->selectLink('contact')->link()){
+                return $crawler->selectLink('contact')->link()->getUri();
             }
+        }catch(\Throwable $e){
+            
+        }
+        try {
+            if($crawler->selectLink('Mail')->link()){
+                return $crawler->selectLink('Mail')->link()->getUri();
+            }
+        }catch(\Throwable $e){
+            
+        }
+        try{
+            $form = $crawler->filter('form')->form()->all();
+            if(isset($form)&&(!empty($form))){
+                return $url;
+            }
+            $form = $crawler->selectButton('送信')->form()->all();
+            if(isset($form)&&(!empty($form))){
+                return $url;
+            }
+            return false;
+            
         }catch (\Throwable $e) {
             return false;
         }
@@ -216,10 +233,17 @@ class BatchCheckCommand extends Command
     private function checkSubContactForm($url) {
         $client = new Client();
         $crawler = $client->request('GET', $url);
-        $form = $crawler->filter('form');
-        if(isset($form)&&(!empty($form->getNode(0)))){
-            return true;
-        }else{
+        try{
+            $form = $crawler->filter('form')->form()->all();
+            if(isset($form)&&(!empty($form))){
+                return true;
+            }
+            $form = $crawler->selectButton('送信')->form()->all();
+            if(isset($form)&&(!empty($form))){
+                return true;
+            }
+            return false;
+        }catch (\Throwable $e) {
             return false;
         }
     }
