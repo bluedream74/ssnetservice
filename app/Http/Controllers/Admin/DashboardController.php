@@ -485,6 +485,9 @@ class DashboardController extends BaseController
 
             $total = 0;
             foreach ($companies as $company) {
+                if(!isset($company->contact_form_url)||(empty($company->contact_form_url))){
+                    continue;
+                }
                 $contact->companies()->create([
                     'company_id'        => $company->id
                 ]);
