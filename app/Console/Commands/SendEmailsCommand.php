@@ -7,6 +7,7 @@ use App\Models\Contact;
 use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Carbon;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 class SendEmailsCommand extends Command
 {
@@ -44,6 +45,7 @@ class SendEmailsCommand extends Command
         $limit = intval(config('values.mail_limit'));
 
         $date=Carbon::now()->timezone('Asia/Tokyo');
+        $output = new ConsoleOutput();
       
         $contacts = Contact::whereHas('reserve_companies')->get();
         $sent = 0;
@@ -55,10 +57,18 @@ class SendEmailsCommand extends Command
                 try {
                     $client = new Client();
                     if($company->contact_form_url=='')continue;
+
+                    $output->writeln("<info>url : </info>".$company->contact_form_url);
+
                     $crawler = $client->request('GET', $company->contact_form_url);
                     if(strpos($crawler->text(),"営業お断り")!==false)continue;
                     $form='';
-                    $form = $crawler->filter('form')->form();
+                    try{
+                        $form = $crawler->filter('form')->form()->all();
+                    }catch (\Throwable $e) {
+                        $form = $crawler->selectButton('送信')->form()->all();
+                    }
+                   
                     $data = [];$captcha_sitekey_check=false;$wp=false;
     
                     $captcha_sitekey = $crawler->filter('.g-recaptcha')->extract(['data-sitekey']);
@@ -66,7 +76,8 @@ class SendEmailsCommand extends Command
                         $captcha_sitekey = $captcha_sitekey[0];$captcha_sitekey_check=true;
                     }
                     $sitekey='';
-                    $sitekey = $crawler->filter('script#wpcf7-recaptcha-js-extra');
+                    $sitekeys = $crawler->filter('script#wpcf7-recaptcha-js-extra');
+                    
                     if(isset($sitekey) && !empty($sitekey)){
                         try{
                             $sitekey = $sitekey->text();
@@ -81,6 +92,9 @@ class SendEmailsCommand extends Command
                         }
                        
                     }
+
+                    $output->writeln("<info>captcha_sitekey_check : </info>".$company->captcha_sitekey_check);
+
                     if($captcha_sitekey_check){
                         $api = new NoCaptchaProxyless();
                         $api->setVerboseMode(true);
@@ -131,16 +145,16 @@ class SendEmailsCommand extends Command
                             if(($value!=='' || strpos($key,'wpcf7')!==false)&&($key!=='_wpcf7_recaptcha_response')){
                                 $data[$key] = $value;
                             }else {
-                               if((strpos($key,'nam')!==false || strpos($key,'お名前')!==false  )&& !strpos($key,'kana')!==false){
+                               if((strpos($key,'nam')!==false || strpos($key,'お名前')!==false  )&& (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
                                    $name_count++;
                                }
-                               if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false){
+                               if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false){
                                     $kana_count++;
                                }
                                if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false){
                                    $postal_count++;
                                }
-                               if(strpos($key,'tel')!==false || strpos($key,'電話番号')!==false){
+                               if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
                                    $phone_count++;
                                }
                             }
@@ -149,7 +163,7 @@ class SendEmailsCommand extends Command
                         foreach($form->getValues() as $key => $val) {
                             if(($val!=='' || strpos($key,'wpcf7')!==false)) continue;
 
-                            if($name_count==1 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && !strpos($key,'kana')!==false){
+                            if($name_count==1 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
                                 $data[$key] = $contact->surname.' '.$contact->lastname;
 
 
@@ -161,9 +175,9 @@ class SendEmailsCommand extends Command
                                 }
                                 $name_count_check=1;
                             }
-                            if($kana_count==1 && (strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false)){
+                            if($kana_count==1 && (strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false)){
                                 $data[$key] = $contact->fu_surname.' '.$contact->fu_lastname;
-                            }else if($kana_count==2 && (strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false)){
+                            }else if($kana_count==2 && (strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false)){
                                 if(!isset($kana_count_check)){
                                     $data[$key] = $contact->fu_surname;
                                 }else {
@@ -172,8 +186,11 @@ class SendEmailsCommand extends Command
                                 $kana_count_check=1;
                             }
     
-                            if(strpos($key,'company')!==false || strpos($key,'cn')!==false ) {
-                                $data[$key] = $contact->company;
+                            $emailTexts = array('company','cn','kaisha');
+                            foreach($emailTexts as $text) {
+                                if(strpos($key,$text)!==false){
+                                    $data[$key] = $contact->company;
+                                }
                             }
 
                             if($postal_count==1 && (strpos($key,'post')!==false || strpos($key,'郵便番号')!==false)){
@@ -186,23 +203,34 @@ class SendEmailsCommand extends Command
                                 }
                                 $postal_count_check=1;
                             }
-                           if(strpos($key,'mail')!==false || strpos($key, 'mail_confirm')!==false || strpos($key, 'ールアドレス')!==false) {
-                               $data[$key] = $contact->email;
-                           }
-                           if(strpos($key,'title')!==false ||(strpos($key,'text')!==false)) {
-                                $data[$key] = $contact->title;
-                            }
-                           if(strpos($key,'textarea')!==false || strpos($key,'body')!==false || strpos($key,'content')!==false || strpos($key,'message')!==false ) {
-                                $content = str_replace('%company_name%', $company->name, $contact->content);
 
-                                $content = nl2br($content);
-                                $data[$key] = $content;
-                              
-                                $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
-                           }
-                           if($phone_count ==1 && (strpos($key,'tel')!==false || strpos($key,'電話番号')!==false)) {
+                            $emailTexts = array('mail','mail_confirm','ールアドレス');
+                            foreach($emailTexts as $text) {
+                                if(strpos($key,$text)!==false){
+                                    $data[$key] = $contact->email;
+                                }
+                            }
+
+                            $titleTexts = array('title','subject');
+                            foreach($titleTexts as $text) {
+                                if(strpos($key,$text)!==false){
+                                    $data[$key] = $contact->title;
+                                }
+                            }
+
+                            $messageTexts = array('textarea','body','content','message','honbun','お問い合わせ内容');
+                            foreach($messageTexts as $text) {
+                                if(strpos($key,$text)!==false){
+                                    $content = str_replace('%company_name%', $company->name, $contact->content);
+                                    $content = nl2br($content);
+                                    $data[$key] = $content;
+                                    $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+                                }
+                            }
+                           
+                           if($phone_count ==1 && (strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
                                 $data[$key] = $contact->phoneNumber1.$contact->phoneNumber2.$contact->phoneNumber3;
-                            }else if($phone_count ==3 && (strpos($key,'tel')!==false || strpos($key,'電話番号')!==false)) {
+                            }else if($phone_count ==3 && (strpos($key,'tel')!==false  || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
                                 if(!isset($phone_count_check)){
                                     $data[$key] = $contact->phoneNumber1;
                                     $phone_count_check=1;
@@ -230,6 +258,9 @@ class SendEmailsCommand extends Command
                         }
 
                         if(strpos($crawler->text(),"ありがとうございま")!==false){
+
+                            $output->writeln("<info>success : </info>");
+
                             $company->update([
                                 'status'        => '送信済み'
                             ]);
@@ -237,6 +268,9 @@ class SendEmailsCommand extends Command
                                 'is_delivered' => 2
                             ]);
                         }else if(strpos($crawler->text(),"失敗")!==false){
+
+                            $output->writeln("<info>failed : </info>");
+
                             $company->update([
                                 'status'        => '送信失敗'
                             ]);
@@ -245,14 +279,19 @@ class SendEmailsCommand extends Command
                             ]);
                         }else {
                             $form='';
-                            $form = $crawler->filter('form');
+                            try{
+                                $form = $crawler->selectButton('送信する')->form();
+                            }catch (\Throwable $e) {
+                                    $form = $crawler->filter('form')->form();
+                            }
+                            $output->writeln("<info>next form : </info>");
                             if(isset($form) && !empty($form)){
-                                $form = $form->form();
-                                $data = $form->getValues();
-                                $form->setValues($data);
+                              
                                 $crawler = $client->submit($form);
 
                                 if(strpos($crawler->text(),"ありがとうございま")){
+
+                                    $output->writeln("<info>success : </info>");
                                     $company->update([
                                         'status'        => '送信済み'
                                     ]);
@@ -260,6 +299,7 @@ class SendEmailsCommand extends Command
                                         'is_delivered' => 2
                                     ]);
                             }else {
+                                    $output->writeln("<info>failed : </info>");
                                     $company->update([
                                         'status'        => '送信失敗'
                                     ]);
@@ -270,6 +310,7 @@ class SendEmailsCommand extends Command
                             }
                         }
                     }else {
+                        $output->writeln("<info>failed : </info>");
                         $company->update([
                             'status'        => '送信失敗'
                         ]);
@@ -279,9 +320,7 @@ class SendEmailsCommand extends Command
                     }
                 }  
                 catch (\Throwable $e) {
-                    $myfile = fopen("company.txt", "a") or die("Unable to open file!");
-                    fwrite($myfile, $e->getMessage()."error   -------------start----------".$date."\r\n");
-                    fclose($myfile);
+                    $output->writeln("<info>failed : </info>");
                     $company->update(['status' => '送信失敗']);
                     $companyContact->update([
                         'is_delivered' => 1
@@ -290,18 +329,18 @@ class SendEmailsCommand extends Command
 
                 $sent++;
 
-                if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
-                    try {
-                        // \App\Jobs\SendMagazineEmailJob::dispatch("syt.iphone@gmail.com", new \App\Notifications\MailMagazineNotification($contact, "syt.iphone@gmail.com", $company->name), $company);
-                        Mail::to("syt.iphone@gmail.com")
-                            ->send(new \App\Mail\CustomEmail($contact, "syt.iphone@gmail.com", $company->name, $company));
+                // if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
+                //     try {
+                //         // \App\Jobs\SendMagazineEmailJob::dispatch("syt.iphone@gmail.com", new \App\Notifications\MailMagazineNotification($contact, "syt.iphone@gmail.com", $company->name), $company);
+                //         Mail::to("syt.iphone@gmail.com")
+                //             ->send(new \App\Mail\CustomEmail($contact, "syt.iphone@gmail.com", $company->name, $company));
 
-                        $contact->update(['is_confirmed' => 1]);
-                        sleep(4);
-                    } catch (\Throwable $e) {
-                        \Log::error("KKKKK:  " . $e->getMessage());
-                    }
-                }
+                //         $contact->update(['is_confirmed' => 1]);
+                //         sleep(4);
+                //     } catch (\Throwable $e) {
+                //         \Log::error("KKKKK:  " . $e->getMessage());
+                //     }
+                // }
 
                 if ($sent >= $limit) return 0;
             }
