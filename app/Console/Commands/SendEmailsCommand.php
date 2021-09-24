@@ -62,11 +62,11 @@ class SendEmailsCommand extends Command
 
                     $crawler = $client->request('GET', $company->contact_form_url);
                     if(strpos($crawler->text(),"営業お断り")!==false)continue;
-                    $form='';
+                    
                     try{
-                        $form = $crawler->filter('form')->form()->all();
+                        $form = $crawler->filter('form')->form();
                     }catch (\Throwable $e) {
-                        $form = $crawler->selectButton('送信')->form()->all();
+                        $form = $crawler->selectButton('送信')->form();
                     }
                    
                     $data = [];$captcha_sitekey_check=false;$wp=false;
@@ -86,9 +86,7 @@ class SendEmailsCommand extends Command
                                 $captcha_sitekey = substr($sitekey,$key_position+10,40);$captcha_sitekey_check=true;$wp=true;
                             }
                         }catch (\Throwable $e) {
-                            $myfile = fopen("error.txt", "a") or die("Unable to open file!");
-                            fwrite($myfile, $e->getMessage()."   -------------start----------".$date."\r\n");
-                            fclose($myfile);
+                           
                         }
                        
                     }
@@ -218,7 +216,7 @@ class SendEmailsCommand extends Command
                                 }
                             }
 
-                            $messageTexts = array('textarea','body','content','message','honbun','お問い合わせ内容');
+                            $messageTexts = array('textarea','body','content','message','honbun','お問い合わせ内容','userData[お問い合わ内容]');
                             foreach($messageTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
@@ -257,7 +255,7 @@ class SendEmailsCommand extends Command
                             $crawler = $client->submit($form);
                         }
 
-                        if(strpos($crawler->text(),"ありがとうございま")!==false){
+                        if(strpos($crawler->text(),"ありがとうございま")!==false || strpos($crawler->text(),"送信されました")!==false){
 
                             $output->writeln("<info>success : </info>");
 
@@ -289,7 +287,7 @@ class SendEmailsCommand extends Command
                               
                                 $crawler = $client->submit($form);
 
-                                if(strpos($crawler->text(),"ありがとうございま")){
+                                if(strpos($crawler->text(),"ありがとうございま") || strpos($crawler->text(),"送信されました")!==false){
 
                                     $output->writeln("<info>success : </info>");
                                     $company->update([
@@ -329,18 +327,18 @@ class SendEmailsCommand extends Command
 
                 $sent++;
 
-                // if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
-                //     try {
-                //         // \App\Jobs\SendMagazineEmailJob::dispatch("syt.iphone@gmail.com", new \App\Notifications\MailMagazineNotification($contact, "syt.iphone@gmail.com", $company->name), $company);
-                //         Mail::to("syt.iphone@gmail.com")
-                //             ->send(new \App\Mail\CustomEmail($contact, "syt.iphone@gmail.com", $company->name, $company));
+                if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
+                    try {
+                        // \App\Jobs\SendMagazineEmailJob::dispatch("syt.iphone@gmail.com", new \App\Notifications\MailMagazineNotification($contact, "syt.iphone@gmail.com", $company->name), $company);
+                        Mail::to("syt.iphone@gmail.com")
+                            ->send(new \App\Mail\CustomEmail($contact, "syt.iphone@gmail.com", $company->name, $company));
 
-                //         $contact->update(['is_confirmed' => 1]);
-                //         sleep(4);
-                //     } catch (\Throwable $e) {
-                //         \Log::error("KKKKK:  " . $e->getMessage());
-                //     }
-                // }
+                        $contact->update(['is_confirmed' => 1]);
+                        sleep(4);
+                    } catch (\Throwable $e) {
+                        \Log::error("KKKKK:  " . $e->getMessage());
+                    }
+                }
 
                 if ($sent >= $limit) return 0;
             }
