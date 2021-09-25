@@ -7,7 +7,6 @@ use App\Models\Contact;
 use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Carbon;
-use Symfony\Component\Console\Output\ConsoleOutput;
 
 class SendEmailsCommand extends Command
 {
@@ -45,7 +44,6 @@ class SendEmailsCommand extends Command
         $limit = intval(config('values.mail_limit'));
 
         $date=Carbon::now()->timezone('Asia/Tokyo');
-        $output = new ConsoleOutput();
       
         $contacts = Contact::whereHas('reserve_companies')->get();
         $sent = 0;
@@ -58,25 +56,25 @@ class SendEmailsCommand extends Command
                     $client = new Client();
                     if($company->contact_form_url=='')continue;
 
-                    $output->writeln("<info>url : </info>".$company->contact_form_url);
 
                     $crawler = $client->request('GET', $company->contact_form_url);
                     if(strpos($crawler->text(),"営業お断り")!==false)continue;
-                    
+
                     try{
                         $form = $crawler->filter('form')->form();
                     }catch (\Throwable $e) {
                         $form = $crawler->selectButton('送信')->form();
                     }
                    
-                    $data = [];$captcha_sitekey_check=false;$wp=false;
+                    $data = [];
+                    $captcha_sitekey_check=false;$wp=false;
     
                     $captcha_sitekey = $crawler->filter('.g-recaptcha')->extract(['data-sitekey']);
                     if(isset($captcha_sitekey) && !empty($captcha_sitekey)){
                         $captcha_sitekey = $captcha_sitekey[0];$captcha_sitekey_check=true;
                     }
                     $sitekey='';
-                    $sitekeys = $crawler->filter('script#wpcf7-recaptcha-js-extra');
+                    $sitekey = $crawler->filter('script#wpcf7-recaptcha-js-extra');
                     
                     if(isset($sitekey) && !empty($sitekey)){
                         try{
@@ -90,8 +88,6 @@ class SendEmailsCommand extends Command
                         }
                        
                     }
-
-                    $output->writeln("<info>captcha_sitekey_check : </info>".$company->captcha_sitekey_check);
 
                     if($captcha_sitekey_check){
                         $api = new NoCaptchaProxyless();
@@ -216,7 +212,7 @@ class SendEmailsCommand extends Command
                                 }
                             }
 
-                            $messageTexts = array('textarea','body','content','message','honbun','お問い合わせ内容','userData[お問い合わ内容]');
+                            $messageTexts = array('textarea','body','content','note','message','honbun','お問い合わせ内容','userData[お問い合わ内容]');
                             foreach($messageTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
@@ -248,16 +244,9 @@ class SendEmailsCommand extends Command
                           }
                         }
 
-                        if(isset($data['g-recaptcha-response']) || isset($data['_wpcf7_recaptcha_response'])){
-                            $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
-                        }else {
-                            $form->setValues($data);
-                            $crawler = $client->submit($form);
-                        }
+                        $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
 
                         if(strpos($crawler->text(),"ありがとうございま")!==false || strpos($crawler->text(),"送信されました")!==false){
-
-                            $output->writeln("<info>success : </info>");
 
                             $company->update([
                                 'status'        => '送信済み'
@@ -266,8 +255,6 @@ class SendEmailsCommand extends Command
                                 'is_delivered' => 2
                             ]);
                         }else if(strpos($crawler->text(),"失敗")!==false){
-
-                            $output->writeln("<info>failed : </info>");
 
                             $company->update([
                                 'status'        => '送信失敗'
@@ -282,14 +269,12 @@ class SendEmailsCommand extends Command
                             }catch (\Throwable $e) {
                                     $form = $crawler->filter('form')->form();
                             }
-                            $output->writeln("<info>next form : </info>");
                             if(isset($form) && !empty($form)){
                               
                                 $crawler = $client->submit($form);
 
                                 if(strpos($crawler->text(),"ありがとうございま") || strpos($crawler->text(),"送信されました")!==false){
 
-                                    $output->writeln("<info>success : </info>");
                                     $company->update([
                                         'status'        => '送信済み'
                                     ]);
@@ -297,7 +282,6 @@ class SendEmailsCommand extends Command
                                         'is_delivered' => 2
                                     ]);
                             }else {
-                                    $output->writeln("<info>failed : </info>");
                                     $company->update([
                                         'status'        => '送信失敗'
                                     ]);
@@ -308,7 +292,6 @@ class SendEmailsCommand extends Command
                             }
                         }
                     }else {
-                        $output->writeln("<info>failed : </info>");
                         $company->update([
                             'status'        => '送信失敗'
                         ]);
@@ -318,7 +301,6 @@ class SendEmailsCommand extends Command
                     }
                 }  
                 catch (\Throwable $e) {
-                    $output->writeln("<info>failed : </info>");
                     $company->update(['status' => '送信失敗']);
                     $companyContact->update([
                         'is_delivered' => 1
