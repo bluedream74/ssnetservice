@@ -228,7 +228,12 @@ class SendEmailsFirstCommand extends Command
                                     $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                                 }
                             }
-                           
+                            $titleTexts = array('fax',);
+                            foreach($titleTexts as $text) {
+                                if(strpos($key,$text)!==false){
+                                    $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
+                                }
+                            }
                            if($phone_count ==1 && (strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
                                 $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
                             }else if($phone_count ==3 && (strpos($key,'tel')!==false  || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
@@ -252,8 +257,7 @@ class SendEmailsFirstCommand extends Command
                         }
 
                         $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
-
-                        if(strpos($crawler->text(),"ありがとうございま")!==false || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
+                        if(strpos($crawler->text(),"ありがとうございま")!==false|| strpos($crawler->text(),"有難うございま")!==false || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
 
                             $company->update([
                                 'status'        => '送信済み'
@@ -262,7 +266,7 @@ class SendEmailsFirstCommand extends Command
                                 'is_delivered' => 2
                             ]);
                         }else if(strpos($crawler->text(),"失敗")!==false){
-
+                            
                             $company->update([
                                 'status'        => '送信失敗'
                             ]);
@@ -274,8 +278,9 @@ class SendEmailsFirstCommand extends Command
                             try{
                                 $form = $crawler->selectButton('送信する')->form();
                             }catch (\Throwable $e) {
-                                    $form = $crawler->filter('form')->form();
+                                $form = $crawler->filter('form')->form();
                             }
+                            
                             if(isset($form) && !empty($form)){
                               
                                 $crawler = $client->submit($form);
@@ -308,6 +313,7 @@ class SendEmailsFirstCommand extends Command
                     }
                 }  
                 catch (\Throwable $e) {
+                    
                     $company->update(['status' => '送信失敗']);
                     $companyContact->update([
                         'is_delivered' => 1
