@@ -142,7 +142,7 @@ class SendEmailsFirstCommand extends Command
                         $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;
                         foreach($form->getValues() as $key => $value) {
                             if(isset($data[$key]))continue;
-                            if(($value!=='' || strpos($key,'wpcf7')!==false)&&($key!=='_wpcf7_recaptcha_response')){
+                            if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                 $data[$key] = $value;
                             }else {
                                if((strpos($key,'nam')!==false || strpos($key,'お名前')!==false  )&& (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
@@ -151,7 +151,7 @@ class SendEmailsFirstCommand extends Command
                                if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false){
                                     $kana_count++;
                                }
-                               if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false){
+                               if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false){
                                    $postal_count++;
                                }
                                if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
@@ -161,7 +161,14 @@ class SendEmailsFirstCommand extends Command
                         }
 
                         foreach($form->getValues() as $key => $val) {
-                            if(($val!=='' || strpos($key,'wpcf7')!==false)) continue;
+                            
+                            if(($val!=='' || strpos($key,'wpcf7')!==false)) {
+                                if(strpos($val,'例')!==false){
+
+                                }else{
+                                    continue;
+                                }
+                            }
 
                             if($name_count==1 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
                                 $data[$key] = $contact->surname.' '.$contact->lastname;
@@ -186,15 +193,15 @@ class SendEmailsFirstCommand extends Command
                                 $kana_count_check=1;
                             }
     
-                            $emailTexts = array('company','cn','kaisha');
+                            $emailTexts = array('company','cn','kaisha','cop');
                             foreach($emailTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $data[$key] = $contact->company;
                                 }
                             }
 
-                            if($postal_count==1 && (strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false)){
-                                $data[$key] = $contact->postalCode1.' '.$contact->postalCode2;
+                            if($postal_count==1 && (strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false|| strpos($key,'zip')!==false)){
+                                $data[$key] = $contact->postalCode1.'-'.$contact->postalCode2;
                             }else if($postal_count==2 && (strpos($key,'post')!==false || strpos($key,'郵便番号')!==false)){
                                 if(!isset($postal_count_check)){
                                     $data[$key] = $contact->postalCode1;
@@ -223,7 +230,7 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
 
-                            $messageTexts = array('textarea','body','content','content','inquiry','note','message','MESSAGE','honbun','お問い合わせ内容','userData[お問い合わ内容]');
+                            $messageTexts = array('textarea','body','content','comment','inquiry','note','message','MESSAGE','honbun','お問い合わせ内容','userData[お問い合わ内容]');
                             foreach($messageTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
@@ -234,7 +241,7 @@ class SendEmailsFirstCommand extends Command
                             }
                            
                            if($phone_count ==1 && (strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
-                                $data[$key] = $contact->phoneNumber1.$contact->phoneNumber2.$contact->phoneNumber3;
+                                $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
                             }else if($phone_count ==3 && (strpos($key,'tel')!==false  || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
                                 if(!isset($phone_count_check)){
                                     $data[$key] = $contact->phoneNumber1;

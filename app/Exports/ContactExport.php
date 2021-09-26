@@ -49,7 +49,6 @@ class ContactExport implements FromCollection, WithHeadings, WithMapping
   public function map($CompanyContact): array
   {
     $company = $CompanyContact->company;
-
     $res = array();
     $res[] = $company->source;
     $res[] = $company->name;
@@ -73,11 +72,7 @@ class ContactExport implements FromCollection, WithHeadings, WithMapping
   {
     $query = CompanyContact::whereIn('company_id', $this->contact->companies()->pluck('company_id'));
     if (!empty($value = Arr::get($this->params, 'status'))) {
-      if ($value == 'Not') {
-        $query = $query->whereIn('email', \App\Models\NotificationLog::where('contact_id', $this->contact->id)->whereNull('status')->pluck('email'));
-      } else {
-        $query = $query->whereIn('email', \App\Models\NotificationLog::where('contact_id', $this->contact->id)->where('status', $value)->pluck('email'));
-      }
+      $query->where('is_delivered', $value);
     }
     return $query->get();
   }
