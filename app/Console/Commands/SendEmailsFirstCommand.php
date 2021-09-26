@@ -70,29 +70,20 @@ class SendEmailsFirstCommand extends Command
                    
                     $data = [];
                     try {
-                        $captcha_sitekey_check=false;$wp=false;
     
-                        $captcha_sitekey = $crawler->filter('.g-recaptcha')->extract(['data-sitekey']);
-                        if(isset($captcha_sitekey) && !empty($captcha_sitekey)){
-                            $captcha_sitekey = $captcha_sitekey[0];$captcha_sitekey_check=true;
-                        }
-                        $sitekey='';
-                        $sitekey = $crawler->filter('script#wpcf7-recaptcha-js-extra');
-                        
-                        if(isset($sitekey) && !empty($sitekey)){
-                            try{
-                                $sitekey = $sitekey->text();
-                                $key_position = strpos($sitekey,'sitekey');
-                                if(isset($key_position)){
-                                    $captcha_sitekey = substr($sitekey,$key_position+10,40);$captcha_sitekey_check=true;$wp=true;
+                        if(strpos($crawler->text(),'sitekey')!==false){
+                            $key_position = strpos($crawler->text(),'sitekey');
+                            if(isset($key_position)){
+                                if(substr($crawler->text(),$key_position+10,1)=="'"){
+                                    $captcha_sitekey = substr($crawler->text(),$key_position+11,40);
                                 }
-                            }catch (\Throwable $e) {
-                            
+                                if(substr($crawler->text(),$key_position+11,1)=="'"){
+                                    $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
+                                }
                             }
-                        
                         }
 
-                        if($captcha_sitekey_check){
+                        if(isset($captcha_sitekey)&&!empty($captcha_sitekey)){
                             $api = new NoCaptchaProxyless();
                             $api->setVerboseMode(true);
                             //your anti-captcha.com account key
