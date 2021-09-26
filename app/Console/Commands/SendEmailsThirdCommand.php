@@ -79,8 +79,7 @@ class SendEmailsThirdCommand extends Command
                                 if(isset($key_position)){
                                     if((substr($crawler->text(),$key_position+9,1)=="'"||(substr($crawler->text(),$key_position+9,1)=='"'))){
                                         $captcha_sitekey = substr($crawler->text(),$key_position+10,40);
-                                    }
-                                    if((substr($crawler->text(),$key_position+11,1)=="'"||(substr($crawler->text(),$key_position11,1)=='"'))){
+                                    }else if((substr($crawler->text(),$key_position+11,1)=="'"||(substr($crawler->text(),$key_position11,1)=='"'))){
                                         $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
                                     }
                                 }
