@@ -80,6 +80,11 @@ class SendEmailsFirstCommand extends Command
                                     $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
                                 }
                             }
+                        }else if(strpos($crawler->html(),'changeCaptcha')!==false){
+                            $key_position = strpos($crawler->html(),'changeCaptcha');
+                            if(isset($key_position)){
+                                $captcha_sitekey = substr($crawler->html(),$key_position+15,40);
+                            }
                         }
 
                         if(isset($captcha_sitekey)){
@@ -148,7 +153,7 @@ class SendEmailsFirstCommand extends Command
                                }
                             }
                         }
-
+                        $num_count=0;
                         foreach($form->getValues() as $key => $val) {
                             
                             if(($val!=='' || strpos($key,'wpcf7')!==false)) {
@@ -158,7 +163,7 @@ class SendEmailsFirstCommand extends Command
                                     continue;
                                 }
                             }
-
+                            $num_count++;
                             if($name_count==1 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
                                 $data[$key] = $contact->surname.' '.$contact->lastname;
 
@@ -246,6 +251,15 @@ class SendEmailsFirstCommand extends Command
                                     $data[$key] = $contact->phoneNumber3;
                                 }
                             }
+                            if(($num_count==2) && !isset($data[$key])){
+                                $data[$key] = $contact->email;
+                            }
+                            if(($num_count==5) && !isset($data[$key])){
+                                $content = str_replace('%company_name%', $company->name, $contact->content);
+                                $content = nl2br($content);
+                                $data[$key] = $content;
+                                $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+                            }
                         }
 
                         foreach($form->getValues() as $key => $val) {
@@ -257,6 +271,7 @@ class SendEmailsFirstCommand extends Command
                         }
 
                         $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
+                        // file_put_contents('error.txt',$crawler->text());
                         if(strpos($crawler->text(),"ありがとうございま")!==false|| strpos($crawler->text(),"有難うございま")!==false || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
 
                             $company->update([
@@ -275,6 +290,7 @@ class SendEmailsFirstCommand extends Command
                             ]);
                         }else {
                             $form='';
+                            // 送信する
                             try{
                                 $form = $crawler->selectButton('送信する')->form();
                             }catch (\Throwable $e) {
