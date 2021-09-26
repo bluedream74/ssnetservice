@@ -101,8 +101,7 @@ class SendEmailsFirstCommand extends Command
                                 continue;
                             } else {
                                 $recaptchaToken = $api->getTaskSolution();
-                                
-                                if($wp){
+                                if(strpos($crawler->text(),'wpcf7_recaptcha')!==false){
                                     $data['_wpcf7_recaptcha_response'] = $recaptchaToken; //g-recaptcha-response
                                 } else {
                                     $data['g-recaptcha-response'] = $recaptchaToken; //g-recaptcha-response
