@@ -85,7 +85,7 @@ class SendEmailsThirdCommand extends Command
                                 }
                             }
     
-                            if(isset($captcha_sitekey)&&!empty($captcha_sitekey)){
+                            if(isset($captcha_sitekey)){
                                 $api = new NoCaptchaProxyless();
                                 $api->setVerboseMode(true);
                                 //your anti-captcha.com account key
@@ -104,7 +104,6 @@ class SendEmailsThirdCommand extends Command
                                     continue;
                                 } else {
                                     $recaptchaToken = $api->getTaskSolution();
-                                    
                                     if(strpos($crawler->text(),'wpcf7_recaptcha')!==false){
                                         $data['_wpcf7_recaptcha_response'] = $recaptchaToken; //g-recaptcha-response
                                     } else {
@@ -232,7 +231,12 @@ class SendEmailsThirdCommand extends Command
                                         $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                                     }
                                 }
-                               
+                                $titleTexts = array('fax',);
+                                foreach($titleTexts as $text) {
+                                    if(strpos($key,$text)!==false){
+                                        $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
+                                    }
+                                }
                                if($phone_count ==1 && (strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
                                     $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
                                 }else if($phone_count ==3 && (strpos($key,'tel')!==false  || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
@@ -256,8 +260,7 @@ class SendEmailsThirdCommand extends Command
                             }
     
                             $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
-    
-                            if(strpos($crawler->text(),"ありがとうございま")!==false || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
+                            if(strpos($crawler->text(),"ありがとうございま")!==false|| strpos($crawler->text(),"有難うございま")!==false || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
     
                                 $company->update([
                                     'status'        => '送信済み'
@@ -266,7 +269,7 @@ class SendEmailsThirdCommand extends Command
                                     'is_delivered' => 2
                                 ]);
                             }else if(strpos($crawler->text(),"失敗")!==false){
-    
+                                
                                 $company->update([
                                     'status'        => '送信失敗'
                                 ]);
@@ -278,8 +281,9 @@ class SendEmailsThirdCommand extends Command
                                 try{
                                     $form = $crawler->selectButton('送信する')->form();
                                 }catch (\Throwable $e) {
-                                        $form = $crawler->filter('form')->form();
+                                    $form = $crawler->filter('form')->form();
                                 }
+                                
                                 if(isset($form) && !empty($form)){
                                   
                                     $crawler = $client->submit($form);
@@ -312,6 +316,7 @@ class SendEmailsThirdCommand extends Command
                         }
                     }  
                     catch (\Throwable $e) {
+                        
                         $company->update(['status' => '送信失敗']);
                         $companyContact->update([
                             'is_delivered' => 1
