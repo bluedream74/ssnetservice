@@ -44,12 +44,12 @@ class Contact extends Model
 
     public function success_companies()
     {
-        return $this->companies()->where('is_delivered', 1);
+        return $this->companies()->where('is_delivered', 2);
     }
 
     public function failed_companies()
     {
-        return $this->companies()->where('is_delivered', 2);
+        return $this->companies()->where('is_delivered', 1);
     }
 
     public function reserve_companies()

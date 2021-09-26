@@ -58,5 +58,6 @@ return [
     'mail_password' => env('MAIL_PASSWORD'),
     'mail_encryption' => env('MAIL_ENCRYPTION'),
     'check_contact_form' => env('CHECK_CONTACT_FORM'),
-    'mail_limit' => env('MAIL_LIMIT')
+    'mail_limit' => env('MAIL_LIMIT'),
+    'ProcessCount' => '500'
 ];
