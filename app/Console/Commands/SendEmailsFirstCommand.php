@@ -70,8 +70,18 @@ class SendEmailsFirstCommand extends Command
                    
                     $data = [];
                     try {
-    
-                        if(strpos($crawler->text(),'sitekey')!==false){
+                        if(strpos($crawler->html(),'changeCaptcha')!==false){
+                            $key_position = strpos($crawler->html(),'changeCaptcha');
+                            if(isset($key_position)){
+                                $captcha_sitekey = substr($crawler->html(),$key_position+15,40);
+                            }
+                        }else if(strpos($crawler->html(),'wpcf7submit')!==false){
+                            $key_position = strpos($crawler->html(),'wpcf7submit');
+                            if(isset($key_position)){
+                                $str = substr($crawler->html(),$key_position);
+                                $captcha_sitekey = substr($str,strpos($str,'grecaptcha')+13,40);
+                            }
+                        }else if(strpos($crawler->text(),'sitekey')!==false){
                             $key_position = strpos($crawler->text(),'sitekey');
                             if(isset($key_position)){
                                 if((substr($crawler->text(),$key_position+9,1)=="'"||(substr($crawler->text(),$key_position+9,1)=='"'))){
@@ -79,11 +89,6 @@ class SendEmailsFirstCommand extends Command
                                 }else if((substr($crawler->text(),$key_position+11,1)=="'"||(substr($crawler->text(),$key_position11,1)=='"'))){
                                     $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
                                 }
-                            }
-                        }else if(strpos($crawler->html(),'changeCaptcha')!==false){
-                            $key_position = strpos($crawler->html(),'changeCaptcha');
-                            if(isset($key_position)){
-                                $captcha_sitekey = substr($crawler->html(),$key_position+15,40);
                             }
                         }
 
@@ -106,10 +111,16 @@ class SendEmailsFirstCommand extends Command
                                 continue;
                             } else {
                                 $recaptchaToken = $api->getTaskSolution();
-                                if(strpos($crawler->text(),'wpcf7_recaptcha')!==false){
-                                    $data['_wpcf7_recaptcha_response'] = $recaptchaToken; //g-recaptcha-response
-                                } else {
-                                    $data['g-recaptcha-response'] = $recaptchaToken; //g-recaptcha-response
+                                foreach($form->all() as $key=>$val) {
+                                    if(strpos($key,'wpcf7_recaptcha')!==false){
+                                        $data['_wpcf7_recaptcha_response'] = $recaptchaToken;
+                                    }else if(strpos($key,'g-recaptcha-response')!==false){
+                                        $data['g-recaptcha-response'] = $recaptchaToken;
+                                    }else if(strpos($key,'captcha-170')!==false){
+                                        $data['captcha-170'] = $recaptchaToken;
+                                    }else if(strpos($key,'captcha')!==false){
+                                        $data['captcha'] = $recaptchaToken;
+                                    }
                                 }
                             }
                         }
