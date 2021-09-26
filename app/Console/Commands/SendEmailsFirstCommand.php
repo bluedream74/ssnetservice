@@ -74,12 +74,7 @@ class SendEmailsFirstCommand extends Command
                         if(strpos($crawler->text(),'sitekey')!==false){
                             $key_position = strpos($crawler->text(),'sitekey');
                             if(isset($key_position)){
-                                if(substr($crawler->text(),$key_position+10,1)=="'"){
-                                    $captcha_sitekey = substr($crawler->text(),$key_position+11,40);
-                                }
-                                if(substr($crawler->text(),$key_position+11,1)=="'"){
-                                    $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
-                                }
+                                $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
                             }
                         }
 
