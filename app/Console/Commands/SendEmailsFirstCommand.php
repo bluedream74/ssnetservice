@@ -204,7 +204,7 @@ class SendEmailsFirstCommand extends Command
                                 $postal_count_check=1;
                             }
 
-                            $emailTexts = array('mail','mail_confirm','ールアドレス');
+                            $emailTexts = array('mail','mail_confirm','ールアドレス','M_ADR');
                             foreach($emailTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $data[$key] = $contact->email;
@@ -223,7 +223,7 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
 
-                            $messageTexts = array('textarea','body','content','note','message','honbun','お問い合わせ内容','userData[お問い合わ内容]');
+                            $messageTexts = array('textarea','body','content','content','inquiry','note','message','MESSAGE','honbun','お問い合わせ内容','userData[お問い合わ内容]');
                             foreach($messageTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
@@ -251,13 +251,13 @@ class SendEmailsFirstCommand extends Command
                           if(isset($data[$key]) &&($data[$key] !== "")){
                             continue;
                           } else {
-                            $data[$key] = " ";
+                            $data[$key] = "054";
                           }
                         }
 
                         $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
 
-                        if(strpos($crawler->text(),"ありがとうございま")!==false || strpos($crawler->text(),"送信されました")!==false){
+                        if(strpos($crawler->text(),"ありがとうございま")!==false || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
 
                             $company->update([
                                 'status'        => '送信済み'
@@ -284,7 +284,7 @@ class SendEmailsFirstCommand extends Command
                               
                                 $crawler = $client->submit($form);
 
-                                if(strpos($crawler->text(),"ありがとうございま") || strpos($crawler->text(),"送信されました")!==false){
+                                if(strpos($crawler->text(),"ありがとうございま") || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
 
                                     $company->update([
                                         'status'        => '送信済み'
