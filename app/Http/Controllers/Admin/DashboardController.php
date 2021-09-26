@@ -600,10 +600,7 @@ class DashboardController extends BaseController
         return back()->with(['system.message.success' => '削除しました。']);
     }
 
-    public function exportContactCSV(Contact $contact)
-    {
-        return Excel::download(new ContactExport($contact, request()->all()), 'フォーム一覧.csv', \Maatwebsite\Excel\Excel::CSV);
-    }
+    
 
     private function getSiteUrlsForConstruct($string)
     {
@@ -884,7 +881,10 @@ class DashboardController extends BaseController
     {
         return Excel::download(new CompanyExport(request()->all()), '会社一覧.csv', \Maatwebsite\Excel\Excel::CSV);
     }
-
+    public function exportContactCSV(Contact $contact)
+    {
+        return Excel::download(new ContactExport($contact, request()->all()), 'フォーム一覧.csv', \Maatwebsite\Excel\Excel::CSV);
+    }
     public function importCSV()
     {
         try {

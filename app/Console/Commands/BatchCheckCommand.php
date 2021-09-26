@@ -208,8 +208,8 @@ class BatchCheckCommand extends Command
             
         }
         try {
-            if($crawler->selectLink('Mail')->link()){
-                return $crawler->selectLink('Mail')->link()->getUri();
+            if($crawler->selectLink('お見積り・お問合せ')->link()){
+                return $crawler->selectLink('お見積り・お問合せ')->link()->getUri();
             }
         }catch(\Throwable $e){
             
