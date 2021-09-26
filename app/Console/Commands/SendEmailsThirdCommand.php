@@ -60,42 +60,33 @@ class SendEmailsThirdCommand extends Command
                     try {
                         $client = new Client();
                         if($company->contact_form_url=='')continue;
-
-
+    
+    
                         $crawler = $client->request('GET', $company->contact_form_url);
                         if(strpos($crawler->text(),"営業お断り")!==false)continue;
-
+    
                         try{
                             $form = $crawler->filter('form')->form();
                         }catch (\Throwable $e) {
                             $form = $crawler->selectButton('送信')->form();
                         }
-                    
+                       
                         $data = [];
                         try {
-                            $captcha_sitekey_check=false;$wp=false;
         
-                            $captcha_sitekey = $crawler->filter('.g-recaptcha')->extract(['data-sitekey']);
-                            if(isset($captcha_sitekey) && !empty($captcha_sitekey)){
-                                $captcha_sitekey = $captcha_sitekey[0];$captcha_sitekey_check=true;
-                            }
-                            $sitekey='';
-                            $sitekey = $crawler->filter('script#wpcf7-recaptcha-js-extra');
-                            
-                            if(isset($sitekey) && !empty($sitekey)){
-                                try{
-                                    $sitekey = $sitekey->text();
-                                    $key_position = strpos($sitekey,'sitekey');
-                                    if(isset($key_position)){
-                                        $captcha_sitekey = substr($sitekey,$key_position+10,40);$captcha_sitekey_check=true;$wp=true;
+                            if(strpos($crawler->text(),'sitekey')!==false){
+                                $key_position = strpos($crawler->text(),'sitekey');
+                                if(isset($key_position)){
+                                    if(substr($crawler->text(),$key_position+10,1)=="'"){
+                                        $captcha_sitekey = substr($crawler->text(),$key_position+11,40);
                                     }
-                                }catch (\Throwable $e) {
-                                
+                                    if(substr($crawler->text(),$key_position+11,1)=="'"){
+                                        $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
+                                    }
                                 }
-                            
                             }
-
-                            if($captcha_sitekey_check){
+    
+                            if(isset($captcha_sitekey)&&!empty($captcha_sitekey)){
                                 $api = new NoCaptchaProxyless();
                                 $api->setVerboseMode(true);
                                 //your anti-captcha.com account key
@@ -123,11 +114,11 @@ class SendEmailsThirdCommand extends Command
                                 }
                             }
                         }catch(\Throwable $e){
-                            
+    
                         }
                         
                         foreach($form->all() as $key =>$val){
-                        
+                           
                             try{
                                 $type = $val->getType();
                                 if($type == 'select'){
@@ -145,31 +136,38 @@ class SendEmailsThirdCommand extends Command
                             $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;
                             foreach($form->getValues() as $key => $value) {
                                 if(isset($data[$key]))continue;
-                                if(($value!=='' || strpos($key,'wpcf7')!==false)&&($key!=='_wpcf7_recaptcha_response')){
+                                if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                     $data[$key] = $value;
                                 }else {
-                                if((strpos($key,'nam')!==false || strpos($key,'お名前')!==false  )&& (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
-                                    $name_count++;
-                                }
-                                if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false){
+                                   if((strpos($key,'nam')!==false || strpos($key,'お名前')!==false  )&& (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
+                                       $name_count++;
+                                   }
+                                   if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false){
                                         $kana_count++;
-                                }
-                                if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false){
-                                    $postal_count++;
-                                }
-                                if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
-                                    $phone_count++;
-                                }
+                                   }
+                                   if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false){
+                                       $postal_count++;
+                                   }
+                                   if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
+                                       $phone_count++;
+                                   }
                                 }
                             }
-
+    
                             foreach($form->getValues() as $key => $val) {
-                                if(($val!=='' || strpos($key,'wpcf7')!==false)) continue;
-
+                                
+                                if(($val!=='' || strpos($key,'wpcf7')!==false)) {
+                                    if(strpos($val,'例')!==false){
+    
+                                    }else{
+                                        continue;
+                                    }
+                                }
+    
                                 if($name_count==1 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
                                     $data[$key] = $contact->surname.' '.$contact->lastname;
-
-
+    
+    
                                 }else if($name_count==2 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && !strpos($key,'kana')!==false){
                                     if(!isset($name_count_check)){
                                         $data[$key] = $contact->surname;
@@ -189,15 +187,15 @@ class SendEmailsThirdCommand extends Command
                                     $kana_count_check=1;
                                 }
         
-                                $emailTexts = array('company','cn','kaisha');
+                                $emailTexts = array('company','cn','kaisha','cop');
                                 foreach($emailTexts as $text) {
                                     if(strpos($key,$text)!==false){
                                         $data[$key] = $contact->company;
                                     }
                                 }
-
-                                if($postal_count==1 && (strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false)){
-                                    $data[$key] = $contact->postalCode1.' '.$contact->postalCode2;
+    
+                                if($postal_count==1 && (strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false|| strpos($key,'zip')!==false)){
+                                    $data[$key] = $contact->postalCode1.'-'.$contact->postalCode2;
                                 }else if($postal_count==2 && (strpos($key,'post')!==false || strpos($key,'郵便番号')!==false)){
                                     if(!isset($postal_count_check)){
                                         $data[$key] = $contact->postalCode1;
@@ -206,8 +204,8 @@ class SendEmailsThirdCommand extends Command
                                     }
                                     $postal_count_check=1;
                                 }
-
-                                $emailTexts = array('mail','mail_confirm','ールアドレス');
+    
+                                $emailTexts = array('mail','mail_confirm','ールアドレス','M_ADR');
                                 foreach($emailTexts as $text) {
                                     if(strpos($key,$text)!==false){
                                         $data[$key] = $contact->email;
@@ -225,8 +223,8 @@ class SendEmailsThirdCommand extends Command
                                         $data[$key] = $contact->title;
                                     }
                                 }
-
-                                $messageTexts = array('textarea','body','content','note','message','honbun','お問い合わせ内容','userData[お問い合わ内容]');
+    
+                                $messageTexts = array('textarea','body','content','comment','inquiry','note','message','MESSAGE','honbun','お問い合わせ内容','userData[お問い合わ内容]');
                                 foreach($messageTexts as $text) {
                                     if(strpos($key,$text)!==false){
                                         $content = str_replace('%company_name%', $company->name, $contact->content);
@@ -235,9 +233,9 @@ class SendEmailsThirdCommand extends Command
                                         $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                                     }
                                 }
-                            
-                            if($phone_count ==1 && (strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
-                                    $data[$key] = $contact->phoneNumber1.$contact->phoneNumber2.$contact->phoneNumber3;
+                               
+                               if($phone_count ==1 && (strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
+                                    $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
                                 }else if($phone_count ==3 && (strpos($key,'tel')!==false  || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false)) {
                                     if(!isset($phone_count_check)){
                                         $data[$key] = $contact->phoneNumber1;
@@ -249,19 +247,19 @@ class SendEmailsThirdCommand extends Command
                                     }
                                 }
                             }
-
+    
                             foreach($form->getValues() as $key => $val) {
-                            if(isset($data[$key]) &&($data[$key] !== "")){
+                              if(isset($data[$key]) &&($data[$key] !== "")){
                                 continue;
-                            } else {
-                                $data[$key] = " ";
+                              } else {
+                                $data[$key] = "054";
+                              }
                             }
-                            }
-
+    
                             $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
-
-                            if(strpos($crawler->text(),"ありがとうございま")!==false || strpos($crawler->text(),"送信されました")!==false){
-
+    
+                            if(strpos($crawler->text(),"ありがとうございま")!==false || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
+    
                                 $company->update([
                                     'status'        => '送信済み'
                                 ]);
@@ -269,7 +267,7 @@ class SendEmailsThirdCommand extends Command
                                     'is_delivered' => 2
                                 ]);
                             }else if(strpos($crawler->text(),"失敗")!==false){
-
+    
                                 $company->update([
                                     'status'        => '送信失敗'
                                 ]);
@@ -284,11 +282,11 @@ class SendEmailsThirdCommand extends Command
                                         $form = $crawler->filter('form')->form();
                                 }
                                 if(isset($form) && !empty($form)){
-                                
+                                  
                                     $crawler = $client->submit($form);
-
-                                    if(strpos($crawler->text(),"ありがとうございま") || strpos($crawler->text(),"送信されました")!==false){
-
+    
+                                    if(strpos($crawler->text(),"ありがとうございま") || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
+    
                                         $company->update([
                                             'status'        => '送信済み'
                                         ]);
