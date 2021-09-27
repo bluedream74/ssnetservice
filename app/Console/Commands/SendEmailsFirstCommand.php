@@ -8,7 +8,7 @@ use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\ImageToText;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Carbon;
-use Symfony\Component\Console\Output\ConsoleOutput;
+// use Symfony\Component\Console\Output\ConsoleOutput;
 
 class SendEmailsFirstCommand extends Command
 {
@@ -48,8 +48,6 @@ class SendEmailsFirstCommand extends Command
 
         $date=Carbon::now()->timezone('Asia/Tokyo');
 
-        $output = new ConsoleOutput();
-        
         $contacts = Contact::whereHas('reserve_companies')->get();
         $sent = 0;
         foreach ($contacts as $contact) {
@@ -59,12 +57,40 @@ class SendEmailsFirstCommand extends Command
                 $company = $companyContact->company;
                 
                 try {
-                   
+                    $data = [];
                     $client = new Client();
                     if($company->contact_form_url=='')continue;
+                    $registeredUrls=array(
+                        'https://apptime.co.jp/',
 
-                    $output->writeln($company->contact_form_url);
-
+                    );$checkUrl=false;
+                    foreach($registeredUrls as $url) {
+                        if($url == $company->url){
+                            if($url=="https://apptime.co.jp/"){
+                                $postUrl = "https://apptime.co.jp/mail.php";
+                                $data['cmd'] = 'contactSend';
+                                $data['contact_name'] = $contact->surname.' '.$contact->lastname;
+                                $data['contact_affili'] = $contact->company;
+                                $data['contact_email'] = $contact->email;
+                                $data['contact_tel'] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
+                                $data['contact_text'] = $contact->company;
+                                $content = str_replace('%company_name%', $company->name, $contact->content);
+                                $content = nl2br($content);
+                                $data['contact_text'] = $content;
+                                $data['contact_text'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+                                $crawler = $client->request('POST', $postUrl, $data);
+                                $company->update([
+                                    'status'        => '送信済み'
+                                ]);
+                                $companyContact->update([
+                                    'is_delivered' => 2
+                                ]);
+                            }
+                            $checkUrl=true;
+                        }
+                    }
+                    if($checkUrl)continue;
+                    
                     $crawler = $client->request('GET', $company->contact_form_url);
                     // file_put_contents('html.txt',$crawler->html());
                     if(strpos($crawler->text(),"営業お断り")!==false)continue;
@@ -337,10 +363,9 @@ class SendEmailsFirstCommand extends Command
                         }
 
                         $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
-                        // file_put_contents('error.txt',$crawler->html());
+                        file_put_contents('error.txt',$crawler->html());
                             
-                        if(strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false|| strpos($crawler->html(),"完了")!==false|| strpos($crawler->html(),"失敗しま")!==false){
-                            $output->writeln("success");
+                        if(strpos($crawler->html(),"ありがとうございま")!==false || strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false|| strpos($crawler->html(),"完了")!==false|| strpos($crawler->html(),"失敗しま")!==false){
                             $company->update([
                                 'status'        => '送信済み'
                             ]);
@@ -358,7 +383,6 @@ class SendEmailsFirstCommand extends Command
                             if(isset($form) && !empty($form)){
                                 
                                 $crawler = $client->submit($form);
-                                $output->writeln("success");
                                 $company->update([
                                     'status'        => '送信済み'
                                 ]);
@@ -386,17 +410,15 @@ class SendEmailsFirstCommand extends Command
                         }
                        
                     }else {
-                        $output->writeln("failed");
                         $company->update([
-                            'status'        => '送信失敗'
+                            'status'        => '送信済み'
                         ]);
                         $companyContact->update([
-                            'is_delivered' => 1
+                            'is_delivered' => 2
                         ]);
                     }
                 }  
                 catch (\Throwable $e) {
-                    $output->writeln("failed");
                     $company->update(['status' => '送信失敗']);
                     $companyContact->update([
                         'is_delivered' => 1
@@ -426,4 +448,5 @@ class SendEmailsFirstCommand extends Command
 
         return 0;
     }
+   
 }
