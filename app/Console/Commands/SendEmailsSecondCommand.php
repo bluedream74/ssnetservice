@@ -348,8 +348,12 @@ class SendEmailsSecondCommand extends Command
                                 try{
                                     $form = $crawler->selectButton('送信する')->form();
                                 }catch (\Throwable $e) {
+                                    
+                                }
+                                try{
                                     $form = $crawler->filter('form')->form();
-    
+                                }catch (\Throwable $e) {
+                                    
                                 }
                                 if(isset($form) && !empty($form)){
                                     
