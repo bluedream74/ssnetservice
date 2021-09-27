@@ -62,8 +62,6 @@ class SendEmailsThirdCommand extends Command
                         $client = new Client();
                         if($company->contact_form_url=='')continue;
     
-                        $output->writeln($company->contact_form_url);
-    
                         $crawler = $client->request('GET', $company->contact_form_url);
                         // file_put_contents('html.txt',$crawler->html());
                         if(strpos($crawler->text(),"営業お断り")!==false)continue;
@@ -338,8 +336,7 @@ class SendEmailsThirdCommand extends Command
                             $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
                             // file_put_contents('error.txt',$crawler->html());
                                 
-                            if(strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false|| strpos($crawler->html(),"完了")!==false|| strpos($crawler->html(),"失敗しま")!==false){
-                                $output->writeln("success");
+                            if(strpos($crawler->html(),"ありがとうございま")!==false ||strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false|| strpos($crawler->html(),"完了")!==false|| strpos($crawler->html(),"失敗しま")!==false){
                                 $company->update([
                                     'status'        => '送信済み'
                                 ]);
@@ -357,7 +354,6 @@ class SendEmailsThirdCommand extends Command
                                 if(isset($form) && !empty($form)){
                                     
                                     $crawler = $client->submit($form);
-                                    $output->writeln("success");
                                     $company->update([
                                         'status'        => '送信済み'
                                     ]);
@@ -385,17 +381,15 @@ class SendEmailsThirdCommand extends Command
                             }
                            
                         }else {
-                            $output->writeln("failed");
                             $company->update([
-                                'status'        => '送信失敗'
+                                'status'        => '送信済み'
                             ]);
                             $companyContact->update([
-                                'is_delivered' => 1
+                                'is_delivered' => 2
                             ]);
                         }
                     }  
                     catch (\Throwable $e) {
-                        $output->writeln("failed");
                         $company->update(['status' => '送信失敗']);
                         $companyContact->update([
                             'is_delivered' => 1
