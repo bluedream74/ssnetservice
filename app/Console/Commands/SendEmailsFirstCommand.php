@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Contact;
 use Goutte\Client;
+use LaravelAnticaptcha\Anticaptcha\ImageToText;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Carbon;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -102,8 +103,21 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                         }
-
+                        try{
+                            $image = $crawler->selectImage('captcha')->image();
+                            $imageurl = $image->getUri();
+                        }catch(\Throwable $e){
+                            
+                        }
+                        
                         if(isset($captcha_sitekey)){
+                            
+                            try{
+                                $index = '#captchaImage'.$captcha_sitekey;
+                                $imageurl = $crawler->filter($index)->image()->getUri();
+                            }catch(\Throwable $e){
+                                
+                            }
                             $api = new NoCaptchaProxyless();
                             $api->setVerboseMode(true);
                             //your anti-captcha.com account key
@@ -112,9 +126,9 @@ class SendEmailsFirstCommand extends Command
                             //recaptcha key from target website
                             $api->setWebsiteURL($company->contact_form_url);
                             $api->setWebsiteKey($captcha_sitekey);
-                            
+
                             if (!$api->createTask()) {
-                                continue;                            
+                                continue;
                             }
                             $taskId = $api->getTaskId();
                         
@@ -129,19 +143,48 @@ class SendEmailsFirstCommand extends Command
                                         $data['g-recaptcha-response'] = $recaptchaToken;
                                     }else if(strpos($key,'recaptcha_response')!==false){
                                         $data['recaptcha_response'] = $recaptchaToken;
-                                    }else if(strpos($key,'captcha-170')!==false){
+                                    }
+                                }
+                            }
+                        }
+                        if(isset($imageurl)){
+
+                            $apiImage = new ImageToText();
+                            $apiImage->setVerboseMode(true);
+                                    
+                            //your anti-captcha.com account key
+                            $apiImage->setKey(config('anticaptcha.key'));
+
+                            //setting file
+                            $apiImage->setFile($imageurl);
+
+                            if (!$apiImage->createTask()) {
+                                continue;
+                            }
+
+                            $taskId = $apiImage->getTaskId();
+
+
+                            if (!$apiImage->waitForResult()) {
+                                continue;
+                            } else {
+                                $captchaText = $apiImage->getTaskSolution();
+                                foreach($form->all() as $key=>$val) {
+                                    if(strpos($key,'captcha-170')!==false){
                                         $data['captcha-170'] = $recaptchaToken;
                                     }else if(strpos($key,'captcha')!==false){
                                         $data['captcha'] = $recaptchaToken;
                                     }
                                 }
                             }
+                           
                         }
                     }catch(\Throwable $e){
+                        file_put_contents('error.txt',$e->getMessage());
 
                     }
                     
-                    foreach($form->all() as $key =>$val){
+                        foreach($form->all() as $key =>$val){
                        
                         try{
                             $type = $val->getType();
@@ -180,7 +223,7 @@ class SendEmailsFirstCommand extends Command
                         $num_count=0;
                         foreach($form->getValues() as $key => $val) {
                             
-                            if(($val!=='' || strpos($key,'wpcf7')!==false)) {
+                            if(($val!=='' || strpos($key,'wpcf7')!==false||strpos($key,'captcha')!==false)) {
                                 if(strpos($val,'例')!==false){
 
                                 }else{
@@ -287,7 +330,7 @@ class SendEmailsFirstCommand extends Command
                         }
 
                         foreach($form->getValues() as $key => $val) {
-                            if((isset($data[$key]) || strpos($key,'wpcf7')!==false)) {
+                            if((isset($data[$key]) || strpos($key,'wpcf7')!==false ||strpos($key,'captcha')!==false)) {
                                 continue;
                             }else {
                                 $data[$key] = "054";
