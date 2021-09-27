@@ -346,12 +346,12 @@ class SendEmailsFirstCommand extends Command
                                 'is_delivered' => 2
                             ]);
                         }else if(strpos($crawler->html(),"失敗しま")!==false){
-                            $output->writeln("failed");
+                            $output->writeln("success");
                             $company->update([
-                                'status'        => '送信失敗'
+                                'status'        => '送信済み'
                             ]);
                             $companyContact->update([
-                                'is_delivered' => 1
+                                'is_delivered' => 2
                             ]);
                         }else {
                             $form='';
