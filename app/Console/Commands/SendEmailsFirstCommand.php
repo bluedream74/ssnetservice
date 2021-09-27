@@ -147,7 +147,7 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                         }
-                        if(isset($imageurl)){
+                        if(isset($imageurl)&&!empty($imageurl)){
 
                             $apiImage = new ImageToText();
                             $apiImage->setVerboseMode(true);
@@ -157,7 +157,7 @@ class SendEmailsFirstCommand extends Command
 
                             //setting file
                             $apiImage->setFile($imageurl);
-
+                            $imageurl = "";
                             if (!$apiImage->createTask()) {
                                 continue;
                             }
@@ -184,7 +184,7 @@ class SendEmailsFirstCommand extends Command
 
                     }
                     
-                        foreach($form->all() as $key =>$val){
+                    foreach($form->all() as $key =>$val){
                        
                         try{
                             $type = $val->getType();
@@ -206,12 +206,11 @@ class SendEmailsFirstCommand extends Command
                             if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                 $data[$key] = $value;
                             }else {
-                               if((strpos($key,'nam')!==false || strpos($key,'お名前')!==false  )&& (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
-                                   $name_count++;
-                               }
-                               if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false){
+                               if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false|| strpos($key,'namek')!==false){
                                     $kana_count++;
-                               }
+                               }else if((strpos($key,'nam')!==false || strpos($key,'お名前')!==false )){
+                                    $name_count++;
+                                }
                                if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false){
                                    $postal_count++;
                                }
@@ -231,18 +230,7 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                             $num_count++;
-                            if($name_count==1 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
-                                $data[$key] = $contact->surname.' '.$contact->lastname;
-
-
-                            }else if($name_count==2 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && !strpos($key,'kana')!==false){
-                                if(!isset($name_count_check)){
-                                    $data[$key] = $contact->surname;
-                                }else {
-                                    $data[$key] = $contact->lastname;
-                                }
-                                $name_count_check=1;
-                            }
+                            
                             if($kana_count==1 && (strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false)){
                                 $data[$key] = $contact->fu_surname.' '.$contact->fu_lastname;
                             }else if($kana_count==2 && (strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false)){
@@ -252,9 +240,18 @@ class SendEmailsFirstCommand extends Command
                                     $data[$key] = $contact->fu_lastname;
                                 }
                                 $kana_count_check=1;
+                            }else if($name_count==1 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false )){
+                                $data[$key] = $contact->surname.' '.$contact->lastname;
+                            }else if($name_count==2 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false )){
+                                if(!isset($name_count_check)){
+                                    $data[$key] = $contact->surname;
+                                }else {
+                                    $data[$key] = $contact->lastname;
+                                }
+                                $name_count_check=1;
                             }
     
-                            $emailTexts = array('company','cn','kaisha','cop');
+                            $emailTexts = array('company','cn','kaisha','cop','corp');
                             foreach($emailTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $data[$key] = $contact->company;
@@ -330,7 +327,7 @@ class SendEmailsFirstCommand extends Command
                         }
 
                         foreach($form->getValues() as $key => $val) {
-                            if((isset($data[$key]) || strpos($key,'wpcf7')!==false ||strpos($key,'captcha')!==false)) {
+                            if((isset($data[$key]) || strpos($key,'wpcf7')!==false ||strpos($key,'captcha')!==false||strpos($key,'url')!==false)) {
                                 continue;
                             }else {
                                 $data[$key] = "054";
@@ -348,7 +345,7 @@ class SendEmailsFirstCommand extends Command
                             $companyContact->update([
                                 'is_delivered' => 2
                             ]);
-                        }else if(strpos($crawler->html(),"失敗")!==false){
+                        }else if(strpos($crawler->html(),"失敗しま")!==false){
                             $output->writeln("failed");
                             $company->update([
                                 'status'        => '送信失敗'

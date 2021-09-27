@@ -1,1 +1,0 @@
-API error ERROR_ZERO_CAPTCHA_FILESIZE : The size of the captcha you are uploading is less than 100 bytes
