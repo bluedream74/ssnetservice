@@ -102,8 +102,21 @@ class SendEmailsSecondCommand extends Command
                                     }
                                 }
                             }
-    
+                            // try{
+                            //     $image = $crawler->selectImage('captcha')->image();
+                            //     $imageurl = $image->getUri();
+                            // }catch(\Throwable $e){
+                                
+                            // }
+                            
                             if(isset($captcha_sitekey)){
+                                
+                                // try{
+                                //     $index = '#captchaImage'.$captcha_sitekey;
+                                //     $imageurl = $crawler->filter($index)->image()->getUri();
+                                // }catch(\Throwable $e){
+                                    
+                                // }
                                 $api = new NoCaptchaProxyless();
                                 $api->setVerboseMode(true);
                                 //your anti-captcha.com account key
@@ -112,9 +125,9 @@ class SendEmailsSecondCommand extends Command
                                 //recaptcha key from target website
                                 $api->setWebsiteURL($company->contact_form_url);
                                 $api->setWebsiteKey($captcha_sitekey);
-                                
+    
                                 if (!$api->createTask()) {
-                                    continue;                            
+                                    continue;
                                 }
                                 $taskId = $api->getTaskId();
                             
@@ -129,15 +142,44 @@ class SendEmailsSecondCommand extends Command
                                             $data['g-recaptcha-response'] = $recaptchaToken;
                                         }else if(strpos($key,'recaptcha_response')!==false){
                                             $data['recaptcha_response'] = $recaptchaToken;
-                                        }else if(strpos($key,'captcha-170')!==false){
-                                            $data['captcha-170'] = $recaptchaToken;
-                                        }else if(strpos($key,'captcha')!==false){
-                                            $data['captcha'] = $recaptchaToken;
                                         }
                                     }
                                 }
                             }
+                            // if(isset($imageurl)&&!empty($imageurl)){
+    
+                            //     $apiImage = new ImageToText();
+                            //     $apiImage->setVerboseMode(true);
+                                        
+                            //     //your anti-captcha.com account key
+                            //     $apiImage->setKey(config('anticaptcha.key'));
+    
+                            //     //setting file
+                            //     $apiImage->setFile($imageurl);
+                            //     $imageurl = "";
+                            //     if (!$apiImage->createTask()) {
+                            //         continue;
+                            //     }
+    
+                            //     $taskId = $apiImage->getTaskId();
+    
+    
+                            //     if (!$apiImage->waitForResult()) {
+                            //         continue;
+                            //     } else {
+                            //         $captchaText = $apiImage->getTaskSolution();
+                            //         foreach($form->all() as $key=>$val) {
+                            //             if(strpos($key,'captcha-170')!==false){
+                            //                 $data['captcha-170'] = $recaptchaToken;
+                            //             }else if(strpos($key,'captcha')!==false){
+                            //                 $data['captcha'] = $recaptchaToken;
+                            //             }
+                            //         }
+                            //     }
+                               
+                            // }
                         }catch(\Throwable $e){
+                            // file_put_contents('error.txt',$e->getMessage());
     
                         }
                         
@@ -163,12 +205,11 @@ class SendEmailsSecondCommand extends Command
                                 if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                     $data[$key] = $value;
                                 }else {
-                                   if((strpos($key,'nam')!==false || strpos($key,'お名前')!==false  )&& (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
-                                       $name_count++;
-                                   }
-                                   if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false){
+                                   if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false|| strpos($key,'namek')!==false){
                                         $kana_count++;
-                                   }
+                                   }else if((strpos($key,'nam')!==false || strpos($key,'お名前')!==false )){
+                                        $name_count++;
+                                    }
                                    if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false){
                                        $postal_count++;
                                    }
@@ -180,7 +221,7 @@ class SendEmailsSecondCommand extends Command
                             $num_count=0;
                             foreach($form->getValues() as $key => $val) {
                                 
-                                if(($val!=='' || strpos($key,'wpcf7')!==false)) {
+                                if(($val!=='' || strpos($key,'wpcf7')!==false||strpos($key,'captcha')!==false)) {
                                     if(strpos($val,'例')!==false){
     
                                     }else{
@@ -188,18 +229,7 @@ class SendEmailsSecondCommand extends Command
                                     }
                                 }
                                 $num_count++;
-                                if($name_count==1 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && (!strpos($key,'kana')!==false || !strpos($key,'Kana')!==false)){
-                                    $data[$key] = $contact->surname.' '.$contact->lastname;
-    
-    
-                                }else if($name_count==2 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false ) && !strpos($key,'kana')!==false){
-                                    if(!isset($name_count_check)){
-                                        $data[$key] = $contact->surname;
-                                    }else {
-                                        $data[$key] = $contact->lastname;
-                                    }
-                                    $name_count_check=1;
-                                }
+                                
                                 if($kana_count==1 && (strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false)){
                                     $data[$key] = $contact->fu_surname.' '.$contact->fu_lastname;
                                 }else if($kana_count==2 && (strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false)){
@@ -209,24 +239,35 @@ class SendEmailsSecondCommand extends Command
                                         $data[$key] = $contact->fu_lastname;
                                     }
                                     $kana_count_check=1;
+                                }else if($name_count==1 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false )){
+                                    $data[$key] = $contact->surname.' '.$contact->lastname;
+                                }else if($name_count==2 && (strpos($key,'nam')!==false || strpos($key,'お名前')!==false )){
+                                    if(!isset($name_count_check)){
+                                        $data[$key] = $contact->surname;
+                                    }else {
+                                        $data[$key] = $contact->lastname;
+                                    }
+                                    $name_count_check=1;
                                 }
         
-                                $emailTexts = array('company','cn','kaisha','cop');
+                                $emailTexts = array('company','cn','kaisha','cop','corp');
                                 foreach($emailTexts as $text) {
                                     if(strpos($key,$text)!==false){
                                         $data[$key] = $contact->company;
                                     }
                                 }
     
-                                if($postal_count==1 && (strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false|| strpos($key,'zip')!==false)){
-                                    $data[$key] = $contact->postalCode1.'-'.$contact->postalCode2;
-                                }else if($postal_count==2 && (strpos($key,'post')!==false || strpos($key,'郵便番号')!==false)){
-                                    if(!isset($postal_count_check)){
-                                        $data[$key] = $contact->postalCode1;
-                                    }else {
-                                        $data[$key] = $contact->postalCode2;
+                                if(strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false|| strpos($key,'zip')!==false){
+                                    if($postal_count==1){
+                                        $data[$key] = $contact->postalCode1.'-'.$contact->postalCode2;
+                                    }else if($postal_count==2){
+                                        if(!isset($postal_count_check)){
+                                            $data[$key] = $contact->postalCode1;
+                                        }else {
+                                            $data[$key] = $contact->postalCode2;
+                                        }
+                                        $postal_count_check=1;
                                     }
-                                    $postal_count_check=1;
                                 }
     
                                 $emailTexts = array('mail','mail_confirm','ールアドレス','M_ADR');
@@ -287,7 +328,7 @@ class SendEmailsSecondCommand extends Command
                             }
     
                             foreach($form->getValues() as $key => $val) {
-                                if((isset($data[$key]) || strpos($key,'wpcf7')!==false)) {
+                                if((isset($data[$key]) || strpos($key,'wpcf7')!==false ||strpos($key,'captcha')!==false||strpos($key,'url')!==false)) {
                                     continue;
                                 }else {
                                     $data[$key] = "054";
@@ -297,7 +338,7 @@ class SendEmailsSecondCommand extends Command
                             $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
                             // file_put_contents('error.txt',$crawler->html());
                                 
-                            if(strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false||  strpos($crawler->html(),"完了")!==false){
+                            if(strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false|| strpos($crawler->html(),"完了")!==false|| strpos($crawler->html(),"失敗しま")!==false){
                                 $output->writeln("success");
                                 $company->update([
                                     'status'        => '送信済み'
@@ -305,45 +346,41 @@ class SendEmailsSecondCommand extends Command
                                 $companyContact->update([
                                     'is_delivered' => 2
                                 ]);
-                            }else if(strpos($crawler->html(),"失敗")!==false){
-                                $output->writeln("failed");
-                                $company->update([
-                                    'status'        => '送信失敗'
-                                ]);
-                                $companyContact->update([
-                                    'is_delivered' => 1
-                                ]);
                             }else {
                                 $form='';
-                                // 送信する
                                 try{
                                     $form = $crawler->selectButton('送信する')->form();
                                 }catch (\Throwable $e) {
                                     $form = $crawler->filter('form')->form();
     
                                 }
-                                
                                 if(isset($form) && !empty($form)){
                                     
                                     $crawler = $client->submit($form);
-    
-                                    if(strpos($crawler->html(),"ありがとうございま")!==false|| strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false || strpos($crawler->html(),"完了")!==false){
-                                        $output->writeln("success");
-                                        $company->update([
-                                            'status'        => '送信済み'
-                                        ]);
-                                        $companyContact->update([
-                                            'is_delivered' => 2
-                                        ]);
-                                }else {
-                                        $output->writeln("failed");
-                                        $company->update([
-                                            'status'        => '送信失敗'
-                                        ]);
-                                        $companyContact->update([
-                                            'is_delivered' => 1
-                                        ]);
-                                    }
+                                    $output->writeln("success");
+                                    $company->update([
+                                        'status'        => '送信済み'
+                                    ]);
+                                    $companyContact->update([
+                                        'is_delivered' => 2
+                                    ]);
+                                    // if(strpos($crawler->html(),"ありがとうございま")!==false|| strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false || strpos($crawler->html(),"完了")!==false){
+                                    //     $output->writeln("success");
+                                    //     $company->update([
+                                    //         'status'        => '送信済み'
+                                    //     ]);
+                                    //     $companyContact->update([
+                                    //         'is_delivered' => 2
+                                    //     ]);
+                                    // }else {
+                                    //     $output->writeln("failed");
+                                    //     $company->update([
+                                    //         'status'        => '送信失敗'
+                                    //     ]);
+                                    //     $companyContact->update([
+                                    //         'is_delivered' => 1
+                                    //     ]);
+                                    // }
                                 }
                             }
                            
