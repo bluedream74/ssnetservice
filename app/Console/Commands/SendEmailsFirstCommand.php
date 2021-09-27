@@ -65,7 +65,7 @@ class SendEmailsFirstCommand extends Command
                     $output->writeln($company->contact_form_url);
 
                     $crawler = $client->request('GET', $company->contact_form_url);
-                    file_put_contents('html.txt',$crawler->html());
+                    // file_put_contents('html.txt',$crawler->html());
                     if(strpos($crawler->text(),"営業お断り")!==false)continue;
 
                     try{
@@ -287,15 +287,15 @@ class SendEmailsFirstCommand extends Command
                         }
 
                         foreach($form->getValues() as $key => $val) {
-                          if(isset($data[$key]) &&($data[$key] !== "")){
-                            continue;
-                          } else {
-                            $data[$key] = "054";
-                          }
+                            if((isset($data[$key]) || strpos($key,'wpcf7')!==false)) {
+                                continue;
+                            }else {
+                                $data[$key] = "054";
+                            }
                         }
 
                         $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
-                       
+                        // file_put_contents('error.txt',$crawler->html());
                             
                         if(strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false||  strpos($crawler->html(),"完了")!==false){
                             $output->writeln("success");

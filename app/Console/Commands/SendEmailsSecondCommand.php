@@ -58,11 +58,14 @@ class SendEmailsSecondCommand extends Command
                     $company = $companyContact->company;
                     
                     try {
+                   
                         $client = new Client();
                         if($company->contact_form_url=='')continue;
     
+                        $output->writeln($company->contact_form_url);
     
                         $crawler = $client->request('GET', $company->contact_form_url);
+                        // file_put_contents('html.txt',$crawler->html());
                         if(strpos($crawler->text(),"営業お断り")!==false)continue;
     
                         try{
@@ -73,8 +76,23 @@ class SendEmailsSecondCommand extends Command
                        
                         $data = [];
                         try {
-        
-                            if(strpos($crawler->text(),'sitekey')!==false){
+                            if(strpos($crawler->html(),'api.js?render')!==false){
+                                $key_position = strpos($crawler->html(),'api.js?render');
+                                if(isset($key_position)){
+                                    $captcha_sitekey = substr($crawler->html(),$key_position+14,40);
+                                }
+                            }else if(strpos($crawler->html(),'changeCaptcha')!==false){
+                                $key_position = strpos($crawler->html(),'changeCaptcha');
+                                if(isset($key_position)){
+                                    $captcha_sitekey = substr($crawler->html(),$key_position+15,40);
+                                }
+                            }else if(strpos($crawler->html(),'wpcf7submit')!==false){
+                                $key_position = strpos($crawler->html(),'wpcf7submit');
+                                if(isset($key_position)){
+                                    $str = substr($crawler->html(),$key_position);
+                                    $captcha_sitekey = substr($str,strpos($str,'grecaptcha')+13,40);
+                                }
+                            }else if(strpos($crawler->text(),'sitekey')!==false){
                                 $key_position = strpos($crawler->text(),'sitekey');
                                 if(isset($key_position)){
                                     if((substr($crawler->text(),$key_position+9,1)=="'"||(substr($crawler->text(),$key_position+9,1)=='"'))){
@@ -82,11 +100,6 @@ class SendEmailsSecondCommand extends Command
                                     }else if((substr($crawler->text(),$key_position+11,1)=="'"||(substr($crawler->text(),$key_position11,1)=='"'))){
                                         $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
                                     }
-                                }
-                            }else if(strpos($crawler->html(),'changeCaptcha')!==false){
-                                $key_position = strpos($crawler->html(),'changeCaptcha');
-                                if(isset($key_position)){
-                                    $captcha_sitekey = substr($crawler->html(),$key_position+15,40);
                                 }
                             }
     
@@ -109,10 +122,18 @@ class SendEmailsSecondCommand extends Command
                                     continue;
                                 } else {
                                     $recaptchaToken = $api->getTaskSolution();
-                                    if(strpos($crawler->text(),'wpcf7_recaptcha')!==false){
-                                        $data['_wpcf7_recaptcha_response'] = $recaptchaToken; //g-recaptcha-response
-                                    } else {
-                                        $data['g-recaptcha-response'] = $recaptchaToken; //g-recaptcha-response
+                                    foreach($form->all() as $key=>$val) {
+                                        if(strpos($key,'wpcf7_recaptcha')!==false){
+                                            $data['_wpcf7_recaptcha_response'] = $recaptchaToken;
+                                        }else if(strpos($key,'g-recaptcha-response')!==false){
+                                            $data['g-recaptcha-response'] = $recaptchaToken;
+                                        }else if(strpos($key,'recaptcha_response')!==false){
+                                            $data['recaptcha_response'] = $recaptchaToken;
+                                        }else if(strpos($key,'captcha-170')!==false){
+                                            $data['captcha-170'] = $recaptchaToken;
+                                        }else if(strpos($key,'captcha')!==false){
+                                            $data['captcha'] = $recaptchaToken;
+                                        }
                                     }
                                 }
                             }
@@ -266,25 +287,26 @@ class SendEmailsSecondCommand extends Command
                             }
     
                             foreach($form->getValues() as $key => $val) {
-                              if(isset($data[$key]) &&($data[$key] !== "")){
-                                continue;
-                              } else {
-                                $data[$key] = "054";
-                              }
+                                if((isset($data[$key]) || strpos($key,'wpcf7')!==false)) {
+                                    continue;
+                                }else {
+                                    $data[$key] = "054";
+                                }
                             }
     
                             $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
-                            // file_put_contents('error.txt',$crawler->text());
-                            if(strpos($crawler->text(),"ありがとうございま")!==false|| strpos($crawler->text(),"有難うございま")!==false || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
-    
+                            // file_put_contents('error.txt',$crawler->html());
+                                
+                            if(strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false||  strpos($crawler->html(),"完了")!==false){
+                                $output->writeln("success");
                                 $company->update([
                                     'status'        => '送信済み'
                                 ]);
                                 $companyContact->update([
                                     'is_delivered' => 2
                                 ]);
-                            }else if(strpos($crawler->text(),"失敗")!==false){
-                                
+                            }else if(strpos($crawler->html(),"失敗")!==false){
+                                $output->writeln("failed");
                                 $company->update([
                                     'status'        => '送信失敗'
                                 ]);
@@ -298,14 +320,15 @@ class SendEmailsSecondCommand extends Command
                                     $form = $crawler->selectButton('送信する')->form();
                                 }catch (\Throwable $e) {
                                     $form = $crawler->filter('form')->form();
+    
                                 }
                                 
                                 if(isset($form) && !empty($form)){
-                                  
+                                    
                                     $crawler = $client->submit($form);
     
-                                    if(strpos($crawler->text(),"ありがとうございま") || strpos($crawler->text(),"送信されました")!==false || strpos($crawler->text(),"完了")!==false){
-    
+                                    if(strpos($crawler->html(),"ありがとうございま")!==false|| strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false || strpos($crawler->html(),"完了")!==false){
+                                        $output->writeln("success");
                                         $company->update([
                                             'status'        => '送信済み'
                                         ]);
@@ -313,6 +336,7 @@ class SendEmailsSecondCommand extends Command
                                             'is_delivered' => 2
                                         ]);
                                 }else {
+                                        $output->writeln("failed");
                                         $company->update([
                                             'status'        => '送信失敗'
                                         ]);
@@ -322,7 +346,9 @@ class SendEmailsSecondCommand extends Command
                                     }
                                 }
                             }
+                           
                         }else {
+                            $output->writeln("failed");
                             $company->update([
                                 'status'        => '送信失敗'
                             ]);
@@ -332,7 +358,7 @@ class SendEmailsSecondCommand extends Command
                         }
                     }  
                     catch (\Throwable $e) {
-                        
+                        $output->writeln("failed");
                         $company->update(['status' => '送信失敗']);
                         $companyContact->update([
                             'is_delivered' => 1
