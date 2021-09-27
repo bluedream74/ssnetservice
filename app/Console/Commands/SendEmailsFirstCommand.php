@@ -157,7 +157,7 @@ class SendEmailsFirstCommand extends Command
 
                             //setting file
                             $apiImage->setFile($imageurl);
-
+                            $imageurl = "";
                             if (!$apiImage->createTask()) {
                                 continue;
                             }
