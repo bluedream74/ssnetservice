@@ -60,36 +60,36 @@ class SendEmailsFirstCommand extends Command
                     $data = [];
                     $client = new Client();
                     if($company->contact_form_url=='')continue;
-                    // $registeredUrls=array(
-                    //     'https://apptime.co.jp/',
+                    $registeredUrls=array(
+                        'https://apptime.co.jp/',
 
-                    // );$checkUrl=false;
-                    // foreach($registeredUrls as $url) {
-                    //     if($url == $company->url){
-                    //         if($url=="https://apptime.co.jp/"){
-                    //             $postUrl = "https://apptime.co.jp/mail.php";
-                    //             $data['cmd'] = 'contactSend';
-                    //             $data['contact_name'] = $contact->surname.' '.$contact->lastname;
-                    //             $data['contact_affili'] = $contact->company;
-                    //             $data['contact_email'] = $contact->email;
-                    //             $data['contact_tel'] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
-                    //             $data['contact_text'] = $contact->company;
-                    //             $content = str_replace('%company_name%', $company->name, $contact->content);
-                    //             $content = nl2br($content);
-                    //             $data['contact_text'] = $content;
-                    //             $data['contact_text'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
-                    //             $crawler = $client->request('POST', $postUrl, $data);
-                    //             $company->update([
-                    //                 'status'        => '送信済み'
-                    //             ]);
-                    //             $companyContact->update([
-                    //                 'is_delivered' => 2
-                    //             ]);
-                    //         }
-                    //         $checkUrl=true;
-                    //     }
-                    // }
-                    // if($checkUrl)continue;
+                    );$checkUrl=false;
+                    foreach($registeredUrls as $url) {
+                        if($url == $company->url){
+                            if($url=="https://apptime.co.jp/"){
+                                $postUrl = "https://apptime.co.jp/mail.php";
+                                $data['cmd'] = 'contactSend';
+                                $data['contact_name'] = $contact->surname.' '.$contact->lastname;
+                                $data['contact_affili'] = $contact->company;
+                                $data['contact_email'] = $contact->email;
+                                $data['contact_tel'] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
+                                $data['contact_text'] = $contact->company;
+                                $content = str_replace('%company_name%', $company->name, $contact->content);
+                                $content = nl2br($content);
+                                $data['contact_text'] = $content;
+                                $data['contact_text'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+                                $crawler = $client->request('POST', $postUrl, $data);
+                                $company->update([
+                                    'status'        => '送信済み'
+                                ]);
+                                $companyContact->update([
+                                    'is_delivered' => 2
+                                ]);
+                            }
+                            $checkUrl=true;
+                        }
+                    }
+                    if($checkUrl)continue;
                     
                     $crawler = $client->request('GET', $company->contact_form_url);
                     // file_put_contents('html.txt',$crawler->html());
@@ -433,6 +433,7 @@ class SendEmailsFirstCommand extends Command
                             'status'        => '送信済み'
                         ]);
                         $companyContact->update([
+
                             'is_delivered' => 2
                         ]);
                     }
