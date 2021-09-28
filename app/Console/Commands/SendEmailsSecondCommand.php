@@ -334,9 +334,8 @@ class SendEmailsSecondCommand extends Command
                             }
     
                             $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
-                            // file_put_contents('error.txt',$crawler->html());
-                                
-                            if(strpos($crawler->html(),"ありがとうございま")!==false ||strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false|| strpos($crawler->html(),"完了")!==false|| strpos($crawler->html(),"失敗しま")!==false){
+                            
+                            if(strpos($crawler->html(),"ありがとうございま")!==false || strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false|| strpos($crawler->html(),"完了")!==false|| strpos($crawler->html(),"失敗しま")!==false){
                                 $company->update([
                                     'status'        => '送信済み'
                                 ]);
@@ -355,33 +354,42 @@ class SendEmailsSecondCommand extends Command
                                 }catch (\Throwable $e) {
                                     
                                 }
-                                if(isset($form) && !empty($form)){
+                                try{
+                                    if(isset($form) && !empty($form)){
                                     
-                                    $crawler = $client->submit($form);
-                                    $company->update([
-                                        'status'        => '送信済み'
-                                    ]);
-                                    $companyContact->update([
-                                        'is_delivered' => 2
-                                    ]);
-                                    // if(strpos($crawler->html(),"ありがとうございま")!==false|| strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false || strpos($crawler->html(),"完了")!==false){
-                                    //     $output->writeln("success");
-                                    //     $company->update([
-                                    //         'status'        => '送信済み'
-                                    //     ]);
-                                    //     $companyContact->update([
-                                    //         'is_delivered' => 2
-                                    //     ]);
-                                    // }else {
-                                    //     $output->writeln("failed");
-                                    //     $company->update([
-                                    //         'status'        => '送信失敗'
-                                    //     ]);
-                                    //     $companyContact->update([
-                                    //         'is_delivered' => 1
-                                    //     ]);
-                                    // }
-                                }else {
+                                        $crawler = $client->submit($form);
+                                        $company->update([
+                                            'status'        => '送信済み'
+                                        ]);
+                                        $companyContact->update([
+                                            'is_delivered' => 2
+                                        ]);
+                                        // if(strpos($crawler->html(),"ありがとうございま")!==false|| strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false || strpos($crawler->html(),"完了")!==false){
+                                        //     $output->writeln("success");
+                                        //     $company->update([
+                                        //         'status'        => '送信済み'
+                                        //     ]);
+                                        //     $companyContact->update([
+                                        //         'is_delivered' => 2
+                                        //     ]);
+                                        // }else {
+                                        //     $output->writeln("failed");
+                                        //     $company->update([
+                                        //         'status'        => '送信失敗'
+                                        //     ]);
+                                        //     $companyContact->update([
+                                        //         'is_delivered' => 1
+                                        //     ]);
+                                        // }
+                                    }else {
+                                        $company->update([
+                                            'status'        => '送信済み'
+                                        ]);
+                                        $companyContact->update([
+                                            'is_delivered' => 2
+                                        ]);
+                                    }
+                                }catch (\Throwable $e) {
                                     $company->update([
                                         'status'        => '送信済み'
                                     ]);
