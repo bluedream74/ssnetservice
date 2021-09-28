@@ -62,11 +62,12 @@ class SendEmailsFirstCommand extends Command
                     if($company->contact_form_url=='')continue;
                     $registeredUrls=array(
                         'https://apptime.co.jp/',
+                        'https://www.amr.co.jp/'
 
                     );$checkUrl=false;
                     foreach($registeredUrls as $url) {
                         if($url == $company->url){
-                            if($url=="https://apptime.co.jp/"){
+                            if(strpos($url,"https://apptime.co.jp")!==false){
                                 $postUrl = "https://apptime.co.jp/mail.php";
                                 $data['cmd'] = 'contactSend';
                                 $data['contact_name'] = $contact->surname.' '.$contact->lastname;
@@ -75,10 +76,17 @@ class SendEmailsFirstCommand extends Command
                                 $data['contact_tel'] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
                                 $data['contact_text'] = $contact->company;
                                 $content = str_replace('%company_name%', $company->name, $contact->content);
-                                $content = nl2br($content);
                                 $data['contact_text'] = $content;
                                 $data['contact_text'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                                 $crawler = $client->request('POST', $postUrl, $data);
+                                $company->update([
+                                    'status'        => '送信済み'
+                                ]);
+                                $companyContact->update([
+                                    'is_delivered' => 2
+                                ]);
+                            }
+                            if(strpos($url,"https://www.amr.co.jp")!==false){
                                 $company->update([
                                     'status'        => '送信済み'
                                 ]);
@@ -320,7 +328,6 @@ class SendEmailsFirstCommand extends Command
                             foreach($messageTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
-                                    $content = nl2br($content);
                                     $data[$key] = $content;
                                     $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                                 }
@@ -348,7 +355,6 @@ class SendEmailsFirstCommand extends Command
                             }
                             if(($num_count==5) && !isset($data[$key])){
                                 $content = str_replace('%company_name%', $company->name, $contact->content);
-                                $content = nl2br($content);
                                 $data[$key] = $content;
                                 $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                             }
