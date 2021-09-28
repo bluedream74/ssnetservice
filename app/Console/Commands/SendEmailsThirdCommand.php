@@ -319,7 +319,6 @@ class SendEmailsThirdCommand extends Command
                                 }
                                 if(($num_count==5) && !isset($data[$key])){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
-                                    $content = nl2br($content);
                                     $data[$key] = $content;
                                     $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                                 }

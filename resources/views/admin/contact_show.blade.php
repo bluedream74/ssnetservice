@@ -54,7 +54,7 @@
             </div>
             <div class="row mb-3">
                 <label class="col-sm-4">内容</label>
-                <div class="col-sm-8 pre-wrap">{!! $contact->content !!}</div>
+                <div class="col-sm-8 pre-wrap">{!! nl2br($contact->content) !!}</div>
             </div>
             <div class="row mb-3">
                 <label class="col-sm-4">郵便番号</label>
