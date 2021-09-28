@@ -60,7 +60,7 @@ class SendEmailsFirstCommand extends Command
                     $data = [];
                     $client = new Client();
                     if($company->contact_form_url=='')continue;
-                    if(strpos($company->url,"https://apptime.co.jp")!==false || strpos($company->url,"https://www.amr.co.jp")!==false){
+                    // if(strpos($company->url,"https://apptime.co.jp")!==false || strpos($company->url,"https://www.amr.co.jp")!==false){
                         // $postUrl = "https://apptime.co.jp/mail.php";
                         // $data['cmd'] = 'contactSend';
                         // $data['contact_name'] = $contact->surname.' '.$contact->lastname;
@@ -72,13 +72,13 @@ class SendEmailsFirstCommand extends Command
                         // $data['contact_text'] = $content;
                         // $data['contact_text'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                         // $crawler = $client->request('POST', $postUrl, $data);
-                        $company->update([
-                            'status'        => '送信済み'
-                        ]);
-                        $companyContact->update([
-                            'is_delivered' => 2
-                        ]);
-                    }
+                    //     $company->update([
+                    //         'status'        => '送信済み'
+                    //     ]);
+                    //     $companyContact->update([
+                    //         'is_delivered' => 2
+                    //     ]);
+                    // }
                     
                     $crawler = $client->request('GET', $company->contact_form_url);
                     // file_put_contents('html.txt',$crawler->html());
