@@ -90,6 +90,7 @@ class SendEmailsFirstCommand extends Command
                         }
                     }
                     if($checkUrl)continue;
+                    $checkUrl=false;
                     
                     $crawler = $client->request('GET', $company->contact_form_url);
                     // file_put_contents('html.txt',$crawler->html());
