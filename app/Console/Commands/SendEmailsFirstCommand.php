@@ -420,6 +420,13 @@ class SendEmailsFirstCommand extends Command
                             }
                         }
                        
+                    }else {
+                        $company->update([
+                            'status'        => '送信済み'
+                        ]);
+                        $companyContact->update([
+                            'is_delivered' => 2
+                        ]);
                     }
                 }  
                 catch (\Throwable $e) {
