@@ -334,29 +334,29 @@ class SendEmailsThirdCommand extends Command
                             }
     
                             $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
-                            // file_put_contents('error.txt',$crawler->html());
+                            
+                        if(strpos($crawler->html(),"ありがとうございま")!==false || strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false|| strpos($crawler->html(),"完了")!==false|| strpos($crawler->html(),"失敗しま")!==false){
+                            $company->update([
+                                'status'        => '送信済み'
+                            ]);
+                            $companyContact->update([
+                                'is_delivered' => 2
+                            ]);
+                        }else {
+                            $form='';
+                            try{
+                                $form = $crawler->selectButton('送信する')->form();
+                            }catch (\Throwable $e) {
                                 
-                            if(strpos($crawler->html(),"ありがとうございま")!==false ||strpos($crawler->html(),"有難うございま")!==false || strpos($crawler->html(),"送信されました")!==false ||strpos($crawler->html(),"&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;")!==false|| strpos($crawler->html(),"完了")!==false|| strpos($crawler->html(),"失敗しま")!==false){
-                                $company->update([
-                                    'status'        => '送信済み'
-                                ]);
-                                $companyContact->update([
-                                    'is_delivered' => 2
-                                ]);
-                            }else {
-                                $form='';
-                                try{
-                                    $form = $crawler->selectButton('送信する')->form();
-                                }catch (\Throwable $e) {
-                                    
-                                }
-                                try{
-                                    $form = $crawler->filter('form')->form();
-                                }catch (\Throwable $e) {
-                                    
-                                }
+                            }
+                            try{
+                                $form = $crawler->filter('form')->form();
+                            }catch (\Throwable $e) {
+                                
+                            }
+                            try{
                                 if(isset($form) && !empty($form)){
-                                    
+                                
                                     $crawler = $client->submit($form);
                                     $company->update([
                                         'status'        => '送信済み'
@@ -389,7 +389,15 @@ class SendEmailsThirdCommand extends Command
                                         'is_delivered' => 2
                                     ]);
                                 }
+                            }catch (\Throwable $e) {
+                                $company->update([
+                                    'status'        => '送信済み'
+                                ]);
+                                $companyContact->update([
+                                    'is_delivered' => 2
+                                ]);
                             }
+                        }
                            
                         }else {
                             $company->update([
