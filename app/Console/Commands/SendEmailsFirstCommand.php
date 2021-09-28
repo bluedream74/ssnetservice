@@ -90,7 +90,6 @@ class SendEmailsFirstCommand extends Command
                         }
                     }
                     if($checkUrl)continue;
-                    $checkUrl=false;
                     
                     $crawler = $client->request('GET', $company->contact_form_url);
                     // file_put_contents('html.txt',$crawler->html());
@@ -411,16 +410,16 @@ class SendEmailsFirstCommand extends Command
                                 //         'is_delivered' => 1
                                 //     ]);
                                 // }
+                            }else {
+                                $company->update([
+                                    'status'        => '送信済み'
+                                ]);
+                                $companyContact->update([
+                                    'is_delivered' => 2
+                                ]);
                             }
                         }
                        
-                    }else {
-                        $company->update([
-                            'status'        => '送信済み'
-                        ]);
-                        $companyContact->update([
-                            'is_delivered' => 2
-                        ]);
                     }
                 }  
                 catch (\Throwable $e) {
