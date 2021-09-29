@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 // use Laravel\Cashier\Cashier;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
             $authUser = Auth::user();
             $view->with('authUser', $authUser);
         });
-
+	Schema::defaultStringLength(191);
         Paginator::defaultView('vendor.pagination.default');
     }
 }
