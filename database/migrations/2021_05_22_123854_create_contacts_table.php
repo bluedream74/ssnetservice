@@ -23,6 +23,8 @@ class CreateContactsTable extends Migration
             $table->string('email',30);
             $table->string('title', 1000)->nullable();
             $table->text('content')->nullable();
+            $table->string('homepageUrl')->nullable();
+            $table->string('area')->nullable();
             $table->string('postalCode1',20)->nullable();
             $table->string('postalCode2',20)->nullable();
             $table->string('address',50)->nullable();
