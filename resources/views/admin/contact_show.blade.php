@@ -56,6 +56,17 @@
                 <label class="col-sm-4">内容</label>
                 <div class="col-sm-8 pre-wrap">{!! nl2br($contact->content) !!}</div>
             </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-4">ホームページURL</label>
+                <div class="col-sm-8 pre-wrap">{!! nl2br($contact->homepageUrl) !!}</div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-4">都道府県</label>
+                <div class="col-sm-8 pre-wrap">{!! nl2br($contact->area) !!}</div>
+            </div>
+
             <div class="row mb-3">
                 <label class="col-sm-4">郵便番号</label>
                 <div class="col-sm-8 pre-wrap">
@@ -186,6 +197,16 @@
                             <label class="col-sm-12">内容<span class="essential">*</span></label>
                             <div class="col-sm-12 form-group">
                                 {{ Form::textarea('content', old('content'), ['class' => 'form-control', 'rows' => 7, 'id' => 'content']) }}
+                            </div>
+
+                            <label class="col-sm-12">ホームページURL</label>
+                            <div class="col-sm-12 form-group">
+                                {{ Form::text('homepageUrl', old('homepageUrl'), ['class' => 'form-control','id' => 'homepageUrl']) }}
+                            </div>
+
+                            <label class="col-sm-12">都道府県</label>
+                            <div class="col-sm-8 form-group">
+                                {{ Form::select('area', $prefectures, Request::get('area'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
                             </div>
 
                             <label class="col-sm-12">郵便番号</label>

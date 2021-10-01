@@ -10,17 +10,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Goutte\Client;
 use Illuminate\Support\Facades\Artisan;
-use Symfony\Component\Console\Output\ConsoleOutput;
+// use Symfony\Component\Console\Output\ConsoleOutput;
 
 
-class BatchCheckCommand extends Command
+class BatchCheckCommand1 extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'batch:check';
+    protected $signature = 'batch:check1';
 
     /**
      * The console command description.
@@ -47,7 +47,7 @@ class BatchCheckCommand extends Command
     public function handle()
     {
         $check_contact_form = config('values.check_contact_form');
-        $output = new ConsoleOutput();
+        // $output = new ConsoleOutput();
         if($check_contact_form=="1"){
             $limit = intval(config('values.mail_limit'));
 

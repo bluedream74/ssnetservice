@@ -39,11 +39,12 @@ class CompanyImport implements ToCollection
                     $parse = parse_url($row[2]);
                     if(isset($parse['host'])) {
                         $host = str_replace('www.', '', $parse['host']);
+                        $url = $parse['scheme'].'://'.$parse['host'];
                         if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
                             $company = Company::create([
                                 'source'        => $row[0],
                                 'name'          => $row[1],
-                                'url'           => $row[2],
+                                'url'           => $url,
                                 'contact_form_url'           => $row[3],
                                 'area'          => $row[4]
                             ]);
@@ -73,6 +74,7 @@ class CompanyImport implements ToCollection
                 }
                 
             } catch (\Throwable $e) {
+                dd($e->getMessage());
                 continue;
             }
            
