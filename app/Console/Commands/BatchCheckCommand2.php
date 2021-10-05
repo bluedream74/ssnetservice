@@ -10,17 +10,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Goutte\Client;
 use Illuminate\Support\Facades\Artisan;
-use Symfony\Component\Console\Output\ConsoleOutput;
+// use Symfony\Component\Console\Output\ConsoleOutput;
 
 
-class BatchCheckCommand extends Command
+class BatchCheckCommand2 extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'batch:check';
+    protected $signature = 'batch:check2';
 
     /**
      * The console command description.
@@ -47,9 +47,11 @@ class BatchCheckCommand extends Command
     public function handle()
     {
         $check_contact_form = config('values.check_contact_form');
-        $output = new ConsoleOutput();
+        // $output = new ConsoleOutput();
         if($check_contact_form=="1"){
-            $limit = intval(config('values.mail_limit'));
+            //$limit = intval(config('values.mail_limit'));
+			$limit = 40;
+            $ProcessCount = intval(config('values.ProcessCount'));
 
             $date=Carbon::now()->timezone('Asia/Tokyo');
           
@@ -57,8 +59,12 @@ class BatchCheckCommand extends Command
             
             $sent = 0;
             if(sizeof($companies)>0){
+                $count = 0;
                 foreach($companies as $company) {
                     try {
+                        if($count < $ProcessCount) {
+                            $count++;continue;
+                        }
                         $sent++;
                         // $output->writeln("<info>sent count</info>".$sent);
                         Company::where('id',$company->id)->update(['check_contact_form'=>1]);
