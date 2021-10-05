@@ -49,7 +49,8 @@ class BatchCheckCommand2 extends Command
         $check_contact_form = config('values.check_contact_form');
         // $output = new ConsoleOutput();
         if($check_contact_form=="1"){
-            $limit = intval(config('values.mail_limit'));
+            //$limit = intval(config('values.mail_limit'));
+			$limit = 40;
             $ProcessCount = intval(config('values.ProcessCount'));
 
             $date=Carbon::now()->timezone('Asia/Tokyo');
