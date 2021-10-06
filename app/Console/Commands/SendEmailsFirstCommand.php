@@ -239,7 +239,7 @@ class SendEmailsFirstCommand extends Command
                                 if(strpos($key,$text)!==false){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
                                     $data[$key] = $content;
-                                    $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';break;
+                                    $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                                 }
                             }
                             $titleTexts = array('fax');
@@ -563,8 +563,7 @@ class SendEmailsFirstCommand extends Command
                             }else {
                                 $content = str_replace('%company_name%', $company->name, $contact->content);
                                 $data[$nameStr] = $content;
-                                $data[$nameStr] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
-                                break;
+                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                             }
                         }
                     }
@@ -654,7 +653,7 @@ class SendEmailsFirstCommand extends Command
                             $data['mailform11'] = "無料見積りのご依頼";
                             $content = str_replace('%company_name%', $company->name, $contact->content);
                             $data['mailform12'] = $content;
-                            $data['mailform12'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+                            $data['mailform12'] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
                         }
                         if(strpos($company->contact_form_url,"ksa.jp")!==false){
                             $data['key'] = '319254';
