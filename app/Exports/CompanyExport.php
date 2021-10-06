@@ -79,10 +79,11 @@ class CompanyExport implements FromCollection, WithHeadings, WithMapping
             }
         }
 
-        // if (!empty($value = Arr::get($this->params, 'origin'))) {
-        //     $query->where('is_origin_email', $value);
-        // }
+        if (!empty($value = Arr::get($this->params, 'origin'))) {
+            $query->whereNotNull('contact_form_url');
+        }
 
         return $query->orderByDesc('source')->orderBy('name')->get();
+        
     }
 }
