@@ -8,7 +8,7 @@ use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Carbon;
 
-class SendEmailsThirdCommand extends Command
+class SendEmailsFourthCommand extends Command
 {
     /**
      * The name and signature of the console command.
