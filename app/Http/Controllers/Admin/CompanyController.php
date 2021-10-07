@@ -116,17 +116,17 @@ class CompanyController extends BaseController
       }
     }
 
-    $emails = CompanyEmail::whereNotNull('email')->select('email')->distinct()->pluck('email');
-    if (sizeof($emails) < CompanyEmail::whereNotNull('email')->count()) {
-      foreach ($emails as $email) {
-        if (CompanyEmail::where('email', $email)->count() > 1) {
-          $companyEmail = CompanyEmail::where('email', $email)->first();
-          CompanyEmail::where('email', $email)
-                  ->where('id', '!=', $companyEmail->id)
-                  ->delete();
-        }
-      }
-    }
+    // $emails = CompanyEmail::whereNotNull('email')->select('email')->distinct()->pluck('email');
+    // if (sizeof($emails) < CompanyEmail::whereNotNull('email')->count()) {
+    //   foreach ($emails as $email) {
+    //     if (CompanyEmail::where('email', $email)->count() > 1) {
+    //       $companyEmail = CompanyEmail::where('email', $email)->first();
+    //       CompanyEmail::where('email', $email)
+    //               ->where('id', '!=', $companyEmail->id)
+    //               ->delete();
+    //     }
+    //   }
+    // }
 
     return back()->with(['system.message.success' => '削除しました。']);
   }

@@ -790,6 +790,10 @@ class SendEmailsSecondCommand extends Command
                     ]);
                 }
 
+<<<<<<< HEAD
+=======
+                $sent++;
+>>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
 
                 if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
                     try {
@@ -805,6 +809,8 @@ class SendEmailsSecondCommand extends Command
                 }
 
             }
+
+            if ($sent >= $limit) return 0;
                 
         }
 
