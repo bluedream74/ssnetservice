@@ -562,10 +562,6 @@ class SendEmailsFirstCommand extends Command
                             }
                         }
                     }
-<<<<<<< HEAD
-=======
-                   
->>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
                     
                     
                     if(!empty($form->getValues())){
@@ -652,11 +648,7 @@ class SendEmailsFirstCommand extends Command
                             $data['mailform11'] = "無料見積りのご依頼";
                             $content = str_replace('%company_name%', $company->name, $contact->content);
                             $data['mailform12'] = $content;
-<<<<<<< HEAD
-                            $data['mailform12'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
-=======
                             $data['mailform12'] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
->>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
                         }
                         if(strpos($company->contact_form_url,"ksa.jp")!==false){
                             $data['key'] = '319254';
@@ -758,10 +750,6 @@ class SendEmailsFirstCommand extends Command
                     ]);
                 }
 
-<<<<<<< HEAD
-=======
-                $sent++;
->>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
 
                 if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
                     try {
@@ -776,16 +764,8 @@ class SendEmailsFirstCommand extends Command
                     }
                 }
 
-<<<<<<< HEAD
             }
 
-=======
-                if ($sent >= $limit) return 0;
-            }
-
-            if ($sent >= $limit) return 0;
-                
->>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
         }
 
         return 0;
