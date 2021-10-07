@@ -206,7 +206,7 @@
 
                             <label class="col-sm-12">都道府県</label>
                             <div class="col-sm-8 form-group">
-                                {{ Form::select('area', $prefectures, Request::get('area'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                                {{ Form::select('zone', $prefectures, Request::get('zone'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
                             </div>
 
                             <label class="col-sm-12">郵便番号</label>
