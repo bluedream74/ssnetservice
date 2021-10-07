@@ -806,7 +806,6 @@ class SendEmailsSecondCommand extends Command
 
             }
 
-            if ($sent >= $limit) return 0;
                 
         }
 
