@@ -88,7 +88,6 @@
                     </div>
                 {{ Form::close() }}
 
-                @if (sizeof($companies) > 0)
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -104,7 +103,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    @foreach($companies as $company)
+                    @forelse($companies as $company)
                         <tr>
                             <td style="max-width: 400px;">{{ $company->name }}</td>
                             <td style="max-width: 400px;">
@@ -126,13 +125,13 @@
                                 <button type="button" class="btn btn-sm btn-block mt-2 btn-danger btn-delete-company" data-id="{{ $company->id }}">削除</button>
                             </td>
                         </tr>
-                    @endforeach
+                        @empty
+                        <tr>
+                            <td style="row"><h4 class="text-center mt-3">会社はヒットしませんでした。</h4></td>
+                        </tr>
+                    @endforelse
                     </tbody>
                 </table>
-                @else
-                    <br><br>
-                    <h4 class="text-center mt-3">会社はヒットしませんでした。</h4> 
-                @endif
             </div>
         </div>
 
@@ -192,7 +191,7 @@
 
                             <label class="col-sm-12">都道府県</label>
                             <div class="col-sm-8 form-group">
-                                {{ Form::select('area', $prefectures, Request::get('area'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                                {{ Form::select('zone', $prefectures, Request::get('zone'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
                             </div>
 
                            

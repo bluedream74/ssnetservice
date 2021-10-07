@@ -31,7 +31,7 @@ class DashboardController extends BaseController
     {
         parent::__construct($events);
         ini_set('max_execution_time', -1);
-	
+        ini_set('default_socket_timeout', 6000);
     }
 
     public function index(Request $request)
@@ -112,7 +112,6 @@ class DashboardController extends BaseController
     public function contact(Request $request)
     {
         $contacts = Contact::orderByDesc('created_at')->paginate(20);
-
         foreach($contacts as $contact) {
             $contact->sent_count = $contact->companies()->where('is_delivered','2')->count();
             $contact->stand_by_count = $contact->companies()->where('is_delivered','0')->count();
@@ -474,6 +473,8 @@ class DashboardController extends BaseController
                 'email'             => request()->get('email'),
                 'title'             => request()->get('title'),
                 'content'           => request()->get('content'),
+                'homepageUrl'       => request()->get('homepageUrl'),
+                'area'              => request()->get('zone'),
                 'postalCode1'       => request()->get('postalCode1'),
                 'postalCode2'       => request()->get('postalCode2'),
                 'address'           => request()->get('address'),
@@ -485,7 +486,7 @@ class DashboardController extends BaseController
 
             $total = 0;
             foreach ($companies as $company) {
-                if(!isset($company->contact_form_url)||(empty($company->contact_form_url))){
+                if(!isset($company->contact_form_url)||(empty($company->contact_form_url))){    
                     continue;
                 }
                 $contact->companies()->create([
@@ -514,13 +515,19 @@ class DashboardController extends BaseController
 
     public function contactShow(Contact $contact)
     {
+        $prefectures = array();
+        foreach (config('values.prefectures') as $value) {
+            $prefectures[$value] = $value;
+        }
         $query = $contact->companies();
         if (!empty($value = Arr::get(request()->all(), 'status'))) {
             $query->where('is_delivered',$value);
         }
+
+        
         $companies = $query->paginate(20);
 
-        return view('admin.contact_show', compact('contact', 'companies'));
+        return view('admin.contact_show', compact('contact', 'companies','prefectures'));
     }
 
     public function sendShowContact(Contact $contact)
@@ -542,6 +549,8 @@ class DashboardController extends BaseController
                 'email'             => request()->get('email'),
                 'title'             => request()->get('title'),
                 'content'           => request()->get('content'),
+                'homepageUrl'       => request()->get('homepageUrl'),
+                'area'              => request()->get('zone'),
                 'postalCode1'       => request()->get('postalCode1'),
                 'postalCode2'       => request()->get('postalCode2'),
                 'address'           => request()->get('address'),
