@@ -42,12 +42,11 @@ class SendEmailsFourthCommand extends Command
     public function handle()
     {
         $limit = intval(config('values.mail_limit'));
-
+        $offset = 50;
         $contacts = Contact::whereHas('reserve_companies')->get();
-        $sent = 0;
         foreach ($contacts as $contact) {
 
-            $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(30)->take(10)->get();
+            $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(3*$offset)->take($offset)->get();
             foreach ($companyContacts as $companyContact) {
                 
                 $company = $companyContact->company;
@@ -791,7 +790,6 @@ class SendEmailsFourthCommand extends Command
                     ]);
                 }
 
-                $sent++;
 
                 if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
                     try {
@@ -806,10 +804,8 @@ class SendEmailsFourthCommand extends Command
                     }
                 }
 
-                if ($sent >= $limit) return 0;
             }
 
-            if ($sent >= $limit) return 0;
         }
 
         return 0;
