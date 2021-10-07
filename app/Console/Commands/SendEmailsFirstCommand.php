@@ -43,13 +43,11 @@ class SendEmailsFirstCommand extends Command
     {
         $limit = intval(config('values.mail_limit'));
 
-        $date=Carbon::now()->timezone('Asia/Tokyo');
+        $offset = 50;
       
         $contacts = Contact::whereHas('reserve_companies')->get();
-        $sent = 0;
         foreach ($contacts as $contact) {
-            $count = 0;
-            $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take(10)->get();
+            $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
             foreach ($companyContacts as $companyContact) {
                     
                 $company = $companyContact->company;
@@ -564,6 +562,10 @@ class SendEmailsFirstCommand extends Command
                             }
                         }
                     }
+<<<<<<< HEAD
+=======
+                   
+>>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
                     
                     
                     if(!empty($form->getValues())){
@@ -650,7 +652,11 @@ class SendEmailsFirstCommand extends Command
                             $data['mailform11'] = "無料見積りのご依頼";
                             $content = str_replace('%company_name%', $company->name, $contact->content);
                             $data['mailform12'] = $content;
+<<<<<<< HEAD
                             $data['mailform12'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+=======
+                            $data['mailform12'] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+>>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
                         }
                         if(strpos($company->contact_form_url,"ksa.jp")!==false){
                             $data['key'] = '319254';
@@ -752,7 +758,10 @@ class SendEmailsFirstCommand extends Command
                     ]);
                 }
 
+<<<<<<< HEAD
+=======
                 $sent++;
+>>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
 
                 if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
                     try {
@@ -767,11 +776,16 @@ class SendEmailsFirstCommand extends Command
                     }
                 }
 
+<<<<<<< HEAD
+            }
+
+=======
                 if ($sent >= $limit) return 0;
             }
 
             if ($sent >= $limit) return 0;
                 
+>>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
         }
 
         return 0;

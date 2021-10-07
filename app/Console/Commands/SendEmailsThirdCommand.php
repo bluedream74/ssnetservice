@@ -42,12 +42,11 @@ class SendEmailsThirdCommand extends Command
     public function handle()
     {
         $limit = intval(config('values.mail_limit'));
-
+        $offset = 50;
         $contacts = Contact::whereHas('reserve_companies')->get();
-        $sent = 0;
         foreach ($contacts as $contact) {
 
-            $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(20)->take(10)->get();
+            $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(2*$offset)->take($offset)->get();
             foreach ($companyContacts as $companyContact) {
                 
                 $company = $companyContact->company;
@@ -791,8 +790,11 @@ class SendEmailsThirdCommand extends Command
                     ]);
                 }
 
+<<<<<<< HEAD
+=======
                 $sent++;
 
+>>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
                 if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
                     try {
                         // \App\Jobs\SendMagazineEmailJob::dispatch("syt.iphone@gmail.com", new \App\Notifications\MailMagazineNotification($contact, "syt.iphone@gmail.com", $company->name), $company);
@@ -806,10 +808,12 @@ class SendEmailsThirdCommand extends Command
                     }
                 }
 
-                if ($sent >= $limit) return 0;
             }
 
+<<<<<<< HEAD
+=======
             if ($sent >= $limit) return 0;
+>>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
         }
 
         return 0;
