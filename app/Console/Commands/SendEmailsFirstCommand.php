@@ -15,7 +15,7 @@ class SendEmailsThirdCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'send:emailsThird';
+    protected $signature = 'send:emailsFirst';
 
     /**
      * The console command description.
