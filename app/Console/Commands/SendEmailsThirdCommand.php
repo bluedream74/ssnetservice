@@ -790,11 +790,6 @@ class SendEmailsThirdCommand extends Command
                     ]);
                 }
 
-<<<<<<< HEAD
-=======
-                $sent++;
-
->>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
                 if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
                     try {
                         // \App\Jobs\SendMagazineEmailJob::dispatch("syt.iphone@gmail.com", new \App\Notifications\MailMagazineNotification($contact, "syt.iphone@gmail.com", $company->name), $company);
@@ -810,10 +805,6 @@ class SendEmailsThirdCommand extends Command
 
             }
 
-<<<<<<< HEAD
-=======
-            if ($sent >= $limit) return 0;
->>>>>>> 603c3939e34962c28d7f52beecd653e00ac44f70
         }
 
         return 0;
