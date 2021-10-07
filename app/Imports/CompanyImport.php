@@ -17,7 +17,6 @@ class CompanyImport implements ToCollection
             if ($key === 0 || $row[0] === 'カテゴリ') {
                 continue;
             }
-
             try {
                 $category = \App\Models\Source::where('name', $row[0])->first();
                 if (empty($category)) {
@@ -35,6 +34,7 @@ class CompanyImport implements ToCollection
                     }
                     
                 }
+				
                 if (isset($category)) {
                     $parse = parse_url($row[2]);
                     if(isset($parse['host'])) {

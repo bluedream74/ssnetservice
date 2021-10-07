@@ -18,7 +18,11 @@ class Contact extends Model
         'email',
         'title',
         'content',
+<<<<<<< HEAD
         'homepageUrl',
+=======
+		 'homepageUrl',
+>>>>>>> main
         'area',
         'contacts_num',
         'sender_name',

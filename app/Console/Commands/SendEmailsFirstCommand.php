@@ -5,12 +5,10 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Contact;
 use Goutte\Client;
-use LaravelAnticaptcha\Anticaptcha\ImageToText;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Carbon;
-// use Symfony\Component\Console\Output\ConsoleOutput;
 
-class SendEmailsFirstCommand extends Command
+class SendEmailsThirdCommand extends Command
 {
     /**
      * The name and signature of the console command.
@@ -44,16 +42,16 @@ class SendEmailsFirstCommand extends Command
     public function handle()
     {
         $limit = intval(config('values.mail_limit'));
-        $ProcessCount = intval(config('values.ProcessCount'));
 
         $date=Carbon::now()->timezone('Asia/Tokyo');
-
+      
         $contacts = Contact::whereHas('reserve_companies')->get();
         
         $sent = 0;
         foreach ($contacts as $contact) {
-            
-            foreach ($contact->reserve_companies as $companyContact) {
+             $count = 0;
+            $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take(10)->get();
+            foreach ($companyContacts as $companyContact) {
                 
                 $company = $companyContact->company;
                 
@@ -90,7 +88,7 @@ class SendEmailsFirstCommand extends Command
                     }catch (\Throwable $e) {
                         $form = $crawler->selectButton('送信')->form();
                     }
-                   
+                
                     $data = [];
                     try {
                         if(strpos($crawler->html(),'api.js?render')!==false){
@@ -164,7 +162,7 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                         }
-                       
+                        
                         // if(isset($imageurl)&&!empty($imageurl)){
 
                         //     $apiImage = new ImageToText();
@@ -195,13 +193,13 @@ class SendEmailsFirstCommand extends Command
                         //             }
                         //         }
                         //     }
-                           
+                            
                         // }
                     }catch(\Throwable $e){
                         // file_put_contents('error.txt',$e->getMessage());
 
                     }
-                   
+                    
 
                     if(!empty($form->getValues())){
                         $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;
@@ -264,7 +262,7 @@ class SendEmailsFirstCommand extends Command
                             }else if($type =='checkbox') {
                                 $data[$key] = $form[$key]->getOptions()[0]['value'];
                             }
-                           
+                            
                         }catch(\Throwable $e){
                             continue;
                         }
@@ -287,7 +285,7 @@ class SendEmailsFirstCommand extends Command
                                     $data[$nameStr] = $contact->company;
                                     break;
                                 }
-                               
+                                
                             }
                             
                         }
@@ -302,13 +300,13 @@ class SendEmailsFirstCommand extends Command
                             }else {
                                 if(strpos($key,'セイ')!==false){
                                     $data[$key] = $contact->fu_surname;
-                               }else if(strpos($key,'メイ')!==false){
+                                }else if(strpos($key,'メイ')!==false){
                                     $data[$key] = $contact->fu_lastname;
-                               }else if(strpos($key,'姓')!==false){
+                                }else if(strpos($key,'姓')!==false){
                                     $data[$key] = $contact->surname;
-                               }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
+                                }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
                                     $data[$key] = $contact->lastname;
-                               }
+                                }
                             }
                         }
                     }
@@ -325,7 +323,7 @@ class SendEmailsFirstCommand extends Command
                                 $data[$nameStr] = 'なし';
                                 break;
                             }
-                           
+                            
                         }
                     }
                     if(!empty($form->getValues())){
@@ -335,18 +333,18 @@ class SendEmailsFirstCommand extends Command
                             if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                 $data[$key] = $value;
                             }else {
-                               
-                               if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false|| strpos($key,'namek')!==false ){
+                                
+                                if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false|| strpos($key,'namek')!==false ){
                                     $kana_count++;
-                               }else if((strpos($key,'nam')!==false || strpos($key,'名前')!==false || strpos($key,'氏名')!==false)){
+                                }else if((strpos($key,'nam')!==false || strpos($key,'名前')!==false || strpos($key,'氏名')!==false)){
                                     $name_count++;
                                 }
-                               if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false){
-                                   $postal_count++;
-                               }
-                               if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
-                                   $phone_count++;
-                               }
+                                if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false){
+                                    $postal_count++;
+                                }
+                                if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
+                                    $phone_count++;
+                                }
                             }
                         }
                     }
@@ -531,7 +529,7 @@ class SendEmailsFirstCommand extends Command
                         }
                     }
 
-                   
+                    
                     $nonPatterns = array('年齢');
                     foreach($nonPatterns as $val) {
                         if(strpos($crawler->html(),$val)!==false) {
@@ -549,7 +547,7 @@ class SendEmailsFirstCommand extends Command
                         }
                     }
 
-                   
+                    
                     
                     $contentPatterns = array('ご相談内容','ご質問','お問い合わせ内容','詳しい内容','備考','要望','詳細','概要','内容');
                     foreach($contentPatterns as $val) {
@@ -568,6 +566,7 @@ class SendEmailsFirstCommand extends Command
                         }
                     }
                    
+                    
                     
                     if(!empty($form->getValues())){
                         $kana_count_check = 0;$name_count_check = 0;$phone_count_check = 0;$postal_count_check = 0;
@@ -622,7 +621,7 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                             
-                           if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
+                            if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
                                 if($phone_count ==1){
                                     $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;continue;
                                 }else if($phone_count ==3){
@@ -636,7 +635,7 @@ class SendEmailsFirstCommand extends Command
                                         $data[$key] = $contact->phoneNumber3;continue;
                                     }
                                 }
-                           }
+                            }
                         }
                         //exception method start
                         if(strpos($company->contact_form_url,"alfa-field.co.jp")!==false){
@@ -738,7 +737,7 @@ class SendEmailsFirstCommand extends Command
                                 ]);
                             }
                         }
-                       
+                        
                     }else {
                         $company->update([
                             'status'        => '送信失敗'
@@ -774,9 +773,9 @@ class SendEmailsFirstCommand extends Command
             }
 
             if ($sent >= $limit) return 0;
+                
         }
 
         return 0;
     }
-   
 }
