@@ -239,7 +239,7 @@ class SendEmailsSecondCommand extends Command
                                     if(strpos($key,$text)!==false){
                                         $content = str_replace('%company_name%', $company->name, $contact->content);
                                         $data[$key] = $content;
-                                        $data[$key] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';break;
+                                        $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                                     }
                                 }
                                 $titleTexts = array('fax');
@@ -563,8 +563,7 @@ class SendEmailsSecondCommand extends Command
                                 }else {
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
                                     $data[$nameStr] = $content;
-                                    $data[$nameStr] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
-                                    break;
+                                    $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                                 }
                             }
                         }
