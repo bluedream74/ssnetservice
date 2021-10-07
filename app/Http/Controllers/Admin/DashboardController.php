@@ -31,10 +31,7 @@ class DashboardController extends BaseController
     {
         parent::__construct($events);
         ini_set('max_execution_time', -1);
-<<<<<<< HEAD
-=======
 		ini_set("memory_limit","1024M");
->>>>>>> main
         ini_set('default_socket_timeout', 6000);
     }
 
