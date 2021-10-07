@@ -31,6 +31,10 @@ class DashboardController extends BaseController
     {
         parent::__construct($events);
         ini_set('max_execution_time', -1);
+<<<<<<< HEAD
+=======
+		ini_set("memory_limit","1024M");
+>>>>>>> main
         ini_set('default_socket_timeout', 6000);
     }
 
@@ -290,18 +294,19 @@ class DashboardController extends BaseController
     public function batchCheck(){
         $CHECK_CONTACT_FORM = config('values.check_contact_form');
         $key = 'CHECK_CONTACT_FORM';
+		
         if($CHECK_CONTACT_FORM=="0"){
             $this->upsert($key, 1);
             Artisan::call('config:cache');
-            Artisan::call('queue:restart');
-            usleep(100);
+            //Artisan::call('queue:restart');	
+            usleep(3000000);
             Company::where('check_contact_form',1)->update(['check_contact_form'=>0]);
             return back()->with(['system.message.info' => "一括チェックしています。"]);
         }else {
             $this->upsert($key, 0);
             Artisan::call('config:cache');
-            Artisan::call('queue:restart');
-            usleep(100);
+            //Artisan::call('queue:restart');
+            usleep(3000000);
             return back()->with(['system.message.info' => "一括チェックが停止されました。"]);
         }
     }
