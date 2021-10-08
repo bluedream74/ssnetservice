@@ -52,11 +52,15 @@
                 <label class="col-sm-4">題名</label>
                 <div class="col-sm-8 pre-wrap">{{ $contact->title }}</div>
             </div>
+           
             <div class="row mb-3">
                 <label class="col-sm-4">内容</label>
                 <div class="col-sm-8 pre-wrap">{!! nl2br($contact->content) !!}</div>
             </div>
-
+            <div class="row mb-3">
+                <label class="col-sm-4">MY URL %myurl%</label>
+                <div class="col-sm-8 pre-wrap">{!! nl2br($contact->myurl) !!}</div>
+            </div>
             <div class="row mb-3">
                 <label class="col-sm-4">ホームページURL</label>
                 <div class="col-sm-8 pre-wrap">{!! nl2br($contact->homepageUrl) !!}</div>

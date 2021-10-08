@@ -64,6 +64,15 @@ class CompanyController extends BaseController
     return back()->with(['system.message.success' => '編集されました。']);
   }
 
+  public function editName(Company $company)
+  {
+    $company->update([
+      'name'   => request()->get('name')
+    ]);
+
+    return back()->with(['system.message.success' => '編集されました。']);
+  }
+
   public function addURL(Company $company)
   {
     $company->update([

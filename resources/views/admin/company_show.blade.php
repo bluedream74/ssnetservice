@@ -9,7 +9,16 @@
     <div class="card-body table-responsive">
       <div class="row mb-3">
         <label class="col-sm-4">会社名</label>
-        <div class="col-sm-8 pre-wrap">{{ $company->name }}</div>
+        <div class="col-sm-8 pre-wrap">
+          <div class="table-responsive">
+            <table class="table table-striped">
+                <tr>
+                  <td>{{ $company->name }}</td>
+                  <td class="text-right"><button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#company-name-edit-modal" data-id="{{ $company->id }}">編集</button></td>
+                </tr>
+            </table>
+          </div>
+        </div>
       </div>
       <div class="row mb-3">
         <label class="col-sm-4">URL</label>
@@ -35,6 +44,7 @@
           @endif
         </div>
       </div>
+     
       <div class="row mb-3">
         <label class="col-sm-4">問い合わせURL</label>
         <div class="col-sm-8 pre-wrap">
@@ -63,6 +73,12 @@
         <label class="col-sm-4">カテゴリ</label>
         <div class="col-sm-8 pre-wrap">{{ $company->source }}</div>
       </div>
+
+      <div class="row mb-3">
+        <label class="col-sm-4">子カテゴリ</label>
+        <div class="col-sm-8 pre-wrap">{{ $company->source }}</div>
+      </div>
+
       <div class="row mb-3">
         <label class="col-sm-4">エリア</label>
         <div class="col-sm-8 pre-wrap">{{ $company->area }}</div>
@@ -106,6 +122,30 @@
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">追加</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+  
+  <div class="modal fade" id="company-name-edit-modal">
+    {{ Form::open(['route' => ['admin.company.edit.name', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>会社名編集</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">会社名</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::text('name', old('name',$company->name), ['class' => 'form-control']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">編集</button>
           <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
         </div>
       </div>
