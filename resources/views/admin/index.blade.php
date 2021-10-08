@@ -45,6 +45,11 @@
                         <label>カテゴリ</label>
                         {{ Form::select('source', getSources(true), Request::get('source'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
                     </div>
+
+                    <div class="col-sm-3">
+                        <label>子カテゴリ</label>
+                        {{ Form::select('source', getSources(true), Request::get('source'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                    </div>
                     
                     <div class="col-sm-3">
                         <label>電話番号</label>
@@ -127,7 +132,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td style="row"><h4 class="text-center mt-3">会社はヒットしませんでした。</h4></td>
+                            <td colspan="7"><h4 class="text-center mt-3">会社はヒットしませんでした。</h4></td>
                         </tr>
                     @endforelse
                     </tbody>
@@ -177,6 +182,11 @@
                             <label class="col-sm-12">題名<span class="essential">*</span></label>
                             <div class="col-sm-12 form-group">
                                 {{ Form::text('title', old('title'), ['class' => 'form-control','id' => 'title']) }}
+                            </div>
+
+                            <label class="col-sm-12">MY URL %myurl%</label>
+                            <div class="col-sm-12 form-group">
+                                {{ Form::text('myurl', old('myurl'), ['class' => 'form-control','id' => 'myurl']) }}
                             </div>
 
                             <label class="col-sm-12">内容<span class="essential">*</span></label>

@@ -7,6 +7,7 @@ use App\Models\Contact;
 use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Crypt;
 
 class SendEmailsFirstCommand extends Command
 {
@@ -48,6 +49,7 @@ class SendEmailsFirstCommand extends Command
         $contacts = Contact::whereHas('reserve_companies')->get();
         foreach ($contacts as $contact) {
             $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
+            
             foreach ($companyContacts as $companyContact) {
                     
                 $company = $companyContact->company;
@@ -78,7 +80,17 @@ class SendEmailsFirstCommand extends Command
                     
                     $crawler = $client->request('GET', $company->contact_form_url);
                     // file_put_contents('html.txt',$crawler->html());
-                    if(strpos($crawler->text(),"営業お断り")!==false)continue;
+                    // $nonStrings = array("営業お断り","カタログ","サンプル","有料","代引き","着払い");
+                    if(
+                        (strpos($crawler->text(),"営業お断り")!==false)
+                        ||(strpos($crawler->text(),"カタログ")!==false)
+                        ||(strpos($crawler->text(),"サンプル")!==false)
+                        ||(strpos($crawler->text(),"有料")!==false)
+                        ||(strpos($crawler->text(),"代引き")!==false)
+                        ||(strpos($crawler->text(),"着払い")!==false)
+                    )
+                    continue;
+                    
 
                     try{
                         $form = $crawler->filter('form')->form();
@@ -229,12 +241,12 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
 
-                            $messageTexts = array('textarea','body','content','comment','naiyo','bikou','detail','inquiry','note','message','MESSAGE','honbun','youken','内容','備考欄','詳細','contact');
+                            $messageTexts = array('textarea','body','content','comment','naiyo','bikou','detail','inquiry','Inquiry','note','message','MESSAGE','honbun','youken','内容','本文','item','備考欄','詳細','contact','comm');
                             foreach($messageTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
                                     $data[$key] = $content;
-                                    $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら'.PHP_EOL.'※※※※※※※※';break;
+                                    $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                                 }
                             }
                             $titleTexts = array('fax');
@@ -546,7 +558,7 @@ class SendEmailsFirstCommand extends Command
 
                     
                     
-                    $contentPatterns = array('ご相談内容','ご質問','お問い合わせ内容','詳しい内容','備考','要望','詳細','概要','内容');
+                    $contentPatterns = array('ご相談内容','ご質問','お問い合わせ内容','詳しい内容','本文','備考','要望','詳細','概要','内容');
                     foreach($contentPatterns as $val) {
                         if(strpos($crawler->html(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
@@ -558,7 +570,7 @@ class SendEmailsFirstCommand extends Command
                             }else {
                                 $content = str_replace('%company_name%', $company->name, $contact->content);
                                 $data[$nameStr] = $content;
-                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら'.PHP_EOL.'※※※※※※※※';break;
+                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                             }
                         }
                     }
@@ -647,8 +659,9 @@ class SendEmailsFirstCommand extends Command
                             $data['mailform10'] = $contact->address;
                             $data['mailform11'] = "無料見積りのご依頼";
                             $content = str_replace('%company_name%', $company->name, $contact->content);
+                            $content = str_replace('%myurl%', $company->name, $contact->content);
                             $data['mailform12'] = $content;
-                            $data['mailform12'] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+                            $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                         }
                         if(strpos($company->contact_form_url,"ksa.jp")!==false){
                             $data['key'] = '319254';

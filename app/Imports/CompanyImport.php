@@ -36,6 +36,9 @@ class CompanyImport implements ToCollection
                 }
 				
                 if (isset($category)) {
+                    if(strpos($row[2],"http")==false){
+                        $row[2]="http://".$row[2];
+                    }
                     $parse = parse_url($row[2]);
                     if(isset($parse['host'])) {
                         $host = str_replace('www.', '', $parse['host']);
@@ -55,19 +58,22 @@ class CompanyImport implements ToCollection
                                 ]);
                             }
                         } 
-                    }else {
-                        $company = Company::create([
-                            'source'        => $row[0],
-                            'name'          => $row[1],
-                            'url'           => $row[2],
-                            'contact_form_url'           => $row[3],
-                            'area'          => $row[4]
-                        ]);
-
-                        if (isset($row[5]) && $row[5] != '') {
-                            $company->phones()->updateOrCreate([
-                                'phone'         => $row[5]
+                    }else { 
+                        $host = str_replace('www.', '', $row[2]);
+                        if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
+                            $company = Company::create([
+                                'source'        => $row[0],
+                                'name'          => $row[1],
+                                'url'           => $row[2],
+                                'contact_form_url'           => $row[3],
+                                'area'          => $row[4]
                             ]);
+
+                            if (isset($row[5]) && $row[5] != '') {
+                                $company->phones()->updateOrCreate([
+                                    'phone'         => $row[5]
+                                ]);
+                            }
                         }
                     }
                    
