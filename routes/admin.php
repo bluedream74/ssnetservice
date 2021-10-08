@@ -19,9 +19,11 @@ Route::post('login', 'AuthController@login')->name('login');
 Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
   Route::post('logout', 'AuthController@logout')->name('logout');
   
-  Route::get('/', function () {
-      return redirect(route('admin.dashboard'));
-  });
+  // Route::get('/', function () {
+  //     return redirect(route('admin.dashboard'));
+  // });
+
+  Route::get('/', 'DashboardController@redirect')->name('redirect');
 
   Route::get('dashboard', 'DashboardController@index')->name('dashboard');
 
@@ -57,6 +59,8 @@ Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
 
   Route::post('/{company}/edit/url', 'CompanyController@editURL')->name('company.edit.url');
   Route::post('/{company}/add/url', 'CompanyController@addURL')->name('company.add.url');
+
+  Route::post('/{company}/edit/name', 'CompanyController@editName')->name('company.edit.name');
 
   Route::post('/{company}/edit/contacturl', 'CompanyController@editContacturl')->name('company.edit.contacturl');
   Route::post('/{company}/add/contacturl', 'CompanyController@addContacturl')->name('company.add.contacturl');

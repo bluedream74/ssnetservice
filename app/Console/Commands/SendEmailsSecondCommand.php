@@ -47,8 +47,9 @@ class SendEmailsSecondCommand extends Command
         $contacts = Contact::whereHas('reserve_companies')->get();
         foreach ($contacts as $contact) {
             $companyContacts = $contact->companies()->where('is_delivered', 0)->skip($offset)->take($offset)->get();
-            foreach ($companyContacts as $companyContact) {
 
+            foreach ($companyContacts as $companyContact) {
+                    
                 $company = $companyContact->company;
                 
                 try {
@@ -77,14 +78,24 @@ class SendEmailsSecondCommand extends Command
                     
                     $crawler = $client->request('GET', $company->contact_form_url);
                     // file_put_contents('html.txt',$crawler->html());
-                    if(strpos($crawler->text(),"営業お断り")!==false)continue;
+                    // $nonStrings = array("営業お断り","カタログ","サンプル","有料","代引き","着払い");
+                    if(
+                        (strpos($crawler->text(),"営業お断り")!==false)
+                        ||(strpos($crawler->text(),"カタログ")!==false)
+                        ||(strpos($crawler->text(),"サンプル")!==false)
+                        ||(strpos($crawler->text(),"有料")!==false)
+                        ||(strpos($crawler->text(),"代引き")!==false)
+                        ||(strpos($crawler->text(),"着払い")!==false)
+                    )
+                    continue;
+                    
 
                     try{
                         $form = $crawler->filter('form')->form();
                     }catch (\Throwable $e) {
                         $form = $crawler->selectButton('送信')->form();
                     }
-                   
+                
                     $data = [];
                     try {
                         if(strpos($crawler->html(),'api.js?render')!==false){
@@ -158,7 +169,7 @@ class SendEmailsSecondCommand extends Command
                                 }
                             }
                         }
-                       
+                        
                         // if(isset($imageurl)&&!empty($imageurl)){
 
                         //     $apiImage = new ImageToText();
@@ -189,13 +200,13 @@ class SendEmailsSecondCommand extends Command
                         //             }
                         //         }
                         //     }
-                           
+                            
                         // }
                     }catch(\Throwable $e){
                         // file_put_contents('error.txt',$e->getMessage());
 
                     }
-                   
+                    
 
                     if(!empty($form->getValues())){
                         $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;
@@ -228,12 +239,12 @@ class SendEmailsSecondCommand extends Command
                                 }
                             }
 
-                            $messageTexts = array('textarea','body','content','comment','naiyo','bikou','detail','inquiry','note','message','MESSAGE','honbun','youken','内容','備考欄','詳細','contact');
+                            $messageTexts = array('textarea','body','content','comment','naiyo','bikou','detail','inquiry','Inquiry','note','message','MESSAGE','honbun','youken','内容','本文','item','備考欄','詳細','contact','comm');
                             foreach($messageTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
                                     $data[$key] = $content;
-                                    $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら'.PHP_EOL.'※※※※※※※※';break;
+                                    $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                                 }
                             }
                             $titleTexts = array('fax');
@@ -258,7 +269,7 @@ class SendEmailsSecondCommand extends Command
                             }else if($type =='checkbox') {
                                 $data[$key] = $form[$key]->getOptions()[0]['value'];
                             }
-                           
+                            
                         }catch(\Throwable $e){
                             continue;
                         }
@@ -281,7 +292,7 @@ class SendEmailsSecondCommand extends Command
                                     $data[$nameStr] = $contact->company;
                                     break;
                                 }
-                               
+                                
                             }
                             
                         }
@@ -296,13 +307,13 @@ class SendEmailsSecondCommand extends Command
                             }else {
                                 if(strpos($key,'セイ')!==false){
                                     $data[$key] = $contact->fu_surname;
-                               }else if(strpos($key,'メイ')!==false){
+                                }else if(strpos($key,'メイ')!==false){
                                     $data[$key] = $contact->fu_lastname;
-                               }else if(strpos($key,'姓')!==false){
+                                }else if(strpos($key,'姓')!==false){
                                     $data[$key] = $contact->surname;
-                               }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
+                                }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
                                     $data[$key] = $contact->lastname;
-                               }
+                                }
                             }
                         }
                     }
@@ -319,7 +330,7 @@ class SendEmailsSecondCommand extends Command
                                 $data[$nameStr] = 'なし';
                                 break;
                             }
-                           
+                            
                         }
                     }
                     if(!empty($form->getValues())){
@@ -329,18 +340,18 @@ class SendEmailsSecondCommand extends Command
                             if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                 $data[$key] = $value;
                             }else {
-                               
-                               if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false|| strpos($key,'namek')!==false ){
+                                
+                                if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false|| strpos($key,'namek')!==false ){
                                     $kana_count++;
-                               }else if((strpos($key,'nam')!==false || strpos($key,'名前')!==false || strpos($key,'氏名')!==false)){
+                                }else if((strpos($key,'nam')!==false || strpos($key,'名前')!==false || strpos($key,'氏名')!==false)){
                                     $name_count++;
                                 }
-                               if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false){
-                                   $postal_count++;
-                               }
-                               if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
-                                   $phone_count++;
-                               }
+                                if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false){
+                                    $postal_count++;
+                                }
+                                if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
+                                    $phone_count++;
+                                }
                             }
                         }
                     }
@@ -362,17 +373,8 @@ class SendEmailsSecondCommand extends Command
                                     $data[$name] = $contact->lastname;
                                     break;
                                 }else {
-                                    if($name_count==2){
-                                        $data[$name] = $contact->surname;
-                                        $nameStr = substr($nameStr,strpos($nameStr,'name='));
-                                        $nameStr = substr($nameStr,6);
-                                        $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                        $data[$name] = $contact->lastname;
-                                        break;
-                                    }else {
-                                        $data[$name] = $contact->surname.' '.$contact->lastname;
-                                        break;
-                                    }
+                                    $data[$name] = $contact->surname.' '.$contact->lastname;
+                                    break;
                                 }
                             }
                         }
@@ -395,17 +397,8 @@ class SendEmailsSecondCommand extends Command
                                     $data[$name] = $contact->postalCode2;
                                     break;
                                 }else {
-                                    if($postal_count==2){
-                                        $data[$name] = $contact->postalCode1;
-                                        $nameStr = substr($nameStr,strpos($nameStr,'name='));
-                                        $nameStr = substr($nameStr,6);
-                                        $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                        $data[$name] = $contact->postalCode2;
-                                        break;
-                                    }else {
-                                        $data[$name] = $contact->postalCode1."-".$contact->postalCode2;
-                                        break;
-                                    }
+                                    $data[$name] = $contact->postalCode1."-".$contact->postalCode2;
+                                    break;
                                 }
                             }
                         }
@@ -428,17 +421,8 @@ class SendEmailsSecondCommand extends Command
                                     $data[$name] = $contact->fu_lastname;
                                     break;
                                 }else {
-                                    if($kana_count==2){
-                                        $data[$name] = $contact->fu_surname;
-                                        $nameStr = substr($nameStr,strpos($nameStr,'name='));
-                                        $nameStr = substr($nameStr,6);
-                                        $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                        $data[$name] = $contact->fu_lastname;
-                                        break;
-                                    }else {
-                                        $data[$name] = $contact->fu_surname.' '.$contact->fu_lastname;
-                                        break;
-                                    }
+                                    $data[$name] = $contact->fu_surname.' '.$contact->fu_lastname;
+                                    break;
                                 }
                             }
                         }
@@ -530,22 +514,8 @@ class SendEmailsSecondCommand extends Command
                                     $data[$name] = $contact->phoneNumber3;
                                     break;
                                 }else {
-                                    if($phone_count==3){
-                                        $data[$name] = $contact->phoneNumber1;
-                                        $nameStr = substr($nameStr,strpos($nameStr,'name='));
-                                        $nameStr = substr($nameStr,6);
-                                        $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                        $data[$name] = $contact->phoneNumber2;
-        
-                                        $nameStr = substr($nameStr,strpos($nameStr,'name='));
-                                        $nameStr = substr($nameStr,6);
-                                        $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                        $data[$name] = $contact->phoneNumber3;
-                                        break;
-                                    }else {
-                                        $data[$name] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
-                                        break;
-                                    }
+                                    $data[$name] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
+                                    break;
                                 }
                             }
                         }
@@ -566,7 +536,7 @@ class SendEmailsSecondCommand extends Command
                         }
                     }
 
-                   
+                    
                     $nonPatterns = array('年齢');
                     foreach($nonPatterns as $val) {
                         if(strpos($crawler->html(),$val)!==false) {
@@ -584,9 +554,9 @@ class SendEmailsSecondCommand extends Command
                         }
                     }
 
-                   
                     
-                    $contentPatterns = array('ご相談内容','ご質問','お問い合わせ内容','詳しい内容','備考','要望','詳細','概要','内容');
+                    
+                    $contentPatterns = array('ご相談内容','ご質問','お問い合わせ内容','詳しい内容','本文','備考','要望','詳細','概要','内容');
                     foreach($contentPatterns as $val) {
                         if(strpos($crawler->html(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
@@ -598,11 +568,11 @@ class SendEmailsSecondCommand extends Command
                             }else {
                                 $content = str_replace('%company_name%', $company->name, $contact->content);
                                 $data[$nameStr] = $content;
-                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら'.PHP_EOL.'※※※※※※※※';break;
+                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                             }
                         }
                     }
-                   
+                    
                     
                     if(!empty($form->getValues())){
                         $kana_count_check = 0;$name_count_check = 0;$phone_count_check = 0;$postal_count_check = 0;
@@ -657,7 +627,7 @@ class SendEmailsSecondCommand extends Command
                                 }
                             }
                             
-                           if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
+                            if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
                                 if($phone_count ==1){
                                     $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;continue;
                                 }else if($phone_count ==3){
@@ -671,7 +641,7 @@ class SendEmailsSecondCommand extends Command
                                         $data[$key] = $contact->phoneNumber3;continue;
                                     }
                                 }
-                           }
+                            }
                         }
                         //exception method start
                         if(strpos($company->contact_form_url,"alfa-field.co.jp")!==false){
@@ -687,8 +657,9 @@ class SendEmailsSecondCommand extends Command
                             $data['mailform10'] = $contact->address;
                             $data['mailform11'] = "無料見積りのご依頼";
                             $content = str_replace('%company_name%', $company->name, $contact->content);
+                            $content = str_replace('%myurl%', $company->name, $contact->content);
                             $data['mailform12'] = $content;
-                            $data['mailform12'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
+                            $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                         }
                         if(strpos($company->contact_form_url,"ksa.jp")!==false){
                             $data['key'] = '319254';
@@ -758,10 +729,10 @@ class SendEmailsSecondCommand extends Command
                                     }
                                 }else {
                                     $company->update([
-                                        'status'        => '送信失敗'
+                                        'status'        => '送信済み'
                                     ]);
                                     $companyContact->update([
-                                        'is_delivered' => 1
+                                        'is_delivered' => 2
                                     ]);
                                 }
                             }catch (\Throwable $e) {
@@ -773,7 +744,7 @@ class SendEmailsSecondCommand extends Command
                                 ]);
                             }
                         }
-                       
+                        
                     }else {
                         $company->update([
                             'status'        => '送信失敗'
@@ -805,7 +776,6 @@ class SendEmailsSecondCommand extends Command
                 }
 
             }
-
                 
         }
 
