@@ -140,10 +140,15 @@ class BatchCheckCommand1 extends Command
     
     private function getTopUrl($companyurl) {
         $topurl='';
-        $url=explode('://',$companyurl);
-        if(isset($url)){
-            $topurl = explode('/',$url[1])[0];
-            $topurl = $url[0].'://'.$topurl;
+        if(strpos($companyurl,"http")!==false){
+            $url=explode('://',$companyurl);
+            if(isset($url)){
+                $topurl = explode('/',$url[1])[0];
+                $topurl = $url[0].'://'.$topurl;
+            }
+        }else{
+            $topurl = explode('/',$companyurl)[0];
+            $topurl = "http://".$topurl;
         }
         return $topurl;
     }

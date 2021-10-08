@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Artisan;
 use App\Imports\CompanyImport;
 use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
+use Illuminate\Support\Facades\Crypt;
 
 class DashboardController extends BaseController
 {
@@ -31,7 +32,6 @@ class DashboardController extends BaseController
     {
         parent::__construct($events);
         ini_set('max_execution_time', -1);
-		ini_set("memory_limit","1024M");
         ini_set('default_socket_timeout', 6000);
     }
 
@@ -474,6 +474,7 @@ class DashboardController extends BaseController
                 'fu_lastname'       => request()->get('fu_lastname'),
                 'email'             => request()->get('email'),
                 'title'             => request()->get('title'),
+                'myurl'             => request()->get('myurl'),
                 'content'           => request()->get('content'),
                 'homepageUrl'       => request()->get('homepageUrl'),
                 'area'              => request()->get('zone'),
@@ -550,6 +551,7 @@ class DashboardController extends BaseController
                 'fu_lastname'       => request()->get('fu_lastname'),
                 'email'             => request()->get('email'),
                 'title'             => request()->get('title'),
+                'myurl'             => request()->get('myurl'),
                 'content'           => request()->get('content'),
                 'homepageUrl'       => request()->get('homepageUrl'),
                 'area'              => request()->get('zone'),
@@ -879,8 +881,9 @@ class DashboardController extends BaseController
         return back();
     }
 
-    public function stopReceive($companyId)
+    public function stopReceive($encrypted)
     {
+        $companyId = Crypt::decryptString($encrypted);
         $company = Company::where('id',$companyId)->get();
 
         $company->toQuery()->update(['status' => '拒絶']);
@@ -908,5 +911,8 @@ class DashboardController extends BaseController
         }
         
         return back()->with(['system.message.success' => __(':itemが完了しました。', ['item' => __('アップロード(CSV)')])]);
+    }
+    public function redirect() {
+        return redirect(route('admin.dashboard'));
     }
 }

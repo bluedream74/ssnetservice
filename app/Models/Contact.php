@@ -17,6 +17,7 @@ class Contact extends Model
         'company',
         'email',
         'title',
+        'myurl',
         'content',
         'homepageUrl',
         'area',
