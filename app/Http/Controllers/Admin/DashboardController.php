@@ -37,7 +37,7 @@ class DashboardController extends BaseController
 
     public function index(Request $request)
     {
-
+      
         $query = $this->makeQuery(request()->all());
         $prefectures = array();
         foreach (config('values.prefectures') as $value) {
