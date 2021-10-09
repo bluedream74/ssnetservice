@@ -19,6 +19,7 @@ class CreateCompanyContactsTable extends Migration
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->bigInteger('contact_id')->nullable()->unsigned()->comment('Contact ID');
             $table->foreign('contact_id')->references('id')->on('contacts')->onDelete('cascade');
+            $table->Integer('counts')->default(0);
             $table->tinyInteger('is_delivered')->default(0);
             $table->timestamps();
         });
