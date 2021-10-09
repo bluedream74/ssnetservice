@@ -21,6 +21,13 @@ function getSources($needAll = false)
     return \App\Models\Source::whereNotNull('url')->orderBy('sort_no')->pluck('name', 'sort_no');
 }
 
+function getSubSources($sourceId = "all")
+{
+    if ($sourceId=="all") return \App\Models\SubSource::orderBy('sort_no')->pluck('name', 'sort_no');
+    
+    return \App\Models\SubSource::whereNotNull('name')->where('source_id',$sourceId)->orderBy('sort_no')->pluck('name', 'sort_no');
+}
+
 function getUrls($needAll = false)
 {
     if ($needAll) return \App\Models\Source::orderBy('sort_no')->pluck('url', 'sort_no');

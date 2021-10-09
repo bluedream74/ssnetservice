@@ -48,7 +48,7 @@
 
                     <div class="col-sm-3">
                         <label>子カテゴリ</label>
-                        {{ Form::select('source', getSources(true), Request::get('source'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                        {{ Form::select('subsource', getSubSources(true), Request::get('subsource'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
                     </div>
                     
                     <div class="col-sm-3">

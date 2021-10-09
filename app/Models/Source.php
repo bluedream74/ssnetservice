@@ -11,4 +11,9 @@ class Source extends Model
     'url',
     'sort_no'
   ];
+
+  public function subSources()
+    {
+        return $this->hasMany(SubSource::class);
+    }
 }
