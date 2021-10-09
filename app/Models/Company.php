@@ -16,6 +16,7 @@ class Company extends Model
         'url',
         'contact_form_url',
         'source',
+        'subsource',
         'status',
         'area'
     ];
