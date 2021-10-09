@@ -121,6 +121,7 @@
                     <tr>
                         <th style="max-width: 400px;">会社名</th>
                         <th style="max-width: 400px;">お問い合わせフォームのURL</th>
+                        <th style="max-width: 200px;">MYURL<br>クリック</th>
                         <th style="max-width: 400px;">電話番号</th>
                         <th style="max-width: 400px;">ステータス</th>
                     </tr>
@@ -133,6 +134,7 @@
                     <tr>
                         <td style="max-width: 400px;">{{ $company->name }}</td>
                         <td style="max-width: 400px;"><a href="{{ $company->contact_form_url }}" target="_blank">{{ $company->contact_form_url }}</a></td>
+                        <td style="max-width: 200px;padding-left:20px;">{{ $companyContact->counts }}</td>
                         <td style="max-width: 400px; width: 200px;">
                             @foreach ($company->phones as $phone)
                                 <div>{{ $phone->phone }}</div>
