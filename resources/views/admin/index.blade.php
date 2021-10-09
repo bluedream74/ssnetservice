@@ -25,7 +25,7 @@
 @stop
 
 @section('content')
-    {{ Form::open(['route' => 'admin.dashboard', 'method' => 'GET']) }}
+    {{ Form::open(['route' => 'admin.dashboard', 'method' => 'GET','id' => 'searchForm']) }}
         <div class="card">
             <div class="card-body">
                 <div class="row">
@@ -43,12 +43,16 @@
                     </div>
                     <div class="col-sm-3">
                         <label>カテゴリ</label>
-                        {{ Form::select('source', getSources(true), Request::get('source'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                        {{ Form::select('source', getSources(true), Request::get('source'), ['class' => 'form-control', 'placeholder' => 'すべて','id' => 'source']) }}
                     </div>
 
                     <div class="col-sm-3">
                         <label>子カテゴリ</label>
-                        {{ Form::select('subsource', getSubSources(true), Request::get('subsource'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                        @if(isset($subsources))
+                          {{ Form::select('subsource', $subsources, Request::get('subsource'), ['class' => 'form-control', 'placeholder' => 'すべて','id' => 'subsource']) }}
+                        @else
+                          {{ Form::select('subsource', getSubSources(), Request::get('subsource'), ['class' => 'form-control', 'placeholder' => 'すべて','id' => 'subsource']) }}
+                        @endif
                     </div>
                     
                     <div class="col-sm-3">
@@ -310,6 +314,9 @@
             })
         })
 
+        $("#source").change(function(){
+            $("#searchForm").submit();
+        })
         $('.status-select').change(function() {
             $.post("{{ route('admin.update.company.status') }}", {
                 _token: "{{ csrf_token() }}",
