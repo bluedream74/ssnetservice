@@ -36,27 +36,30 @@ class CompanyImport implements ToCollection
                     
                 }
                
-                $child_category = \App\Models\SubSource::where('name', $row[1])->first();
+                if($row[1]){
+                    $child_category = \App\Models\SubSource::where('name', $row[1])->first();
 
-                if(empty($child_category)&&isset($category)) {
-
-                    $child_lastCategory = \App\Models\SubSource::orderByDesc('sort_no')->first();
-                
-                    if(!isset($child_lastCategory)){
-                        $child_category = \App\Models\SubSource::create([
-                            'source_id'     => $category->id,
-                            'name'          => $row[1],
-                            'sort_no'       => 1
-                        ]);
-                    }else{
-                        $child_category = \App\Models\SubSource::create([
-                            'source_id'     => $category->id,
-                            'name'          => $row[1],
-                            'sort_no'       => $child_lastCategory->sort_no + 1
-                        ]);
+                    if(empty($child_category)&&isset($category)) {
+    
+                        $child_lastCategory = \App\Models\SubSource::orderByDesc('sort_no')->first();
+                    
+                        if(!isset($child_lastCategory)){
+                            $child_category = \App\Models\SubSource::create([
+                                'source_id'     => $category->id,
+                                'name'          => $row[1],
+                                'sort_no'       => 1
+                            ]);
+                        }else{
+                            $child_category = \App\Models\SubSource::create([
+                                'source_id'     => $category->id,
+                                'name'          => $row[1],
+                                'sort_no'       => $child_lastCategory->sort_no + 1
+                            ]);
+                        }
+    
                     }
-
                 }
+                
 				
                 if (isset($category)) {
                     if(strpos($row[3],"http")!==false){

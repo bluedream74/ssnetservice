@@ -39,14 +39,26 @@ class DashboardController extends BaseController
 
     public function index(Request $request)
     {
-      
         $query = $this->makeQuery(request()->all());
+
         $prefectures = array();
         foreach (config('values.prefectures') as $value) {
             $prefectures[$value] = $value;
         }
+
         $companies = $query->paginate(20);
-        return view('admin.index', compact('companies', 'prefectures'));
+        if (!empty($value = Arr::get(request()->all(), 'source'))) {
+            $source = Source::where('sort_no',$value)->first();
+            $subsource = SubSource::where('source_id',$source->id)->get();
+            foreach($subsource as $value){
+                $subsources[$value->name] = $value->name;
+            }
+        }
+        if(isset($subsources)){
+            return view('admin.index', compact('companies', 'prefectures','subsources'));
+        }else {
+            return view('admin.index', compact('companies', 'prefectures'));
+        }
     }
 
     private function makeQuery($attributes)
