@@ -58,25 +58,7 @@ class SendEmailsFirstCommand extends Command
                     $data = [];
                     $client = new Client();
                     if($company->contact_form_url=='')continue;
-                    // if(strpos($company->url,"https://apptime.co.jp")!==false || strpos($company->url,"https://www.amr.co.jp")!==false){
-                        // $postUrl = "https://apptime.co.jp/mail.php";
-                        // $data['cmd'] = 'contactSend';
-                        // $data['contact_name'] = $contact->surname.' '.$contact->lastname;
-                        // $data['contact_affili'] = $contact->company;
-                        // $data['contact_email'] = $contact->email;
-                        // $data['contact_tel'] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
-                        // $data['contact_text'] = $contact->company;
-                        // $content = str_replace('%company_name%', $company->name, $contact->content);
-                        // $data['contact_text'] = $content;
-                        // $data['contact_text'] .='  配信停止希望の方は  '.route('web.stop.receive', $company->id).'   こちら';
-                        // $crawler = $client->request('POST', $postUrl, $data);
-                    //     $company->update([
-                    //         'status'        => '送信済み'
-                    //     ]);
-                    //     $companyContact->update([
-                    //         'is_delivered' => 2
-                    //     ]);
-                    // }
+                    
                     
                     $crawler = $client->request('GET', $company->contact_form_url);
                     // file_put_contents('html.txt',$crawler->html());
@@ -245,6 +227,7 @@ class SendEmailsFirstCommand extends Command
                             foreach($messageTexts as $text) {
                                 if(strpos($key,$text)!==false){
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
+                                    $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                     $data[$key] = $content;
                                     $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                                 }
@@ -569,6 +552,7 @@ class SendEmailsFirstCommand extends Command
                                 break;
                             }else {
                                 $content = str_replace('%company_name%', $company->name, $contact->content);
+                                $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                 $data[$nameStr] = $content;
                                 $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                             }
@@ -646,23 +630,7 @@ class SendEmailsFirstCommand extends Command
                             }
                         }
                         //exception method start
-                        if(strpos($company->contact_form_url,"alfa-field.co.jp")!==false){
-                            $data['mailform1'] = $contact->surname.' '.$contact->lastname;
-                            $data['mailform2'] = $contact->fu_surname.' '.$contact->fu_lastname;
-                            $data['mailform3'] = $contact->email;
-                            $data['mailform4'] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
-                            $data['mailform5'] = $contact->postalCode1.'-'.$contact->postalCode2;
-                            $data['mailform6'] = $contact->postalCode1;
-                            $data['mailform7'] = $contact->postalCode2;
-                            $data['mailform8'] = $contact->address;
-                            $data['mailform9'] = $contact->address;
-                            $data['mailform10'] = $contact->address;
-                            $data['mailform11'] = "無料見積りのご依頼";
-                            $content = str_replace('%company_name%', $company->name, $contact->content);
-                            $content = str_replace('%myurl%', $company->name, $contact->content);
-                            $data['mailform12'] = $content;
-                            $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
-                        }
+                        
                         if(strpos($company->contact_form_url,"ksa.jp")!==false){
                             $data['key'] = '319254';
                         }

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
+use App\Models\CompanyContact;
 use App\Models\Source;
+use App\Models\SubSource;
 use App\Models\Contact;
 use Illuminate\Support\Arr;
 use App\Exports\CompanyExport;
@@ -65,6 +67,11 @@ class DashboardController extends BaseController
             $query->where('source', $value);
         }
 
+        if (!empty($value = Arr::get($attributes, 'subsource'))) {
+            $value = SubSource::where('sort_no',$value)->first()->name;
+            $query->where('subsource', $value);
+        }
+
         if (!empty($value = Arr::get($attributes, 'area'))) {
             $query->where('area', 'like', "%{$value}%");
         }
@@ -73,17 +80,7 @@ class DashboardController extends BaseController
             $query->where('status', $value);
         }
 
-        // if (!empty($value = Arr::get($attributes, 'email'))) {
-        //     if (intval($value) === 1) {
-        //         $query->whereHas('emails', function ($query) {
-        //             $query->where('is_verified', 0);
-        //         }, '=', 0);
-        //     } else {
-        //         $query->whereHas('emails', function ($query) {
-        //             $query->where('is_verified', 0);
-        //         });
-        //     }
-        // }
+        
 
         if (!empty($value = Arr::get($attributes, 'phone'))) {
             if (intval($value) === 1) {
@@ -885,7 +882,7 @@ class DashboardController extends BaseController
     {
         $companyId = Crypt::decryptString($encrypted);
         $company = Company::where('id',$companyId)->get();
-
+        
         $company->toQuery()->update(['status' => '拒絶']);
 
         return view('done');
@@ -914,5 +911,11 @@ class DashboardController extends BaseController
     }
     public function redirect() {
         return redirect(route('admin.dashboard'));
+    }
+    public function read($companyId,$contacId) {
+        $counts = CompanyContact::where('company_id',$companyId)->where('contact_id',$contacId)->first()->counts;
+        CompanyContact::where('company_id',$companyId)->where('contact_id',$contacId)->update(array('counts'=>$counts+1));
+        $myurl = Contact::where('id',$contacId)->first()->myurl;
+        return redirect($myurl);
     }
 }
