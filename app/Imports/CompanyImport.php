@@ -71,6 +71,7 @@ class CompanyImport implements ToCollection
                         if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
                             $company = Company::create([
                                 'source'        => $row[0],
+                                'subsource'     => $row[1],
                                 'name'          => $row[2],
                                 'url'           => $url,
                                 'contact_form_url'           => $row[4],
@@ -88,6 +89,7 @@ class CompanyImport implements ToCollection
                         if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
                             $company = Company::create([
                                 'source'        => $row[0],
+                                'subsource'     => $row[1],
                                 'name'          => $row[2],
                                 'url'           => $row[3],
                                 'contact_form_url'           => $row[4],
