@@ -80,7 +80,6 @@ class DashboardController extends BaseController
         }
 
         if (!empty($value = Arr::get($attributes, 'subsource'))) {
-            $value = SubSource::where('sort_no',$value)->first()->name;
             $query->where('subsource', $value);
         }
 
