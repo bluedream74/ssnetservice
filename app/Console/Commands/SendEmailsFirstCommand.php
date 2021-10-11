@@ -664,7 +664,7 @@ class SendEmailsFirstCommand extends Command
                             $crawler = $client->submit($form);
                         }
                         
-                        file_put_contents('html.txt',$crawler->html());
+                        // file_put_contents('html.txt',$crawler->html());
                         $checkMessages = array("ありがとうございま","有難うございま","送信されました","&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;","完了","内容を確認させていただき");
                         $check = false;
                         foreach($checkMessages as $message) {
@@ -694,7 +694,7 @@ class SendEmailsFirstCommand extends Command
                                 if(isset($form) && !empty($form)){
                                 
                                     $crawler = $client->submit($form);
-                                    file_put_contents('html.txt',$crawler->html());
+                                    // file_put_contents('html.txt',$crawler->html());
                                     $check =false;
                                     foreach($checkMessages as $message) {
                                         if(strpos($crawler->html(),$message)!==false){
