@@ -154,38 +154,38 @@ class SendEmailsFirstCommand extends Command
                             }
                         }
                         
-                        // if(isset($imageurl)&&!empty($imageurl)){
+                    //     // if(isset($imageurl)&&!empty($imageurl)){
 
-                        //     $apiImage = new ImageToText();
-                        //     $apiImage->setVerboseMode(true);
+                    //     //     $apiImage = new ImageToText();
+                    //     //     $apiImage->setVerboseMode(true);
                                     
-                        //     //your anti-captcha.com account key
-                        //     $apiImage->setKey(config('anticaptcha.key'));
+                    //     //     //your anti-captcha.com account key
+                    //     //     $apiImage->setKey(config('anticaptcha.key'));
 
-                        //     //setting file
-                        //     $apiImage->setFile($imageurl);
-                        //     $imageurl = "";
-                        //     if (!$apiImage->createTask()) {
-                        //         continue;
-                        //     }
+                    //     //     //setting file
+                    //     //     $apiImage->setFile($imageurl);
+                    //     //     $imageurl = "";
+                    //     //     if (!$apiImage->createTask()) {
+                    //     //         continue;
+                    //     //     }
 
-                        //     $taskId = $apiImage->getTaskId();
+                    //     //     $taskId = $apiImage->getTaskId();
 
 
-                        //     if (!$apiImage->waitForResult()) {
-                        //         continue;
-                        //     } else {
-                        //         $captchaText = $apiImage->getTaskSolution();
-                        //         foreach($form->all() as $key=>$val) {
-                        //             if(strpos($key,'captcha-170')!==false){
-                        //                 $data['captcha-170'] = $recaptchaToken;
-                        //             }else if(strpos($key,'captcha')!==false){
-                        //                 $data['captcha'] = $recaptchaToken;
-                        //             }
-                        //         }
-                        //     }
+                    //     //     if (!$apiImage->waitForResult()) {
+                    //     //         continue;
+                    //     //     } else {
+                    //     //         $captchaText = $apiImage->getTaskSolution();
+                    //     //         foreach($form->all() as $key=>$val) {
+                    //     //             if(strpos($key,'captcha-170')!==false){
+                    //     //                 $data['captcha-170'] = $recaptchaToken;
+                    //     //             }else if(strpos($key,'captcha')!==false){
+                    //     //                 $data['captcha'] = $recaptchaToken;
+                    //     //             }
+                    //     //         }
+                    //     //     }
                             
-                        // }
+                    //     // }
                     }catch(\Throwable $e){
                         // file_put_contents('error.txt',$e->getMessage());
 
@@ -262,7 +262,7 @@ class SendEmailsFirstCommand extends Command
                     
                     $compPatterns = array('会社名','企業名','貴社名','御社名','法人名','団体名','機関名','屋号','組織名','屋号','お店の名前');
                     foreach($compPatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             $pos = strpos($str,'name=');
                             if($pos > 3000) {
@@ -342,7 +342,7 @@ class SendEmailsFirstCommand extends Command
                     }
                     $namePatterns = array('名前','氏名','担当者','差出人','ネーム');
                     foreach($namePatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-10);
                             $nameStr = substr($str,strpos($str,'name='));
                             $nameStr = substr($nameStr,6);
@@ -366,7 +366,7 @@ class SendEmailsFirstCommand extends Command
                     }
                     $namePatterns = array('郵便番号');
                     foreach($namePatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             $nameStr = substr($str,strpos($str,'name='));
                             $nameStr = substr($nameStr,6);
@@ -390,7 +390,7 @@ class SendEmailsFirstCommand extends Command
                     }
                     $namePatterns = array('ふりがな','フリガナ','カナ');
                     foreach($namePatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             $nameStr = substr($str,strpos($str,'name='));
                             $nameStr = substr($nameStr,6);
@@ -415,7 +415,7 @@ class SendEmailsFirstCommand extends Command
                     
                     $addPatterns = array('住所','所在地','市区','番地','町名');
                     foreach($addPatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             if(strpos($str,'input')){
                                 $nameStr = substr($str,strpos($str,'name='));
@@ -430,24 +430,24 @@ class SendEmailsFirstCommand extends Command
                             }
                         }
                     }
-                    $addPatterns = array('URL');
-                    foreach($addPatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
-                            $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
-                            $nameStr = substr($str,strpos($str,'name='));
-                            $nameStr = substr($nameStr,6);
-                            $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                            if(isset($data[$nameStr]) && !empty($data[$nameStr])){
-                                break;
-                            }else {
-                                $data[$nameStr] = $contact->homepageUrl;
-                                break;
-                            }
-                        }
-                    }
+                    // $addPatterns = array('URL');
+                    // foreach($addPatterns as $val) {
+                    //     if(strpos($crawler->text(),$val)!==false) {
+                    //         $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
+                    //         $nameStr = substr($str,strpos($str,'name='));
+                    //         $nameStr = substr($nameStr,6);
+                    //         $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
+                    //         if(isset($data[$nameStr]) && !empty($data[$nameStr])){
+                    //             break;
+                    //         }else {
+                    //             $data[$nameStr] = $contact->homepageUrl;
+                    //             break;
+                    //         }
+                    //     }
+                    // }
                     $mailPatterns = array('メールアドレス','Mail アドレス');
                     foreach($mailPatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             $nameStr = substr($str,strpos($str,'name='));
                             $nameStr = substr($nameStr,6);
@@ -462,7 +462,7 @@ class SendEmailsFirstCommand extends Command
                     }
                     $nonPatterns = array('都道府県');
                     foreach($nonPatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             $nameStr = substr($str,strpos($str,'name='));
                             $nameStr = substr($nameStr,6);
@@ -478,7 +478,11 @@ class SendEmailsFirstCommand extends Command
                     }
                     $phonePatterns = array('電話番号','携帯電話','連絡先','TEL','Phone');
                     foreach($phonePatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
+                            $checkstr = substr($crawler->html(),strpos($crawler->html(),$val)-6,100);
+                            if(strpos($checkstr,'meta')!==false){
+                                continue;
+                            }
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             $nameStr = substr($str,strpos($str,'name='));
                             $nameStr = substr($nameStr,6);
@@ -507,7 +511,7 @@ class SendEmailsFirstCommand extends Command
                     }
                     $titlePatterns = array('件名','Title','Subject','題名','用件名');
                     foreach($titlePatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             $nameStr = substr($str,strpos($str,'name='));
                             $nameStr = substr($nameStr,6);
@@ -524,7 +528,7 @@ class SendEmailsFirstCommand extends Command
                     
                     $nonPatterns = array('年齢');
                     foreach($nonPatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             $nameStr = substr($str,strpos($str,'name='));
                             $nameStr = substr($nameStr,6);
@@ -543,7 +547,7 @@ class SendEmailsFirstCommand extends Command
                     
                     $contentPatterns = array('ご相談内容','ご質問','お問い合わせ内容','詳しい内容','本文','備考','要望','詳細','概要','内容');
                     foreach($contentPatterns as $val) {
-                        if(strpos($crawler->html(),$val)!==false) {
+                        if(strpos($crawler->text(),$val)!==false) {
                             $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
                             $nameStr = substr($str,strpos($str,'name='));
                             $nameStr = substr($nameStr,6);
@@ -690,7 +694,7 @@ class SendEmailsFirstCommand extends Command
                                 if(isset($form) && !empty($form)){
                                 
                                     $crawler = $client->submit($form);
-                                    // file_put_contents('html.txt',$crawler->html());
+                                    file_put_contents('html.txt',$crawler->html());
                                     $check =false;
                                     foreach($checkMessages as $message) {
                                         if(strpos($crawler->html(),$message)!==false){
@@ -739,7 +743,7 @@ class SendEmailsFirstCommand extends Command
                     }
                 }  
                 catch (\Throwable $e) {
-                    file_put_contents('html.txt',$e->getMessage());
+                    // file_put_contents('html.txt',$e->getMessage());
                     $company->update(['status' => '送信失敗']);
                     $companyContact->update([
                         'is_delivered' => 1
