@@ -923,7 +923,7 @@ class DashboardController extends BaseController
     public function redirect() {
         return redirect(route('admin.dashboard'));
     }
-    public function read($companyId,$contacId) {
+    public function read($contacId,$companyId) {
         $counts = CompanyContact::where('company_id',$companyId)->where('contact_id',$contacId)->first()->counts;
         CompanyContact::where('company_id',$companyId)->where('contact_id',$contacId)->update(array('counts'=>$counts+1));
         $myurl = Contact::where('id',$contacId)->first()->myurl;
