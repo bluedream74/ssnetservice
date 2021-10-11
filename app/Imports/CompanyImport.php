@@ -78,7 +78,8 @@ class CompanyImport implements ToCollection
                                 'name'          => $row[2],
                                 'url'           => $url,
                                 'contact_form_url'           => $row[4],
-                                'area'          => $row[5]
+                                'area'          => $row[5],
+                                'status'          => $row[6]
                             ]);
     
                             if (isset($row[7]) && $row[7] != '') {
@@ -96,7 +97,8 @@ class CompanyImport implements ToCollection
                                 'name'          => $row[2],
                                 'url'           => $row[3],
                                 'contact_form_url'           => $row[4],
-                                'area'          => $row[5]
+                                'area'          => $row[5],
+                                'status'          => $row[6]
                             ]);
 
                             if (isset($row[7]) && $row[7] != '') {
