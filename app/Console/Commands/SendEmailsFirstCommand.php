@@ -114,7 +114,7 @@ class SendEmailsFirstCommand extends Command
                         // }catch(\Throwable $e){
                             
                         // }
-                        if((strpos($key,'wpcf7_recaptcha')!==false) || (strpos($key,'g-recaptcha-response')!==false) || (strpos($key,'recaptcha_response')!==false)) {
+                        if((strpos($crawler->html(),'wpcf7_recaptcha')!==false) || (strpos($crawler->html(),'g-recaptcha-response')!==false) || (strpos($crawler->html(),'recaptcha_response')!==false)) {
                             if(isset($captcha_sitekey)){
                             
                                 // try{
@@ -644,9 +644,23 @@ class SendEmailsFirstCommand extends Command
                             }
                         }
 
-                        $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
+                        if($form->getMethod()!=="POST"){
+                            $company->update([
+                                'status'        => '送信失敗'
+                            ]);
+                            $companyContact->update([
+                                'is_delivered' => 1
+                            ]);
+                            continue;
+                        }
+                        if(isset($data['g-recaptcha-response']) || isset($data['_wpcf7_recaptcha_response'])){
+                            $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
+                        }else {
+                            $form->setValues($data);
+                            $crawler = $client->submit($form);
+                        }
                         
-                        // file_put_contents('html.txt',$crawler->html());
+                        file_put_contents('html.txt',$crawler->html());
                         $checkMessages = array("ありがとうございま","有難うございま","送信されました","&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;","完了","内容を確認させていただき");
                         $check = false;
                         foreach($checkMessages as $message) {
@@ -725,6 +739,7 @@ class SendEmailsFirstCommand extends Command
                     }
                 }  
                 catch (\Throwable $e) {
+                    file_put_contents('html.txt',$e->getMessage());
                     $company->update(['status' => '送信失敗']);
                     $companyContact->update([
                         'is_delivered' => 1
