@@ -136,7 +136,7 @@ class SendEmailsFirstCommand extends Command
                                         continue;
                                     }
                                 }catch(\Throwable $e){
-                                    file_put_contents('ve.txt',$e->getMessage());
+                                    // file_put_contents('ve.txt',$e->getMessage());
                                 }
                                
                                 $taskId = $api->getTaskId();
