@@ -51,7 +51,8 @@ class SendEmailsSecondCommand extends Command
             foreach ($companyContacts as $companyContact) {
                     
                 $company = $companyContact->company;
-                
+                $pass = '1234';
+                $method = 'aes128';
                 try {
                     $data = [];
                     $client = new Client();
@@ -227,7 +228,7 @@ class SendEmailsSecondCommand extends Command
                                     $content = str_replace('%company_name%', $company->name, $contact->content);
                                     $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                     $data[$key] = $content;
-                                    $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
+                                    $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', openssl_encrypt($company->id, $method, $pass)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                                 }
                             }
                             $titleTexts = array('fax');
@@ -556,7 +557,7 @@ class SendEmailsSecondCommand extends Command
                                 $content = str_replace('%company_name%', $company->name, $contact->content);
                                 $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                 $data[$nameStr] = $content;
-                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', Crypt::encryptString($company->id)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
+                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', openssl_encrypt($company->id, $method, $pass)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                             }
                         }
                     }
