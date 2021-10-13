@@ -924,9 +924,14 @@ class DashboardController extends BaseController
         return redirect(route('admin.dashboard'));
     }
     public function read($contacId,$companyId) {
-        $counts = CompanyContact::where('company_id',$companyId)->where('contact_id',$contacId)->first()->counts;
-        CompanyContact::where('company_id',$companyId)->where('contact_id',$contacId)->update(array('counts'=>$counts+1));
-        $myurl = Contact::where('id',$contacId)->first()->myurl;
-        return redirect($myurl);
+        try{
+            $counts = CompanyContact::where('company_id',$companyId)->where('contact_id',$contacId)->first()->counts;
+            CompanyContact::where('company_id',$companyId)->where('contact_id',$contacId)->update(array('counts'=>$counts+1));
+            $myurl = Contact::where('id',$contacId)->first()->myurl;
+            return redirect($myurl);
+        }catch (\Throwable $e) {
+            
+        }
+        return view('errors.404');
     }
 }

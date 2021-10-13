@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
+use App\Models\Source;
+use App\Models\SubSource;
 use App\Models\Contact;
 use App\Models\CompanyEmail;
 use Illuminate\Support\Arr;
@@ -149,8 +151,18 @@ class CompanyController extends BaseController
 
   public function deleteCompany()
   {
-    Company::find(request()->get('id'))->delete();
+      $company = Company::where('id',request()->get('id'))->first();
+      Company::find(request()->get('id'))->delete();
 
-    return back()->with(['system.message.success' => '削除しました。']);
+      $subSource = Company::where('subsource',$company->subsource)->count();
+      if($subSource==0){
+        SubSource::where('name',$company->subsource)->delete();
+      }
+      $source = Company::where('source',$company->source)->count();
+      if($source==0) {
+        Source::where('name',$company->source)->delete();
+      }
+
+      return back()->with(['system.message.success' => '削除しました。']);
   }
 }
