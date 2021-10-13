@@ -893,7 +893,7 @@ class DashboardController extends BaseController
     {
         $pass = 'test_key';
         $method = 'aes-256-ecb';
-        $companyId = openssl_encrypt($encrypted, $method, $pass);
+        $companyId = openssl_decrypt($encrypted, $method, $pass);
         $company = Company::where('id',$companyId)->get();
         
         $company->toQuery()->update(['status' => '拒絶']);
