@@ -173,30 +173,26 @@
 </div>
 <div class="contact-page">
 <div class="form-single">
-<span class="wpcf7-form-control-wrap namehere"><input type="text" name="namehere" value="齋藤 翔太" size="40" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required form-control" id="name" aria-required="true" aria-invalid="false" placeholder="お名前(または会社名)"></span>
+<span class="wpcf7-form-control-wrap namehere"><input type="text" name="namehere" value="あああ あああ" size="40" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required form-control" id="name" aria-required="true" aria-invalid="false" placeholder="お名前(または会社名)"></span>
 </div>
 <div class="form-single">
-<span class="wpcf7-form-control-wrap email"><input type="email" name="email" value="syt.iphone@gmail.com" size="40" class="wpcf7-form-control wpcf7-text wpcf7-email wpcf7-validates-as-required wpcf7-validates-as-email form-control" id="email" aria-required="true" aria-invalid="false" placeholder="メールアドレス"></span>
+<span class="wpcf7-form-control-wrap email"><input type="email" name="email" value="clark194637285@gmail.com" size="40" class="wpcf7-form-control wpcf7-text wpcf7-email wpcf7-validates-as-required wpcf7-validates-as-email form-control" id="email" aria-required="true" aria-invalid="false" placeholder="メールアドレス"></span>
 </div>
 <div class="form-single">
 電話番号<br>
-<span class="wpcf7-form-control-wrap tel-45"><input type="tel" name="tel-45" value="080-9999-8888" size="40" class="wpcf7-form-control wpcf7-text wpcf7-tel wpcf7-validates-as-tel" aria-invalid="false"></span>
+<span class="wpcf7-form-control-wrap tel-45"><input type="tel" name="tel-45" value="075-2654-8569" size="40" class="wpcf7-form-control wpcf7-text wpcf7-tel wpcf7-validates-as-tel" aria-invalid="false"></span>
 </div>
 <div class="form-textarea">
-<span class="wpcf7-form-control-wrap message"><textarea name="message" cols="40" rows="10" class="wpcf7-form-control wpcf7-textarea form-control" id="message" aria-invalid="false" placeholder="お問い合わせ内容">%comapany_name%
-ご担当社様
+<span class="wpcf7-form-control-wrap message"><textarea name="message" cols="40" rows="10" class="wpcf7-form-control wpcf7-textarea form-control" id="message" aria-invalid="false" placeholder="お問い合わせ内容">ネクストワン株式会社
 
-お世話になっております。
-
-テスト送信いたします。
-
-下記URLをクリックしてみてください。
-https://form.uruemon.work/3/1/read
+test
+ああああああああああああああああああああああああああああああ
+http://mail.pips-bridge.com/1/1/read
 
 
 
 ※※※※※※※※
-配信停止希望の方は  https://form.uruemon.work/quit/eyJpdiI6IlpVTDA4YzJ3NEwyYjdmTnRFMzVteHc9PSIsInZhbHVlIjoiSzZkUENEb1djK0JGa1Y2QlBSZGlBUT09IiwibWFjIjoiNjZjZGVkMTg5NzA3NjYxYjY3YjQ4MTM5NTI5MjA5ZmJlYjJjZGNlZWI1ZmRjYTg5MGQ3ZTZhNGI2NjlkNWNkZSJ9/done   こちら
+配信停止希望の方は  http://mail.pips-bridge.com/quit/eyJpdiI6Imx3dlpUMW5DUncrcjlwdkZ4Zi8zamc9PSIsInZhbHVlIjoiVzlybXpSU0xsM0pQRi9QdXNZK1h4UT09IiwibWFjIjoiYmEwMzRhZTNmMjUwZDk4MTYyNzQ1YmEzOTY0M2VlMWQzMTEyZWIwNDcxOTk1YjQ3MDA5MTI3NzM5NzNhZDViYSJ9/done   こちら
 ※※※※※※※※</textarea></span>
 </div>
 <div class="contact-page-form-btn text-center">

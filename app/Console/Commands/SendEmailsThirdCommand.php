@@ -763,6 +763,8 @@ class SendEmailsThirdCommand extends Command
                 }
 
             }
+
+
         }
 
         return 0;
