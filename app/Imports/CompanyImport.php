@@ -59,8 +59,10 @@ class CompanyImport implements ToCollection
     
                     }
                 }
-                
-				
+               
+				if(is_null($row[6])){
+                    $row[6]="未対応";
+                }
                 if (isset($category)) {
                     if(strpos($row[3],"http")!==false){
                         //
@@ -112,7 +114,6 @@ class CompanyImport implements ToCollection
                 }
                 
             } catch (\Throwable $e) {
-                dd($e->getMessage());
                 continue;
             }
            
