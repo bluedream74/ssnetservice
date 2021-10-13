@@ -51,8 +51,8 @@ class SendEmailsSecondCommand extends Command
             foreach ($companyContacts as $companyContact) {
                     
                 $company = $companyContact->company;
-                $pass = '1234';
-                $method = 'aes128';
+                $pass = 'test_key';
+                $method = 'aes-256-ecb';
                 try {
                     $data = [];
                     $client = new Client();
@@ -142,11 +142,11 @@ class SendEmailsSecondCommand extends Command
                                     $recaptchaToken = $api->getTaskSolution();
                                     foreach($form->all() as $key=>$val) {
                                         if(strpos($key,'wpcf7_recaptcha')!==false){
-                                            $data['_wpcf7_recaptcha_response'] = $recaptchaToken;
+                                            $data['_wpcf7_recaptcha_response'] = $recaptchaToken;break;
                                         }else if(strpos($key,'g-recaptcha-response')!==false){
-                                            $data['g-recaptcha-response'] = $recaptchaToken;
+                                            $data['g-recaptcha-response'] = $recaptchaToken;break;
                                         }else if(strpos($key,'recaptcha_response')!==false){
-                                            $data['recaptcha_response'] = $recaptchaToken;
+                                            $data['recaptcha_response'] = $recaptchaToken;break;
                                         }
                                     }
                                 }
