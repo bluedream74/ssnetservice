@@ -1,0 +1,1 @@
+openssl_encrypt(): Using an empty Initialization Vector (iv) is potentially insecure and not recommended
