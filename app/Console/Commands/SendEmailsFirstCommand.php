@@ -131,10 +131,14 @@ class SendEmailsFirstCommand extends Command
                                 //recaptcha key from target website
                                 $api->setWebsiteURL($company->contact_form_url);
                                 $api->setWebsiteKey($captcha_sitekey);
-    
-                                if (!$api->createTask()) {
-                                    continue;
+                                try{
+                                    if (!$api->createTask()) {
+                                        continue;
+                                    }
+                                }catch(\Throwable $e){
+                                    file_put_contents('ve.txt',$e->getMessage());
                                 }
+                               
                                 $taskId = $api->getTaskId();
                             
                                 if (!$api->waitForResult()) {
