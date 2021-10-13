@@ -76,7 +76,7 @@
 
       <div class="row mb-3">
         <label class="col-sm-4">子カテゴリ</label>
-        <div class="col-sm-8 pre-wrap">{{ $company->source }}</div>
+        <div class="col-sm-8 pre-wrap">{{ $company->subsource }}</div>
       </div>
 
       <div class="row mb-3">
