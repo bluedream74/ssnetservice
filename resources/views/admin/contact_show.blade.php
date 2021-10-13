@@ -200,6 +200,11 @@
                                 {{ Form::text('title', old('title'), ['class' => 'form-control','id' => 'title']) }}
                             </div>
 
+                            <label class="col-sm-12">MY URL %myurl%</label>
+                            <div class="col-sm-12 form-group">
+                                {{ Form::text('myurl', old('myurl'), ['class' => 'form-control','id' => 'myurl']) }}
+                            </div>
+
                             <label class="col-sm-12">内容<span class="essential">*</span></label>
                             <div class="col-sm-12 form-group">
                                 {{ Form::textarea('content', old('content'), ['class' => 'form-control', 'rows' => 7, 'id' => 'content']) }}
@@ -215,6 +220,7 @@
                                 {{ Form::select('zone', $prefectures, Request::get('zone'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
                             </div>
 
+                           
                             <label class="col-sm-12">郵便番号</label>
                             <div class="col-sm-12 form-group row">
                                 <div class="col-sm-6">{{ Form::text('postalCode1', old('postalcode1'), ['class' => 'form-control','id' => 'address1']) }}</div>
