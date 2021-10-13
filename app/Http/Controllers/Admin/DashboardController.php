@@ -891,8 +891,8 @@ class DashboardController extends BaseController
 
     public function stopReceive($encrypted)
     {
-        $pass = '1234';
-        $method = 'aes128';
+        $pass = 'test_key';
+        $method = 'aes-256-ecb';
         $companyId = openssl_encrypt($encrypted, $method, $pass);
         $company = Company::where('id',$companyId)->get();
         
