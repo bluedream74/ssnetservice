@@ -39,25 +39,30 @@ class DashboardController extends BaseController
 
     public function index(Request $request)
     {
-        $query = $this->makeQuery(request()->all());
+        try{
+            
+            $query = $this->makeQuery(request()->all());
 
-        $prefectures = array();
-        foreach (config('values.prefectures') as $value) {
-            $prefectures[$value] = $value;
-        }
-
-        $companies = $query->paginate(20);
-        if (!empty($value = Arr::get(request()->all(), 'source'))) {
-            $source = Source::where('sort_no',$value)->first();
-            $subsource = SubSource::where('source_id',$source->id)->get();
-            foreach($subsource as $value){
-                $subsources[$value->name] = $value->name;
+            $prefectures = array();
+            foreach (config('values.prefectures') as $value) {
+                $prefectures[$value] = $value;
             }
-        }
-        if(isset($subsources)){
-            return view('admin.index', compact('companies', 'prefectures','subsources'));
-        }else {
-            return view('admin.index', compact('companies', 'prefectures'));
+
+            $companies = $query->paginate(20);
+            if (!empty($value = Arr::get(request()->all(), 'source'))) {
+                $source = Source::where('sort_no',$value)->first();
+                $subsource = SubSource::where('source_id',$source->id)->get();
+                foreach($subsource as $value){
+                    $subsources[$value->name] = $value->name;
+                }
+            }
+            if(isset($subsources)){
+                return view('admin.index', compact('companies', 'prefectures','subsources'));
+            }else {
+                return view('admin.index', compact('companies', 'prefectures'));
+            }
+        }catch (\Throwable $e) {
+            return redirect(route('admin.dashboard'));
         }
     }
 
