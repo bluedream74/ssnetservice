@@ -156,62 +156,26 @@ class BatchCheckCommand2 extends Command
     private function checkTopContactForm($url) {
         $client = new Client();
         $crawler = $client->request('GET', $url);
-        try {
-            if($crawler->selectLink('お問い合わせ')->link()){
-                return $crawler->selectLink('お問い合わせ')->link()->getUri();
+        $contact_form_patterns = array('お見積り・お問合せ','お問合せ・サポート','ホームページから問い合わせ','お問い合わせ','お問合せ','お問合わせ','お問い合せ','問い合わせ','問合せ','Contact','CONTACT','contact');
+        foreach($contact_form_patterns as $pattern) {
+            if(strpos($crawler->html(),$pattern)!==false){
+                try {
+                    if($crawler->selectLink($pattern)->link()){
+                        return $crawler->selectLink($pattern)->link()->getUri();
+                    }
+                }catch(\Throwable $e){
+                    $str = substr($crawler->html(),strpos($crawler->html(),$pattern)-100);
+                    $pos = strpos($str,'href=');
+                    if($pos > 100) {
+                        continue;
+                    }else {
+                        $nameStr = substr($str,$pos);
+                        $nameStr = substr($nameStr,6);
+                        $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
+                        return $nameStr;
+                    }
+                }
             }
-        }catch(\Throwable $e){
-            
-        }
-        try {
-            if($crawler->selectLink('お問合せ')->link()){
-                return $crawler->selectLink('お問合せ')->link()->getUri();
-            }
-        }catch(\Throwable $e){
-            
-        }
-        
-        try {
-            if($crawler->selectLink('問い合わせ')->link()){
-                return $crawler->selectLink('問い合わせ')->link()->getUri();
-            }
-        }catch(\Throwable $e){
-            
-        }
-        try {
-            if($crawler->selectLink('問合せ')->link()){
-                return $crawler->selectLink('問合せ')->link()->getUri();
-            }
-        }catch(\Throwable $e){
-            
-        }
-        try {
-            if($crawler->selectLink('Contact')->link()){
-                return $crawler->selectLink('Contact')->link()->getUri();
-            }
-        }catch(\Throwable $e){
-            
-        }
-        try {
-            if($crawler->selectLink('CONTACT')->link()){
-                return $crawler->selectLink('CONTACT')->link()->getUri();
-            }
-        }catch(\Throwable $e){
-            
-        }
-        try {
-            if($crawler->selectLink('contact')->link()){
-                return $crawler->selectLink('contact')->link()->getUri();
-            }
-        }catch(\Throwable $e){
-            
-        }
-        try {
-            if($crawler->selectLink('お見積り・お問合せ')->link()){
-                return $crawler->selectLink('お見積り・お問合せ')->link()->getUri();
-            }
-        }catch(\Throwable $e){
-            
         }
         try{
             $form = $crawler->filter('form')->form()->all();
