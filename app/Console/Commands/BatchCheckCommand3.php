@@ -157,24 +157,32 @@ class BatchCheckCommand3 extends Command
     private function checkTopContactForm($url) {
         $client = new Client();
         $crawler = $client->request('GET', $url);
-        $contact_form_patterns = array('お見積り・お問合せ','お問合せ・サポート','ホームページから問い合わせ','お問い合わせ','お問合せ','お問合わせ','お問い合せ','問い合わせ','問合せ','Contact','CONTACT','contact');
+        
+        $contact_form_patterns = array(
+            'お見積り・お問合せ',
+            'お問合せ・サポート',
+            'ホームページから問い合わせ',
+            'お問い合わせ','お問合せ',
+            'お問合わせ',
+            'お問い合せ',
+            '問い合わせ',
+            '問合せ',
+            'Contact',
+            'CONTACT',
+            'contact');
         foreach($contact_form_patterns as $pattern) {
             if(strpos($crawler->html(),$pattern)!==false){
+                $str = substr($crawler->html(),strpos($crawler->html(),$pattern)-10);
+                $pos = strpos($str,'>');
+                $pattern = substr($str,$pos);
+                $pattern = substr($pattern,2);
+                $pattern = substr($pattern,0,strpos($pattern,'<'));
                 try {
                     if($crawler->selectLink($pattern)->link()){
                         return $crawler->selectLink($pattern)->link()->getUri();
                     }
                 }catch(\Throwable $e){
-                    $str = substr($crawler->html(),strpos($crawler->html(),$pattern)-100);
-                    $pos = strpos($str,'href=');
-                    if($pos > 100) {
-                        continue;
-                    }else {
-                        $nameStr = substr($str,$pos);
-                        $nameStr = substr($nameStr,6);
-                        $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                        return $nameStr;
-                    }
+                    
                 }
             }
         }
