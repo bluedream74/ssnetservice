@@ -59,5 +59,6 @@ return [
     'mail_encryption' => env('MAIL_ENCRYPTION'),
     'check_contact_form' => env('CHECK_CONTACT_FORM'),
     'mail_limit' => env('MAIL_LIMIT'),
-    'ProcessCount' => '50'
+    'ProcessCount' => '50',
+    'offset' => '75'
 ];
