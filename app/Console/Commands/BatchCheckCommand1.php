@@ -69,7 +69,6 @@ class BatchCheckCommand1 extends Command
                             if(isset($check_url)&&($check_url)){
                                 Company::where('id',$company->id)->update(['contact_form_url'=>$check_url]);
                             }else {
-                                
                                 if($this->checkSubContactForm($topPageUrl.'/contact')){
                                     Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact']);
                                     continue;
@@ -100,6 +99,10 @@ class BatchCheckCommand1 extends Command
                                 }
                                 if($this->checkSubContactForm($topPageUrl.'/toiawase')){
                                     Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/toiawase']);
+                                    continue;
+                                }
+                                if($this->checkSubContactForm($topPageUrl.'/html/toiawase.html')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/html/toiawase.html']);
                                     continue;
                                 }
                             }
@@ -155,14 +158,15 @@ class BatchCheckCommand1 extends Command
     private function checkTopContactForm($url) {
         $client = new Client();
         $crawler = $client->request('GET', $url);
-        
         $contact_form_patterns = array(
             'お見積り・お問合せ',
             'お問合せ・サポート',
             'ホームページから問い合わせ',
-            'お問い合わせ','お問合せ',
+            'お問い合わせ',
+            'お問合せ',
             'お問合わせ',
             'お問い合せ',
+            '問い合せ',
             '問い合わせ',
             '問合せ',
             'Contact',
@@ -170,10 +174,10 @@ class BatchCheckCommand1 extends Command
             'contact');
         foreach($contact_form_patterns as $pattern) {
             if(strpos($crawler->html(),$pattern)!==false){
-                $str = substr($crawler->html(),strpos($crawler->html(),$pattern)-10);
+                $str = substr($crawler->html(),strpos($crawler->html(),$pattern)-15);
                 $pos = strpos($str,'>');
                 $pattern = substr($str,$pos);
-                $pattern = substr($pattern,2);
+                $pattern = substr($pattern,1);
                 $pattern = substr($pattern,0,strpos($pattern,'<'));
                 try {
                     if($crawler->selectLink($pattern)->link()){
