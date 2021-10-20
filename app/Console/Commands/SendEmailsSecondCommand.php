@@ -43,7 +43,7 @@ class SendEmailsSecondCommand extends Command
     {
         $limit = intval(config('values.mail_limit'));
 
-        $offset = 50;
+        $offset = intval(config('values.offset'));
         $contacts = Contact::whereHas('reserve_companies')->get();
         foreach ($contacts as $contact) {
             $companyContacts = $contact->companies()->where('is_delivered', 0)->skip($offset)->take($offset)->get();
