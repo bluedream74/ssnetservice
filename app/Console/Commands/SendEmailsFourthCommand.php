@@ -357,7 +357,7 @@ class SendEmailsFourthCommand extends Command
                             $nameStr = substr($nameStr,6);
                             $name = substr($nameStr,0,strpos($nameStr,'"'));
                             foreach($form->all() as $key=>$val) {
-                                if($key==$nameStr){
+                                if($key==$name){
                                     if(isset($data[$name]) && !empty($data[$name])){
                                         break;
                                     }else {
@@ -366,7 +366,11 @@ class SendEmailsFourthCommand extends Command
                                             $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                             $nameStr = substr($nameStr,6);
                                             $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                            $data[$name] = $contact->lastname;
+                                            foreach($form->all() as $key=>$val) {
+                                                if($key==$name){
+                                                    $data[$name] = $contact->lastname;
+                                                }
+                                            }
                                             break;
                                         }else {
                                             $data[$name] = $contact->surname.' '.$contact->lastname;
@@ -385,7 +389,7 @@ class SendEmailsFourthCommand extends Command
                             $nameStr = substr($nameStr,6);
                             $name = substr($nameStr,0,strpos($nameStr,'"'));
                             foreach($form->all() as $key=>$val) {
-                                if($key==$nameStr){
+                                if($key==$name){
                                     if(isset($data[$name]) && !empty($data[$name])){
                                         break;
                                     }else {
@@ -394,7 +398,11 @@ class SendEmailsFourthCommand extends Command
                                             $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                             $nameStr = substr($nameStr,6);
                                             $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                            $data[$name] = $contact->postalCode2;
+                                            foreach($form->all() as $key=>$val) {
+                                                if($key==$name){
+                                                    $data[$name] = $contact->postalCode2;
+                                                }
+                                            }
                                             break;
                                         }else {
                                             $data[$name] = $contact->postalCode1."-".$contact->postalCode2;
@@ -413,7 +421,7 @@ class SendEmailsFourthCommand extends Command
                             $nameStr = substr($nameStr,6);
                             $name = substr($nameStr,0,strpos($nameStr,'"'));
                             foreach($form->all() as $key=>$val) {
-                                if($key==$nameStr){
+                                if($key==$name){
                                     if(isset($data[$name]) && !empty($data[$name])){
                                         break;
                                     }else {
@@ -422,7 +430,11 @@ class SendEmailsFourthCommand extends Command
                                             $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                             $nameStr = substr($nameStr,6);
                                             $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                            $data[$name] = $contact->fu_lastname;
+                                            foreach($form->all() as $key=>$val) {
+                                                if($key==$name){
+                                                    $data[$name] = $contact->fu_lastname;
+                                                }
+                                            }
                                             break;
                                         }else {
                                             $data[$name] = $contact->fu_surname.' '.$contact->fu_lastname;
@@ -529,12 +541,19 @@ class SendEmailsFourthCommand extends Command
                                             $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                             $nameStr = substr($nameStr,6);
                                             $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                            $data[$name] = $contact->phoneNumber2;
-            
+                                            foreach($form->all() as $key=>$val) {
+                                                if($key==$name){
+                                                    $data[$name] = $contact->phoneNumber2;
+                                                }
+                                            }
                                             $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                             $nameStr = substr($nameStr,6);
                                             $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                            $data[$name] = $contact->phoneNumber3;
+                                            foreach($form->all() as $key=>$val) {
+                                                if($key==$name){
+                                                    $data[$name] = $contact->phoneNumber3;
+                                                }
+                                            }
                                             break;
                                         }else {
                                             $data[$name] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;
