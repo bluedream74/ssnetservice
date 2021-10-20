@@ -69,10 +69,14 @@ class SendEmailsThirdCommand extends Command
                         ||(strpos($crawler->text(),"有料")!==false)
                         ||(strpos($crawler->text(),"代引き")!==false)
                         ||(strpos($crawler->text(),"着払い")!==false)
-                    )
-                    continue;
-                    
-
+                    ){
+                        $company->update(['status' => '送信失敗']);
+                        $companyContact->update([
+                            'is_delivered' => 1
+                        ]);
+                        continue;
+                    }
+                   
                     try{
                         $form = $crawler->filter('form')->form();
                     }catch (\Throwable $e) {
