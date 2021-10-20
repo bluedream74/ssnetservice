@@ -69,10 +69,14 @@ class SendEmailsThirdCommand extends Command
                         ||(strpos($crawler->text(),"有料")!==false)
                         ||(strpos($crawler->text(),"代引き")!==false)
                         ||(strpos($crawler->text(),"着払い")!==false)
-                    )
-                    continue;
-                    
-
+                    ){
+                        $company->update(['status' => '送信失敗']);
+                        $companyContact->update([
+                            'is_delivered' => 1
+                        ]);
+                        continue;
+                    }
+                   
                     try{
                         $form = $crawler->filter('form')->form();
                     }catch (\Throwable $e) {
@@ -730,7 +734,7 @@ class SendEmailsThirdCommand extends Command
                             $crawler = $client->submit($form);
                         }
                         
-                        file_put_contents('html.txt',$crawler->html());
+                        // file_put_contents('html.txt',$crawler->html());
                         $checkMessages = array("ありがとうございま","有難うございま","送信されました","&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;","完了","内容を確認させていただき");
                         $check = false;
                         foreach($checkMessages as $message) {
@@ -809,7 +813,7 @@ class SendEmailsThirdCommand extends Command
                     }
                 }  
                 catch (\Throwable $e) {
-                    // file_put_contents('html.txt',$e->getMessage());
+                    file_put_contents('html.txt',$e->getMessage());
                     $company->update(['status' => '送信失敗']);
                     $companyContact->update([
                         'is_delivered' => 1
