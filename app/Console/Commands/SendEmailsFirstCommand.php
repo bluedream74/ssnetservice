@@ -814,7 +814,7 @@ class SendEmailsFirstCommand extends Command
                     }
                 }  
                 catch (\Throwable $e) {
-                    // file_put_contents('html.txt',$e->getMessage());
+                    file_put_contents('html.txt',$e->getMessage());
                     $company->update(['status' => '送信失敗']);
                     $companyContact->update([
                         'is_delivered' => 1
