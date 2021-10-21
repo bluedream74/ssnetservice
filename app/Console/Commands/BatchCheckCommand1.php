@@ -174,14 +174,31 @@ class BatchCheckCommand1 extends Command
             'contact');
         foreach($contact_form_patterns as $pattern) {
             if(strpos($crawler->html(),$pattern)!==false){
-                $str = substr($crawler->html(),strpos($crawler->html(),$pattern)-15);
+                $patternStr = $pattern;
+                $str = substr($crawler->html(),strpos($crawler->html(),$pattern)-10);
                 $pos = strpos($str,'>');
                 $pattern = substr($str,$pos);
                 $pattern = substr($pattern,1);
                 $pattern = substr($pattern,0,strpos($pattern,'<'));
                 try {
+                    if(empty($pattern)){
+                        $pattern = $patternStr;
+                    } 
+                    if( strpos($pattern,$patternStr) !== false){
+
+                    } else {
+                        $pattern = $patternStr;
+                    }
                     if($crawler->selectLink($pattern)->link()){
-                        return $crawler->selectLink($pattern)->link()->getUri();
+                        $link = $crawler->selectLink($pattern)->link()->getUri();
+                        $jsPatterns = arry('javascript','JavaScript');
+                        foreach($jsPatterns as $js) {
+                            if(strpos($link,$js) !== false) {
+                               break;
+                            }else {
+                                return $link;
+                            }
+                        }
                     }
                 }catch(\Throwable $e){
                     
