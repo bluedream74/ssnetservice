@@ -103,7 +103,7 @@
                             <th style="max-width: 400px;">@sortablelink('name', '会社名')</th>
                             <th style="max-width: 400px;">@sortablelink('url', 'URL')</th>
                             <th style="max-width: 400px;">@sortablelink('source', 'カテゴリ')</th>
-                            <th style="max-width: 400px;">@sortablelink('subSource', '子カテゴリ')</th>
+                            <th style="max-width: 400px;">@sortablelink('subsource', '子カテゴリ')</th>
                             <th style="max-width: 400px;">@sortablelink('area', 'エリア')</th>
                             <th style="max-width: 400px;">@sortablelink('status', 'ステータス')</th>
                             <!-- <th style="max-width: 400px;">メールアドレス</th> -->
@@ -121,7 +121,7 @@
                                 <a href="{{ $company->contact_form_url }}" target="_blank">{{ $company->contact_form_url }}</a>
                             </td>
                             <td style="max-width: 400px;">{{ $company->source }}</td>
-                            <td style="max-width: 400px;">{{ $company->subSource }}</td>
+                            <td style="max-width: 400px;">{{ $company->subsource }}</td>
                             
                             <td style="max-width: 400px;">{{ $company->area }}</td>
                             <td style="max-width: 400px; width: 120px;">
