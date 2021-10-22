@@ -46,13 +46,11 @@ class BatchCheckCommand3 extends Command
      */
     public function handle()
     {
-        $check_contact_form = config('values.check_contact_form');
+        $check_contact_form = Config::get()->first()->checkContactForm;
         // $output = new ConsoleOutput();
-        if($check_contact_form=="1"){
+        if($check_contact_form == 1){
             //$limit = intval(config('values.mail_limit'));
 			$offset = 30;
-            $ProcessCount = intval(config('values.ProcessCount'));
-
             $date=Carbon::now()->timezone('Asia/Tokyo');
           
             $companies = Company::where('check_contact_form',0)->skip(2*$offset)->take($offset)->get();
@@ -71,7 +69,6 @@ class BatchCheckCommand3 extends Command
                             if(isset($check_url)&&($check_url)){
                                 Company::where('id',$company->id)->update(['contact_form_url'=>$check_url]);
                             }else {
-                                
                                 if($this->checkSubContactForm($topPageUrl.'/contact')){
                                     Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact']);
                                     continue;
@@ -104,6 +101,10 @@ class BatchCheckCommand3 extends Command
                                     Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/toiawase']);
                                     continue;
                                 }
+                                if($this->checkSubContactForm($topPageUrl.'/html/toiawase.html')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/html/toiawase.html']);
+                                    continue;
+                                }
                             }
                         }
                         
@@ -124,6 +125,7 @@ class BatchCheckCommand3 extends Command
         
         return 0;
     }
+
 
     private function upsert($key, $value)
     {

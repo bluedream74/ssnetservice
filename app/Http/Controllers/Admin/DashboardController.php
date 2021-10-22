@@ -10,6 +10,7 @@ use App\Models\CompanyContact;
 use App\Models\Source;
 use App\Models\SubSource;
 use App\Models\Contact;
+use App\Models\Config;
 use Illuminate\Support\Arr;
 use App\Exports\CompanyExport;
 use App\Exports\ContactExport;
@@ -49,6 +50,7 @@ class DashboardController extends BaseController
                 $prefectures[$value] = $value;
             }
 
+            $config = Config::where('id',1)->first()->checkContactForm;
             $companies = $query->paginate(20);
             if (!empty($value = Arr::get(request()->all(), 'source'))) {
                 $source = Source::where('sort_no',$value)->first();
@@ -58,9 +60,9 @@ class DashboardController extends BaseController
                 }
             }
             if(isset($subsources)){
-                return view('admin.index', compact('companies', 'prefectures','subsources'));
+                return view('admin.index', compact('companies', 'prefectures','subsources', 'config'));
             }else {
-                return view('admin.index', compact('companies', 'prefectures'));
+                return view('admin.index', compact('companies', 'prefectures' , 'config'));
             }
         }catch (\Throwable $e) {
             return redirect(route('admin.dashboard'));
@@ -303,21 +305,13 @@ class DashboardController extends BaseController
     }
 
     public function batchCheck(){
-        $CHECK_CONTACT_FORM = config('values.check_contact_form');
-        $key = 'CHECK_CONTACT_FORM';
-		
-        if($CHECK_CONTACT_FORM=="0"){
-            $this->upsert($key, 1);
-            Artisan::call('config:cache');
-            //Artisan::call('queue:restart');	
-            usleep(3000000);
+        $CHECK_CONTACT_FORM = Config::get()->first()->checkContactForm;
+        if($CHECK_CONTACT_FORM === 0){
+            Config::where('id',1)->update(array('checkContactForm'=>'1'));
             Company::where('check_contact_form',1)->update(['check_contact_form'=>0]);
             return back()->with(['system.message.info' => "一括チェックしています。"]);
         }else {
-            $this->upsert($key, 0);
-            Artisan::call('config:cache');
-            //Artisan::call('queue:restart');
-            usleep(3000000);
+            Config::where('id',1)->update(array('checkContactForm'=>'0'));
             return back()->with(['system.message.info' => "一括チェックが停止されました。"]);
         }
     }
@@ -498,7 +492,9 @@ class DashboardController extends BaseController
                 'phoneNumber1'      => request()->get('phoneNumber1'),
                 'phoneNumber2'      => request()->get('phoneNumber2'),
                 'phoneNumber3'      => request()->get('phoneNumber3'),
-                'company'           => request()->get('company')
+                'company'           => request()->get('company'),
+                'date'           => request()->get('date'),
+                'time'           => request()->get('time'),
             ]);
 
             $total = 0;
@@ -518,6 +514,7 @@ class DashboardController extends BaseController
 
             \DB::commit();
         } catch (\Throwable $e) {
+            dd($e->getMessage());
             \DB::rollBack();
 
             return back()
@@ -575,7 +572,9 @@ class DashboardController extends BaseController
                 'phoneNumber1'      => request()->get('phoneNumber1'),
                 'phoneNumber2'      => request()->get('phoneNumber2'),
                 'phoneNumber3'      => request()->get('phoneNumber3'),
-                'company'           => request()->get('company')
+                'company'           => request()->get('company'),
+                'date'           => request()->get('date'),
+                'time'           => request()->get('time'),
             ]);
 
             $total = 0;
@@ -732,26 +731,36 @@ class DashboardController extends BaseController
 
     public function configIndex()
     {
-        return view('admin.config');
+        $configs = Config::get()->first();
+        return view('admin.config',compact('configs'));
     }
 
     public function updateConfig(Request $request)
     {
-        $keys = [ 
-                'MAIL_LIMIT'
-            ];
+        // $keys = [ 
+        //         'MAIL_LIMIT'
+        //     ];
 
-        foreach($keys as $key) {
-            if ($request->has($key)) {
-                $newValue = $request->get($key);
-                $this->upsert($key, $newValue);
-            }
+        // foreach($keys as $key) {
+        //     if ($request->has($key)) {
+        //         $newValue = $request->get($key);
+        //         $this->upsert($key, $newValue);
+        //     }
+        // }
+
+        // Artisan::call('config:cache');
+        // Artisan::call('queue:restart');
+        // sleep(1);request()->get('surname')
+        // Config::where('')
+        try{
+            Config::where('id',1)->update(array(
+                'start' => $request->get('start'),
+                'end' => $request->get('end'),
+                'mailLimit' => $request->get('MAIL_LIMIT'),
+            ));
+        }catch (\Throwable $e) {
+
         }
-
-        Artisan::call('config:cache');
-        Artisan::call('queue:restart');
-        sleep(1);
-
         return back()->with(['system.message.success' => '保存しました。']);
     }
 
