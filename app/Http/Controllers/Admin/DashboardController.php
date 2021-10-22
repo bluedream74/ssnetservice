@@ -520,10 +520,15 @@ class DashboardController extends BaseController
             return back()
                 ->with(['system.message.danger' => "送信できませんでした。"]);
         }
-
-        return back()
-                ->with(['system.message.success' => "送信しています。"]);
-
+        if(is_null(request()->get('date'))){
+            return back()
+            ->with(['system.message.success' => "送信しています。"]);
+        }else {
+            return back()
+            ->with(['system.message.success' => "送信を予約しました。"]);
+        }
+        
+       
        
     }
 

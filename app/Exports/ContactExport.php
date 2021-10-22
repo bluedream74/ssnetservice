@@ -55,7 +55,7 @@ class ContactExport implements FromCollection, WithHeadings, WithMapping
     $res[] = $company->name;
     $res[] = $company->url;
     $res[] = $company->contact_form_url;
-    $res[] = $CompanyContact->counts;
+    $res[] = (string)$CompanyContact->counts;
     $res[] = $company->area;
     if($CompanyContact->is_delivered == 1) {
       $res[] = "送信失敗";
