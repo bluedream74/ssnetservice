@@ -46,23 +46,22 @@ class BatchCheckCommand2 extends Command
      */
     public function handle()
     {
-        $check_contact_form = config('values.check_contact_form');
+        $check_contact_form = Config::get()->first()->checkContactForm;
         // $output = new ConsoleOutput();
-        if($check_contact_form=="1"){
+        if($check_contact_form == 1){
             //$limit = intval(config('values.mail_limit'));
 			$offset = 30;
-
+            $date=Carbon::now()->timezone('Asia/Tokyo');
           
             $companies = Company::where('check_contact_form',0)->skip($offset)->take($offset)->get();
             
             if(sizeof($companies)>0){
                 foreach($companies as $company) {
                     try {
-                       
                         // $output->writeln("<info>sent count</info>".$sent);
                         Company::where('id',$company->id)->update(['check_contact_form'=>1]);
                         if(isset($company->contact_form_url)&&(!empty($company->contact_form_url))){
-                           continue;
+                            continue;
                         }else {
                             $topPageUrl = $this->getTopUrl($company->url);
                             $check_url = $this->checkTopContactForm($topPageUrl);
@@ -70,7 +69,6 @@ class BatchCheckCommand2 extends Command
                             if(isset($check_url)&&($check_url)){
                                 Company::where('id',$company->id)->update(['contact_form_url'=>$check_url]);
                             }else {
-                                
                                 if($this->checkSubContactForm($topPageUrl.'/contact')){
                                     Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact']);
                                     continue;
@@ -101,6 +99,10 @@ class BatchCheckCommand2 extends Command
                                 }
                                 if($this->checkSubContactForm($topPageUrl.'/toiawase')){
                                     Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/toiawase']);
+                                    continue;
+                                }
+                                if($this->checkSubContactForm($topPageUrl.'/html/toiawase.html')){
+                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/html/toiawase.html']);
                                     continue;
                                 }
                             }

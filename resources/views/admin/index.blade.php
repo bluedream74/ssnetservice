@@ -83,10 +83,10 @@
                         <label class="col-sm-2">Total: {{ $companies->total() }}</label>
                         <div class="col-sm-10 text-right">
                             <!-- <button type="button" class="btn btn-sm btn-default mr-3 btn-delete-email">無効なメールアドレスを一括削除</button> -->
-                            @if (config('values.check_contact_form') === "0")
-                                <button type="button" class="btn btn-sm btn-primary mr-3" id="batchCheck">問い合わせフォームを一括チェック</button>
-                            @else
+                            @if ($config == 1)
                                 <button type="button" class="btn btn-sm btn-danger mr-3" id="batchCheck">問い合わせフォームを一括チェック中を中断</button>
+                            @else
+                                <button type="button" class="btn btn-sm btn-primary mr-3" id="batchCheck">問い合わせフォームを一括チェック</button>
                             @endif
                             <button type="button" class="btn btn-sm btn-primary mr-3 btn-warning" data-toggle="modal" data-target="#email-modal">フォーム作成</button>
                             <button type="button" class="btn btn-sm btn-info mr-3 btn-duplicate-delete">重複をチェックして削除</button>
@@ -103,6 +103,7 @@
                             <th style="max-width: 400px;">@sortablelink('name', '会社名')</th>
                             <th style="max-width: 400px;">@sortablelink('url', 'URL')</th>
                             <th style="max-width: 400px;">@sortablelink('source', 'カテゴリ')</th>
+                            <th style="max-width: 400px;">@sortablelink('subSource', '子カテゴリ')</th>
                             <th style="max-width: 400px;">@sortablelink('area', 'エリア')</th>
                             <th style="max-width: 400px;">@sortablelink('status', 'ステータス')</th>
                             <!-- <th style="max-width: 400px;">メールアドレス</th> -->
@@ -120,6 +121,7 @@
                                 <a href="{{ $company->contact_form_url }}" target="_blank">{{ $company->contact_form_url }}</a>
                             </td>
                             <td style="max-width: 400px;">{{ $company->source }}</td>
+                            <td style="max-width: 400px;">{{ $company->subSource }}</td>
                             
                             <td style="max-width: 400px;">{{ $company->area }}</td>
                             <td style="max-width: 400px; width: 120px;">
@@ -226,7 +228,13 @@
                                 <div class="col-sm-4">{{ Form::number('phoneNumber2', old('phoneNumber2'), ['class' => 'form-control','id' => 'phoneNumber2']) }}</div>
                                 <div class="col-sm-4">{{ Form::number('phoneNumber3', old('phoneNumber3'), ['class' => 'form-control','id' => 'phoneNumber3']) }}</div>
                             </div>
-                           
+
+                            <label class="col-sm-12">予約投稿</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-4">{{Form::date('date','', ['class' => 'form-control'])}}</div>
+                                <div class="col-sm-4">{{Form::time('time','', ['class' => 'form-control'])}}</div>
+                            </div>
+                            
                             <!-- <label class="col-sm-12">添付ファイル</label>
                             <div class="col-sm-12 form-group">
                                 <input type="file" name="attachment" class="form-control" />

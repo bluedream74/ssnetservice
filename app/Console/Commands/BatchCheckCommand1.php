@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Models\Company;
 use App\Models\User;
+use App\Models\Config;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Goutte\Client;
@@ -46,9 +47,9 @@ class BatchCheckCommand1 extends Command
      */
     public function handle()
     {
-        $check_contact_form = config('values.check_contact_form');
+        $check_contact_form = Config::get()->first()->checkContactForm;
         // $output = new ConsoleOutput();
-        if($check_contact_form=="1"){
+        if($check_contact_form == 1){
             //$limit = intval(config('values.mail_limit'));
 			$offset = 30;
             $date=Carbon::now()->timezone('Asia/Tokyo');
