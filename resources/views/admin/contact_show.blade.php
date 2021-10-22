@@ -102,6 +102,21 @@
                 </div>
             </div>
             <div class="row mb-3">
+                <label class="col-sm-4">予約投稿</label>
+                <div class="col-sm-8 pre-wrap">
+                    @if (isset($contact->date))
+                        {!! $contact->date !!}
+                    @else
+                        なし
+                    @endif
+                    @if(isset($contact->time))
+                        &nbsp;{!! $contact->time !!}
+                    @else
+                        &nbsp;なし
+                    @endif
+                </div>
+            </div>
+            <div class="row mb-3">
                 <div class="col-sm-12 text-right">
                     <a href="{{ route('admin.contact.export', ['status' => Request::get('status'), 'contact' => $contact->id]) }}" class="btn btn-sm btn-success pl-3 pr-3" target="_blank">CSVダウンロード</a>
                 </div>
@@ -173,7 +188,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="row">
-                            <label class="col-sm-12">名前<span class="essential">*</span></label>
+                        <label class="col-sm-12">名前<span class="essential">*</span></label>
                             <div class="col-sm-12 form-group row">
                                 <div class="col-sm-6">{{ Form::text('surname', old('surname'), ['class' => 'form-control', 'id' => 'surname']) }}</div>
                                 <div class="col-sm-6">{{ Form::text('lastname', old('lastname'), ['class' => 'form-control', 'id' => 'lastname']) }}</div>
@@ -237,6 +252,12 @@
                                 <div class="col-sm-4">{{ Form::number('phoneNumber1', old('phoneNumber1'), ['class' => 'form-control','id' => 'phoneNumber1']) }}</div>
                                 <div class="col-sm-4">{{ Form::number('phoneNumber2', old('phoneNumber2'), ['class' => 'form-control','id' => 'phoneNumber2']) }}</div>
                                 <div class="col-sm-4">{{ Form::number('phoneNumber3', old('phoneNumber3'), ['class' => 'form-control','id' => 'phoneNumber3']) }}</div>
+                            </div>
+
+                            <label class="col-sm-12">予約投稿</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-4">{{Form::date('date','', ['class' => 'form-control'])}}</div>
+                                <div class="col-sm-4">{{Form::time('time','', ['class' => 'form-control'])}}</div>
                             </div>
                            
                             <!-- <label class="col-sm-12">添付ファイル</label>

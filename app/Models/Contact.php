@@ -30,7 +30,9 @@ class Contact extends Model
         'address',
         'phoneNumber1',
         'phoneNumber2',
-        'phoneNumber3'
+        'phoneNumber3',
+        'date',
+        'time',
     ];
 
     public function companies()
