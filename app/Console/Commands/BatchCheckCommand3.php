@@ -114,11 +114,7 @@ class BatchCheckCommand3 extends Command
         
                 }
             }else {
-                $key = 'CHECK_CONTACT_FORM';
-                $this->upsert($key, 0);
-                Artisan::call('config:cache');
-                Artisan::call('queue:restart');
-                usleep(500);
+                Config::where('id',1)->update(array('checkContactForm'=>'0'));
             }
             return 0;
         }

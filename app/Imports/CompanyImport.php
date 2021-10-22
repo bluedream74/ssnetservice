@@ -35,7 +35,6 @@ class CompanyImport implements ToCollection
                     }
                     
                 }
-               
                 if($row[1]){
                     $child_category = \App\Models\SubSource::where('name', $row[1])->first();
 
