@@ -28,9 +28,10 @@ class Kernel extends ConsoleKernel
         $schedule->command("send:emailsSecond")->everyFiveMinutes()->runInBackground();
         $schedule->command("send:emailsThird")->everyFiveMinutes()->runInBackground();
 		$schedule->command("send:emailsFourth")->everyFiveMinutes()->runInBackground();
-        $schedule->command("batch:check1")->everyMinute()->runInBackground();
-        $schedule->command("batch:check2")->everyMinute()->runInBackground();
-        $schedule->command("batch:check3")->everyMinute()->runInBackground();
+        $schedule->command("batch:check1")->everyFourMinutes()->runInBackground();
+        $schedule->command("batch:check2")->everyFourMinutes()->runInBackground();
+        $schedule->command("batch:check3")->everyFourMinutes()->runInBackground();
+        $schedule->command("batch:check4")->everyFourMinutes()->runInBackground();
     }
 
     /**

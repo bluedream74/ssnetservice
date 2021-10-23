@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Models\Company;
 use App\Models\User;
+use App\Models\Config;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Goutte\Client;
@@ -50,7 +51,7 @@ class BatchCheckCommand3 extends Command
         // $output = new ConsoleOutput();
         if($check_contact_form == 1){
             //$limit = intval(config('values.mail_limit'));
-			$offset = 30;
+			$offset = 60;
             $date=Carbon::now()->timezone('Asia/Tokyo');
           
             $companies = Company::where('check_contact_form',0)->skip(2*$offset)->take($offset)->get();

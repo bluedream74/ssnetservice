@@ -14,14 +14,14 @@ use Illuminate\Support\Facades\Artisan;
 // use Symfony\Component\Console\Output\ConsoleOutput;
 
 
-class BatchCheckCommand2 extends Command
+class BatchCheckCommand4 extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'batch:check2';
+    protected $signature = 'batch:check4';
 
     /**
      * The console command description.
@@ -54,7 +54,7 @@ class BatchCheckCommand2 extends Command
 			$offset = 60;
             $date=Carbon::now()->timezone('Asia/Tokyo');
           
-            $companies = Company::where('check_contact_form',0)->skip($offset)->take($offset)->get();
+            $companies = Company::where('check_contact_form',0)->skip(3*$offset)->take($offset)->get();
             
             if(sizeof($companies)>0){
                 foreach($companies as $company) {
@@ -122,6 +122,7 @@ class BatchCheckCommand2 extends Command
         
         return 0;
     }
+
 
     private function upsert($key, $value)
     {
@@ -236,4 +237,3 @@ class BatchCheckCommand2 extends Command
         }
     }
 }
-
