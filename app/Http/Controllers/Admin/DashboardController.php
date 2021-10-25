@@ -39,7 +39,6 @@ class DashboardController extends BaseController
     public function index(Request $request)
     {
         try{
-            
             $query = $this->makeQuery(request()->all());
 
             $prefectures = array();
@@ -920,7 +919,11 @@ class DashboardController extends BaseController
 
     public function exportCSV()
     {
-        return Excel::download(new CompanyExport(request()->all()), '会社一覧.csv', \Maatwebsite\Excel\Excel::CSV);
+        try{
+            return Excel::download(new CompanyExport(request()->all()), '会社一覧.csv', \Maatwebsite\Excel\Excel::CSV);
+        }catch (\Throwable $e) {
+            dd($e->getMessage());
+        }
     }
     public function exportContactCSV(Contact $contact)
     {
