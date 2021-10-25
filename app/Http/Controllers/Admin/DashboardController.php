@@ -35,6 +35,7 @@ class DashboardController extends BaseController
     {
         parent::__construct($events);
         ini_set("memory_limit","2056M");
+        ini_set('max_execution_time', 400);
     }
 
     public function index(Request $request)
