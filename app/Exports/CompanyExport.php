@@ -93,7 +93,7 @@ class CompanyExport implements FromCollection, WithHeadings, WithMapping
             }
         }
 
-        return $query->orderByDesc('source')->orderBy('name')->get();
+        return $query->orderByDesc('source')->orderBy('name')->cursor();
         
     }
 }
