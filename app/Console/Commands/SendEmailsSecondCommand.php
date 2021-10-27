@@ -265,7 +265,7 @@ class SendEmailsSecondCommand extends Command
                                             $content = str_replace('%company_name%', $company->name, $contact->content);
                                             $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                             $data[$key] = $content;
-                                            $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', openssl_encrypt($company->id, $method, $pass)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
+                                            $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', urlencode(openssl_encrypt($company->id, $method, $pass))).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                                         }
                                     }
                                     $titleTexts = array('fax');
@@ -655,7 +655,7 @@ class SendEmailsSecondCommand extends Command
                                                 $content = str_replace('%company_name%', $company->name, $contact->content);
                                                 $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                                 $data[$nameStr] = $content;
-                                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', openssl_encrypt($company->id, $method, $pass)).'   こちら'.PHP_EOL.'※※※※※※※※';break;
+                                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', urlencode(openssl_encrypt($company->id, $method, $pass))).'   こちら'.PHP_EOL.'※※※※※※※※';break;
                                             }
                                         }
                                     }
