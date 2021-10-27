@@ -911,9 +911,11 @@ class DashboardController extends BaseController
     {
         $pass = 'test_key';
         $method = 'aes-256-ecb';
-        $companyId = openssl_decrypt($encrypted, $method, $pass);
-        $company = Company::where('id',$companyId)->update(['status' => '拒絶']);
+        $companyId = openssl_decrypt(urldecode($encrypted), $method, $pass);
+        $company = Company::where('id',$companyId)->get();
         
+        $company->toQuery()->update(['status' => '拒絶']);
+
         return view('done');
     }
 
