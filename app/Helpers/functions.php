@@ -38,13 +38,11 @@ function getUrls($needAll = false)
 function getMailLimits()
 {
     return [
+        45 => 45,
         50 => 50,
         55 => 55,
         60 => 60,
         65 => 65,
-        70 => 70,
-        75 => 75,
-        80 => 80,
     ];
 }
 

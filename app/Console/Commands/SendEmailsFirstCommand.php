@@ -76,6 +76,7 @@ class SendEmailsFirstCommand extends Command
                 if($startCheck) {
                     
                     $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
+                    $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                 
                     foreach ($companyContacts as $companyContact) {
                             
