@@ -51,7 +51,7 @@ class BatchCheckCommand2 extends Command
         // $output = new ConsoleOutput();
         if($check_contact_form == 1){
             //$limit = intval(config('values.mail_limit'));
-			$offset = 60;
+			$offset = 45;
             $date=Carbon::now()->timezone('Asia/Tokyo');
           
             $companies = Company::where('check_contact_form',0)->skip($offset)->take($offset)->get();
@@ -67,44 +67,37 @@ class BatchCheckCommand2 extends Command
                             $topPageUrl = $this->getTopUrl($company->url);
                             $check_url = $this->checkTopContactForm($topPageUrl);
                             // $output->writeln("<info>env</info>".$check_url);
-                            if(isset($check_url)&&($check_url)){
+                            if(isset($check_url)&& !empty($check_url)){
                                 Company::where('id',$company->id)->update(['contact_form_url'=>$check_url]);
                             }else {
-                                if($this->checkSubContactForm($topPageUrl.'/contact')){
-                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact']);
-                                    continue;
-                                }
-                                if($this->checkSubContactForm($topPageUrl.'/contact.php')){
-                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact.php']);
-                                    continue;
-                                }
-                                if($this->checkSubContactForm($topPageUrl.'/contact.html')){
-                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/contact.html']);
-                                    continue;
-                                }
-                                if($this->checkSubContactForm($topPageUrl.'/inquiry')){
-                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry']);
-                                    continue;
-                                }
-                                if($this->checkSubContactForm($topPageUrl.'/inquiry.php')){
-                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry.php']);
-                                    continue;
-                                }
-                                if($this->checkSubContactForm($topPageUrl.'/inquiry.html')){
-                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/inquiry.html']);
-                                    continue;
-                                }
-                                if($this->checkSubContactForm($topPageUrl.'/form')){
-                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/form']);
-                                    continue;
-                                }
-                                if($this->checkSubContactForm($topPageUrl.'/toiawase')){
-                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/toiawase']);
-                                    continue;
-                                }
-                                if($this->checkSubContactForm($topPageUrl.'/html/toiawase.html')){
-                                    Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/html/toiawase.html']);
-                                    continue;
+                                $url_patterns = array (
+                                    'contact',
+                                    'contact.php',
+                                    'contact.html',
+                                    'inquiry',
+                                    'inquiry.php',
+                                    'inquiry.html',
+                                    'mail.html',
+                                    'form',
+                                    'form.html',
+                                    'otoiawase.html',
+                                    'mail/index.html',
+                                    'toiawase',
+                                    'html/toiawase.html',
+                                    'feedback.html',
+                                    'postmail.html',
+                                    'info.html',
+                                    'quote',
+                                    'inq',
+                                    'contact-us',
+                                    'contactus',
+                                    'company/contact',
+                                );
+                                foreach($url_patterns as $url_pattern) {
+                                    if($this->checkSubContactForm($topPageUrl.'/'.$url_pattern)){
+                                        Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/'.$url_pattern]);
+                                        continue;
+                                    }
                                 }
                             }
                         }
@@ -153,8 +146,14 @@ class BatchCheckCommand2 extends Command
         return $topurl;
     }
     private function checkTopContactForm($url) {
+        $r_url = $this->register_url($url);
+        if($r_url){
+            return $r_url;
+        }
         $client = new Client();
+        // $url = $client->request("GET",$url)->getUri();
         $crawler = $client->request('GET', $url);
+
         $contact_form_patterns = array(
             'お見積り・お問合せ',
             'お問合せ・サポート',
@@ -168,7 +167,8 @@ class BatchCheckCommand2 extends Command
             '問合せ',
             'Contact',
             'CONTACT',
-            'contact');
+            'contact',
+            'こちらから');
         foreach($contact_form_patterns as $pattern) {
             if(strpos($crawler->html(),$pattern)!==false){
                 $patternStr = $pattern;
@@ -178,7 +178,7 @@ class BatchCheckCommand2 extends Command
                 $pattern = substr($pattern,1);
                 $pattern = substr($pattern,0,strpos($pattern,'<'));
                 try {
-                    if(empty($pattern)){
+                    if(empty($pattern) || (strlen($pattern)>15)){
                         $pattern = $patternStr;
                     } 
                     if( strpos($pattern,$patternStr) !== false){
@@ -202,6 +202,27 @@ class BatchCheckCommand2 extends Command
                 }
             }
         }
+
+        $alt_patterns = array(
+            'お問合せ',
+            'お問い合わせ',
+            '依頼する',
+        );
+
+        foreach($alt_patterns as $alt_pattern) {
+            try {
+
+                $link = $crawler->selectImage($alt_pattern)->parents()->attr('href');
+                if(strpos($link,'http')!==false){
+                    return $link;
+                }else {
+                    return 'http://'.$link;
+                }
+                
+            }catch(\Throwable $e){
+
+            }
+        }
         try{
             $form = $crawler->filter('form')->form()->all();
             if(isset($form)&&(!empty($form))){
@@ -218,6 +239,14 @@ class BatchCheckCommand2 extends Command
         }
     }
 
+    private function register_url($url) {
+        foreach($this->register_url as $key =>$r_url) {
+            if(strpos($key,$url)!==false){
+                return $r_url;
+            }
+        }
+        return false;
+    }
     private function checkSubContactForm($url) {
         $client = new Client();
         $crawler = $client->request('GET', $url);
