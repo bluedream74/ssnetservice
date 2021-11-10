@@ -89,12 +89,13 @@ class SendEmailsFourthCommand extends Command
                             
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
-                            // file_put_contents('html.txt',$crawler->html());
+                            // file_put_contents('html.txt',$crawler->text());
                             // $nonStrings = array("営業お断り","カタログ","サンプル","有料","代引き","着払い");
+                            // $pos = strpos($crawler->text(),"カタログ");
                             if(
                                 (strpos($crawler->text(),"営業お断り")!==false)
-                                ||(strpos($crawler->text(),"カタログ")!==false)
-                                ||(strpos($crawler->text(),"サンプル")!==false)
+                                // ||(($pos!==false)&&($pos>50))
+                                // ||(strpos($crawler->text(),"サンプル")!==false)
                                 ||(strpos($crawler->text(),"有料")!==false)
                                 ||(strpos($crawler->text(),"代引き")!==false)
                                 ||(strpos($crawler->text(),"着払い")!==false)
@@ -108,6 +109,10 @@ class SendEmailsFourthCommand extends Command
                            
                             try{
                                 $form = $crawler->filter('form')->form();
+                                if(empty($form->all())){
+                                    // $form = $crawler->filter
+                                    $form = $crawler->selectButton('送信')->form();
+                                }
                             }catch (\Throwable $e) {
                                 $form = $crawler->selectButton('送信')->form();
                             }
@@ -124,22 +129,31 @@ class SendEmailsFourthCommand extends Command
                                     if(isset($key_position)){
                                         $captcha_sitekey = substr($crawler->html(),$key_position+15,40);
                                     }
-                                }else if(strpos($crawler->html(),'wpcf7submit')!==false){
-                                    $key_position = strpos($crawler->html(),'wpcf7submit');
-                                    if(isset($key_position)){
-                                        $str = substr($crawler->html(),$key_position);
-                                        $captcha_sitekey = substr($str,strpos($str,'grecaptcha')+13,40);
-                                    }
                                 }else if(strpos($crawler->text(),'sitekey')!==false){
                                     $key_position = strpos($crawler->text(),'sitekey');
                                     if(isset($key_position)){
                                         if((substr($crawler->text(),$key_position+9,1)=="'"||(substr($crawler->text(),$key_position+9,1)=='"'))){
                                             $captcha_sitekey = substr($crawler->text(),$key_position+10,40);
-                                        }else if((substr($crawler->text(),$key_position+11,1)=="'"||(substr($crawler->text(),$key_position11,1)=='"'))){
+                                        }else if((substr($crawler->text(),$key_position+11,1)=="'"||(substr($crawler->text(),$key_position+11,1)=='"'))){
                                             $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
                                         }
                                     }
                                 }
+                                if(!isset($captcha_sitekey) || str_contains($captcha_sitekey,",")){ 
+                                    if(strpos($crawler->html(),'data-sitekey')!==false){
+                                        $key_position = strpos($crawler->html(),'data-sitekey');
+                                        if(isset($key_position)){
+                                            $captcha_sitekey = substr($crawler->html(),$key_position+14,40);
+                                        }
+                                    }else if(strpos($crawler->html(),'wpcf7submit')!==false){
+                                        $key_position = strpos($crawler->html(),'wpcf7submit');
+                                        if(isset($key_position)){
+                                            $str = substr($crawler->html(),$key_position);
+                                            $captcha_sitekey = substr($str,strpos($str,'grecaptcha')+13,40);
+                                        }
+                                    }
+                                }
+                                
                                 // try{
                                 //     $image = $crawler->selectImage('captcha')->image();
                                 //     $imageurl = $image->getUri();
@@ -147,7 +161,7 @@ class SendEmailsFourthCommand extends Command
                                     
                                 // }
                                 if((strpos($crawler->html(),'wpcf7_recaptcha')!==false) || (strpos($crawler->html(),'g-recaptcha-response')!==false) || (strpos($crawler->html(),'recaptcha_response')!==false)) {
-                                    if(isset($captcha_sitekey)){
+                                    if(isset($captcha_sitekey) && !str_contains($captcha_sitekey,",")){
                                     
                                         // try{
                                         //     $index = '#captchaImage'.$captcha_sitekey;
@@ -790,7 +804,7 @@ class SendEmailsFourthCommand extends Command
                                         
                                     }
                                     try{
-                                        if(isset($form) && !empty($form)){
+                                        if(isset($form) && !empty($form->all())){
                                         
                                             $crawler = $client->submit($form);
                                             // file_put_contents('html.txt',$crawler->html());
@@ -857,7 +871,7 @@ class SendEmailsFourthCommand extends Command
                                     ->send(new \App\Mail\CustomEmail($contact, "syt.iphone@gmail.com", $company->name, $company));
         
                                 $contact->update(['is_confirmed' => 1]);
-                                sleep(4);
+                                // sleep(4);
                             } catch (\Throwable $e) {
                                 \Log::error("KKKKK:  " . $e->getMessage());
                             }
