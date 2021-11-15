@@ -65,6 +65,14 @@ Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
   Route::post('/{company}/edit/contacturl', 'CompanyController@editContacturl')->name('company.edit.contacturl');
   Route::post('/{company}/add/contacturl', 'CompanyController@addContacturl')->name('company.add.contacturl');
 
+  Route::post('/{company}/edit/category', 'CompanyController@editcategory')->name('company.edit.category');
+  Route::post('/{company}/add/category', 'CompanyController@addcategory')->name('company.add.category');
+
+  Route::post('/{company}/edit/subcategory', 'CompanyController@editsubcategory')->name('company.edit.subcategory');
+  Route::post('/{company}/add/subcategory', 'CompanyController@addsubcategory')->name('company.add.subcategory');
+
+  Route::post('/{company}/add/updatearea', 'CompanyController@updatearea')->name('company.update.area');
+
   Route::get('/config', 'DashboardController@configIndex')->name('config.index');
   Route::post('/config', 'DashboardController@updateConfig')->name('config.update');
 });
