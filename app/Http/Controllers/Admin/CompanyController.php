@@ -29,7 +29,11 @@ class CompanyController extends BaseController
 
   public function show(Company $company)
   {
-    return view('admin.company_show', compact('company'));
+    $prefectures = array();
+    foreach (config('values.prefectures') as $value) {
+        $prefectures[$value] = $value;
+    }
+    return view('admin.company_show', compact('company','prefectures'));
   }
 
   public function addEmail(Company $company)
@@ -102,6 +106,53 @@ class CompanyController extends BaseController
 
     return back()->with(['system.message.success' => '追加しました。']);
   }
+
+  public function editcategory(Company $company)
+  {
+    $company->update([
+      'source'   => request()->get('source')
+    ]);
+
+    return back()->with(['system.message.success' => '編集されました。']);
+  }
+
+  public function addcategory(Company $company)
+  {
+    $company->update([
+      'source'   => request()->get('source')
+    ]);
+
+    return back()->with(['system.message.success' => '追加しました。']);
+  }
+
+  public function editsubcategory(Company $company)
+  {
+    
+    $company->update([
+      'subsource'   => request()->get('subsource')
+    ]);
+
+    return back()->with(['system.message.success' => '編集されました。']);
+  }
+
+  public function addsubcategory(Company $company)
+  {
+    $company->update([
+      'subsource'   => request()->get('subsource')
+    ]);
+
+    return back()->with(['system.message.success' => '追加しました。']);
+  }
+
+  public function updatearea(Company $company)
+  {
+    $company->update([
+      'area'   => request()->get('area')
+    ]);
+
+    return back()->with(['system.message.success' => '更新されました。']);
+  }
+
   
   public function removePhone(Company $company)
   {
@@ -119,7 +170,7 @@ class CompanyController extends BaseController
         $host = str_replace('www.', '', $parse['host']);
 
         if (Company::where('url', 'LIKE', "%{$host}%")->count() > 1) {
-          $company = Company::where('url', 'LIKE', "%{$host}%")->first();
+          $company = Company::where('url', 'LIKE', "%{$host}%")->oldest()->first();
           Company::where('url', 'LIKE', "%{$host}%")
               ->where('id', '!=', $company->id)
               ->delete();
