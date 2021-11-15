@@ -3,7 +3,6 @@
 @section('content_header_label')
     <h3 class="m-0">会社詳細</h3>
 @stop
-
 @section('content')
   <div class="card">
     <div class="card-body table-responsive">
@@ -61,7 +60,7 @@
           <div class="table-responsive">
             <table class="table table-striped">
                 <tr>
-                  <td>{{ $company->contact_form_url }}</td>
+                  <td></td>
                   <td class="text-right"><button type="button" class="btn btn-sm btn-primary " data-toggle="modal" data-target="#contact-form-modal" data-id="{{ $company->id }}">追加</button></td>
                 </tr>
             </table>
@@ -71,17 +70,66 @@
       </div>
       <div class="row mb-3">
         <label class="col-sm-4">カテゴリ</label>
-        <div class="col-sm-8 pre-wrap">{{ $company->source }}</div>
+        <div class="col-sm-8 pre-wrap">
+          @if(isset($company->source)&&($company->source !== ""))
+            <div class="table-responsive">
+              <table class="table table-striped">
+                  <tr>
+                    <td>{{ $company->source }}</td>
+                    <td class="text-right"><button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#category-edit-modal" data-id="{{ $company->id }}">編集</button></td>
+                  </tr>
+              </table>
+            </div>
+            @else
+            <div class="table-responsive">
+              <table class="table table-striped">
+                  <tr>
+                    <td></td>
+                    <td class="text-right"><button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#category-modal" data-id="{{ $company->id }}">追加</button></td>
+                  </tr>
+              </table>
+            </div>
+            @endif
+          </div>
       </div>
 
       <div class="row mb-3">
         <label class="col-sm-4">子カテゴリ</label>
-        <div class="col-sm-8 pre-wrap">{{ $company->subsource }}</div>
+        <div class="col-sm-8 pre-wrap">
+          @if(isset($company->subsource)&&($company->subsource !== ""))
+            <div class="table-responsive">
+              <table class="table table-striped">
+                  <tr>
+                    <td>{{ $company->subsource }}</td>
+                    <td class="text-right"><button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#subcategory-edit-modal" data-id="{{ $company->id }}">編集</button></td>
+                  </tr>
+              </table>
+            </div>
+            @else
+            <div class="table-responsive">
+              <table class="table table-striped">
+                  <tr>
+                    <td></td>
+                    <td class="text-right"><button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#subcategory-modal" data-id="{{ $company->id }}">追加</button></td>
+                  </tr>
+              </table>
+            </div>
+            @endif
+        </div>
       </div>
 
       <div class="row mb-3">
         <label class="col-sm-4">エリア</label>
-        <div class="col-sm-8 pre-wrap">{{ $company->area }}</div>
+        <div class="col-sm-8 pre-wrap">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <tr>
+                <td>{{ $company->area}}</td>
+                <td class="text-right"><button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#area-update-modal" data-id="{{ $company->id }}">更新</button></td>
+              </tr>
+            </table>
+          </div>
+        </div>
       </div>
       
       <div class="row mb-3">
@@ -103,7 +151,7 @@
     </div>
   </div>
 
-  
+ 
 
   <div class="modal fade" id="phone-modal">
     {{ Form::open(['route' => ['admin.company.add.phone', $company], 'method' => 'POST']) }}
@@ -242,6 +290,126 @@
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">追加</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+
+  <div class="modal fade" id="category-edit-modal">
+    {{ Form::open(['route' => ['admin.company.edit.category', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>カテゴリ編集</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">カテゴリ</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::text('source', old('source',$company->source), ['class' => 'form-control']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">編集</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+
+  <div class="modal fade" id="category-modal">
+    {{ Form::open(['route' => ['admin.company.add.category', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>カテゴリ追加</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">カテゴリ</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::text('source', old('source',$company->source), ['class' => 'form-control']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">追加</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+
+  <div class="modal fade" id="subcategory-edit-modal">
+    {{ Form::open(['route' => ['admin.company.edit.subcategory', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>子カテゴリ編集</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">子カテゴリ</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::text('subsource', old('subsource',$company->subsource), ['class' => 'form-control']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">編集</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+
+  <div class="modal fade" id="subcategory-modal">
+    {{ Form::open(['route' => ['admin.company.add.subcategory', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>カテゴリ追加</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">カテゴリ</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::text('subsource', old('subsource',$company->subsource), ['class' => 'form-control']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">追加</button>
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
+        </div>
+      </div>
+    </div>
+    {{ Form::close() }}
+  </div>
+
+  <div class="modal fade" id="area-update-modal">
+    {{ Form::open(['route' => ['admin.company.update.area', $company], 'method' => 'POST']) }}
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <label>エリア更新</label>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <label class="col-sm-12">エリア</label>
+            <div class="col-sm-12 form-group">
+              {{ Form::select('area', $prefectures, $company->area, ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary pull-right btn-submit" id="btnSend">更新</button>
           <button type="button" class="btn btn-default pull-right" data-dismiss="modal" id="btnCancel">閉じる</button>
         </div>
       </div>

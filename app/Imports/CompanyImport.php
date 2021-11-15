@@ -69,47 +69,49 @@ class CompanyImport implements ToCollection
                     }else {
                         $row[3]="http://".$row[3];
                     }
-                    $parse = parse_url($row[3]);
-                    if(isset($parse['host'])) {
-                        $host = str_replace('www.', '', $parse['host']);
-                        $url = $parse['scheme'].'://'.$parse['host'];
-                        if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
-                            $company = Company::create([
-                                'source'        => $row[0],
-                                'subsource'     => $row[1],
-                                'name'          => $row[2],
-                                'url'           => $url,
-                                'contact_form_url'           => $row[4],
-                                'area'          => $row[5],
-                                'status'          => $row[6]
-                            ]);
-    
-                            if (isset($row[7]) && $row[7] != '') {
-                                $company->phones()->updateOrCreate([
-                                    'phone'         => $row[7]
-                                ]);
-                            }
-                        } 
-                    }else { 
-                        $host = str_replace('www.', '', $row[3]);
-                        if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
-                            $company = Company::create([
-                                'source'        => $row[0],
-                                'subsource'     => $row[1],
-                                'name'          => $row[2],
-                                'url'           => $row[3],
-                                'contact_form_url'           => $row[4],
-                                'area'          => $row[5],
-                                'status'          => $row[6]
-                            ]);
 
-                            if (isset($row[7]) && $row[7] != '') {
-                                $company->phones()->updateOrCreate([
-                                    'phone'         => $row[7]
-                                ]);
-                            }
-                        }
+                    $company = Company::create([
+                        'source'                => $row[0],
+                        'subsource'             => $row[1],
+                        'name'                  => $row[2],
+                        'url'                   => $row[3],
+                        'contact_form_url'      => $row[4],
+                        'area'                  => $row[5],
+                        'status'                => $row[6]
+                    ]);
+
+                    if (isset($row[7]) && $row[7] != '') {
+                        $company->phones()->updateOrCreate([
+                            'phone'         => $row[7]
+                        ]);
                     }
+                    // $parse = parse_url($row[3]);
+                    // if(isset($parse['host'])) {
+                    //     $host = str_replace('www.', '', $parse['host']);
+                    //     $url = $parse['scheme'].'://'.$parse['host'];
+                    //     if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
+                    //         $company = Company::create([
+                    //             'source'        => $row[0],
+                    //             'subsource'     => $row[1],
+                    //             'name'          => $row[2],
+                    //             'url'           => $url,
+                    //             'contact_form_url'           => $row[4],
+                    //             'area'          => $row[5],
+                    //             'status'          => $row[6]
+                    //         ]);
+    
+                    //         if (isset($row[7]) && $row[7] != '') {
+                    //             $company->phones()->updateOrCreate([
+                    //                 'phone'         => $row[7]
+                    //             ]);
+                    //         }
+                    //     } 
+                    // }else { 
+                    //     $host = str_replace('www.', '', $row[3]);
+                    //     if (Company::where('url', 'like', "%{$host}%")->count() === 0) {
+                            
+                    //     }
+                    // }
                    
                 }
                 
