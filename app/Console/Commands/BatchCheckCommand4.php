@@ -60,8 +60,7 @@ class BatchCheckCommand4 extends Command
 			$offset = 45;
             $date=Carbon::now()->timezone('Asia/Tokyo');
           
-            // $companies = Company::where('check_contact_form',0)->skip(3*$offset)->take($offset)->get();
-            $companies = Company::where('check_contact_form',0)->skip(0)->take($offset)->get();
+            $companies = Company::where('check_contact_form',0)->skip(3*$offset)->take($offset)->get();
 
             
             if(sizeof($companies)>0){
