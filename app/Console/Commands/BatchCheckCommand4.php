@@ -38,6 +38,12 @@ class BatchCheckCommand4 extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->register_url = array(
+            'http://www.dnamedia.co.jp' => 'https://dnamedia.co.jp/contact',
+            'http://park15.wakwak.com'  => 'https://www.wakwak.com/prl/support/help/index.html',
+            'http://www.castplus.co.jp' => 'https://sparkle-caster.jp/deta/contact',
+            'http://mit-consul.com/'    => 'http://mit-consul.com/mailfoam.php'
+        );
     }
 
     /**
@@ -54,9 +60,8 @@ class BatchCheckCommand4 extends Command
 			$offset = 45;
             $date=Carbon::now()->timezone('Asia/Tokyo');
           
-            Company::whereNotNull('contact_form_url')->update(['check_contact_form'=>1]);
-
             $companies = Company::where('check_contact_form',0)->skip(3*$offset)->take($offset)->get();
+
             
             if(sizeof($companies)>0){
                 foreach($companies as $company) {
