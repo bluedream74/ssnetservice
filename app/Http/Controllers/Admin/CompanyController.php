@@ -164,8 +164,6 @@ class CompanyController extends BaseController
   public function deleteDuplicate()
   {
     $urls = Company::whereNotNull('url')->select('url')->distinct()->pluck('url');
-    // echo Company::whereNotNull('url')->count();
-    // dd(sizeof($urls));
     if (sizeof($urls) < Company::whereNotNull('url')->count()) {
       foreach ($urls as $url) {
         $parse = parse_url($url);

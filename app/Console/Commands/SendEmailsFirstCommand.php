@@ -54,8 +54,7 @@ class SendEmailsFirstCommand extends Command
         $startTimeCheck = $now->gte($startTimeStamp);
         $endTimeCheck = $now->lte($endTimeStamp);
 
-        if(true ){
-            // if( $startTimeCheck && $endTimeCheck ){
+        if( $startTimeCheck && $endTimeCheck ){
 
             $contacts = Contact::whereHas('reserve_companies')->get();
             foreach ($contacts as $contact) {
@@ -77,13 +76,11 @@ class SendEmailsFirstCommand extends Command
                 if($startCheck) {
                     
                     $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
-                    // $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+                    $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                 
                     foreach ($companyContacts as $companyContact) {
                             
                         $company = $companyContact->company;
-                        // $pass = 'test_key';
-                        // $method = 'aes-256-ecb';
                         try {
                             $data = [];
                             $client = new Client();
