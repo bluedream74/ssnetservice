@@ -38,6 +38,12 @@ class BatchCheckCommand2 extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->register_url = array(
+            'http://www.dnamedia.co.jp' => 'https://dnamedia.co.jp/contact',
+            'http://park15.wakwak.com'  => 'https://www.wakwak.com/prl/support/help/index.html',
+            'http://www.castplus.co.jp' => 'https://sparkle-caster.jp/deta/contact',
+            'http://mit-consul.com/'    => 'http://mit-consul.com/mailfoam.php'
+        );
     }
 
     /**

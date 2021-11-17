@@ -798,7 +798,7 @@ class SendEmailsFirstCommand extends Command
                                     $crawler = $client->submit($form);
                                 }
                                 
-                                file_put_contents('html.txt',$crawler->html());
+                                // file_put_contents('html.txt',$crawler->html());
                                 $checkMessages = array("ありがとうございま","有難うございま","送信されました","&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;","完了","内容を確認させていただき");
                                 $check = false;
                                 foreach($checkMessages as $message) {
@@ -828,7 +828,7 @@ class SendEmailsFirstCommand extends Command
                                         if(isset($form) && !empty($form->all())){
                                         
                                             $crawler = $client->submit($form);
-                                            file_put_contents('html.txt',$crawler->html());
+                                            // file_put_contents('html.txt',$crawler->html());
                                             $check =false;
                                             foreach($checkMessages as $message) {
                                                 if(strpos($crawler->html(),$message)!==false){
@@ -846,7 +846,7 @@ class SendEmailsFirstCommand extends Command
                                                     'status'        => '送信済み'
                                                 ]);
                                                 $companyContact->update([
-                                                    'is_delivered' => 2
+                                                    'is_delivered' => 1
                                                 ]);
                                             }
                                         }else {
@@ -854,7 +854,7 @@ class SendEmailsFirstCommand extends Command
                                                 'status'        => '送信済み'
                                             ]);
                                             $companyContact->update([
-                                                'is_delivered' => 2
+                                                'is_delivered' => 1
                                             ]);
                                         }
                                     }catch (\Throwable $e) {
@@ -877,7 +877,7 @@ class SendEmailsFirstCommand extends Command
                             }
                         }  
                         catch (\Throwable $e) {
-                            file_put_contents('html.txt',$e->getMessage());
+                            // file_put_contents('html.txt',$e->getMessage());
                             $company->update(['status' => '送信失敗']);
                             $companyContact->update([
                                 'is_delivered' => 1
