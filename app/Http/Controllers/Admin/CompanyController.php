@@ -167,13 +167,21 @@ class CompanyController extends BaseController
     if (sizeof($urls) < Company::whereNotNull('url')->count()) {
       foreach ($urls as $url) {
         $parse = parse_url($url);
-        $host = str_replace('www.', '', $parse['host']);
+        try{
+          $host = str_replace('www.', '', $parse['host']);
 
-        if (Company::where('url', 'LIKE', "%{$host}%")->count() > 1) {
-          $company = Company::where('url', 'LIKE', "%{$host}%")->oldest()->first();
-          Company::where('url', 'LIKE', "%{$host}%")
-              ->where('id', '!=', $company->id)
-              ->delete();
+          if (Company::where('url', 'LIKE', "%{$host}%")->count() > 1) {
+            $company = Company::where('url', 'LIKE', "%{$host}%")->oldest()->first();
+            if(Company::where('subsource', $company->subsource)->count() == 1) {
+              SubSource::where('name',$company->subsource)->delete();
+            }
+            Company::where('url', 'LIKE', "%{$host}%")
+                ->where('id', '!=', $company->id)
+                ->delete();
+          }
+        }
+        catch(\Throwable $e) {
+          print_r($e->getMessage());continue;
         }
       }
     }
