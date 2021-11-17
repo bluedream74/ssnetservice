@@ -60,7 +60,7 @@ class BatchCheckCommand1 extends Command
         if($check_contact_form == 1){
             //$limit = intval(config('values.mail_limit'));
 			$offset = 45;
-            $date=Carbon::now()->timezone('Asia/Tokyo');
+            // $date=Carbon::now()->timezone('Asia/Tokyo');
           
             $companies = Company::where('check_contact_form',0)->skip(0)->take($offset)->get();
             
