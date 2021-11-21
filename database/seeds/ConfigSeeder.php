@@ -21,7 +21,8 @@ class ConfigSeeder extends Seeder
                 'start'             => \Carbon\Carbon::createFromTime('9','0','0')->toDateTimeString(),
                 'end'               => \Carbon\Carbon::createFromTime('21','0','0')->toDateTimeString(),
                 'mailLimit'         => 55,
-                'checkContactForm'          => '0',
+                'checkContactForm'  => '0',
+                'registerUrl'       => '0',
             ]
         ]);
     }
