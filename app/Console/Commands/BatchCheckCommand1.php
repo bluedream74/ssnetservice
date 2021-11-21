@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Goutte\Client;
 use Illuminate\Support\Facades\Artisan;
-// use Symfony\Component\Console\Output\ConsoleOutput;
-
 
 class BatchCheckCommand1 extends Command
 {
@@ -40,12 +38,6 @@ class BatchCheckCommand1 extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->register_url = array(
-            'http://www.dnamedia.co.jp' => 'https://dnamedia.co.jp/contact',
-            'http://park15.wakwak.com'  => 'https://www.wakwak.com/prl/support/help/index.html',
-            'http://www.castplus.co.jp' => 'https://sparkle-caster.jp/deta/contact',
-            'http://mit-consul.com/'    => 'http://mit-consul.com/mailfoam.php'
-        );
     }
 
     /**
@@ -53,28 +45,41 @@ class BatchCheckCommand1 extends Command
      *
      * @return int
      */
+
+    private function register_url() {
+        $csvFile = public_path('registerList.csv');
+        $file_handle = fopen($csvFile, 'r');
+        while (!feof($file_handle)) {
+            $line_of_text[] = fgetcsv($file_handle);
+        }
+        fclose($file_handle);
+        foreach($line_of_text as $key =>$value) {
+            if(($key == 0) || (!$value)) continue;
+            Company::where('check_contact_form',0)->where('url','LIKE','%'.$value[0].'%')->update(array('contact_form_url'=>$value[1],'check_contact_form'=>1));
+        }
+    }
+
     public function handle()
     {
         $check_contact_form = Config::get()->first()->checkContactForm;
-        // $output = new ConsoleOutput();
+        $registerUrl = Config::get()->first()->registerUrl;
+        if($registerUrl){
+            $this->register_url();
+            Config::where('id',1)->update(array('registerUrl'=>'0'));
+        }
         if($check_contact_form == 1){
-            //$limit = intval(config('values.mail_limit'));
 			$offset = 45;
-            // $date=Carbon::now()->timezone('Asia/Tokyo');
-          
             $companies = Company::where('check_contact_form',0)->skip(0)->take($offset)->get();
             
             if(sizeof($companies)>0){
                 foreach($companies as $company) {
                     try {
-                        // $output->writeln("<info>sent count</info>".$sent);
                         Company::where('id',$company->id)->update(['check_contact_form'=>1]);
                         if(isset($company->contact_form_url)&&(!empty($company->contact_form_url))){
                             continue;
                         }else {
                             $topPageUrl = $this->getTopUrl($company->url);
                             $check_url = $this->checkTopContactForm($topPageUrl);
-                            // $output->writeln("<info>env</info>".$check_url);
                             if(isset($check_url)&& !empty($check_url)){
                                 Company::where('id',$company->id)->update(['contact_form_url'=>$check_url]);
                             }else {
@@ -89,22 +94,27 @@ class BatchCheckCommand1 extends Command
                                     'form',
                                     'form.html',
                                     'otoiawase.html',
+                                    'toiawase.html',
                                     'mail/index.html',
                                     'toiawase',
                                     'html/toiawase.html',
+                                    'html/company.html',
+                                    'html/contact.html',
                                     'feedback.html',
                                     'postmail.html',
                                     'info.html',
                                     'quote',
                                     'inq',
+                                    'contactform',
                                     'contact-us',
                                     'contactus',
                                     'company/contact',
+                                    'consulting.html',
                                 );
                                 foreach($url_patterns as $url_pattern) {
                                     if($this->checkSubContactForm($topPageUrl.'/'.$url_pattern)){
                                         Company::where('id',$company->id)->update(['contact_form_url'=>$topPageUrl.'/'.$url_pattern]);
-                                        continue;
+                                        break;
                                     }
                                 }
                             }
@@ -123,21 +133,6 @@ class BatchCheckCommand1 extends Command
         
         return 0;
     }
-
-    private function upsert($key, $value)
-    {
-        $envFilePath = app()->environmentFilePath();
-        $contents = file_get_contents($envFilePath);
-        if (preg_match("/ /", $value)) {
-            $value = '"'.$value.'"';
-        }
-        if (preg_match("/^{$key}=[^\n\r]*/m", $contents)) {
-            file_put_contents($envFilePath, preg_replace("/^{$key}=[^\n\r]*/m", $key.'='.$value, $contents));
-        } else {
-            file_put_contents($envFilePath, $contents . "\n{$key}={$value}");
-        }
-    }
-
     
     private function getTopUrl($companyurl) {
         $topurl='';
@@ -145,6 +140,9 @@ class BatchCheckCommand1 extends Command
             $url=explode('://',$companyurl);
             if(isset($url)){
                 $topurl = explode('/',$url[1])[0];
+                if(isset(explode('/',$url[1])[1]) && (explode('/',$url[1])[1] == 'jp')){
+                    $topurl .= '/'.explode('/',$url[1])[1];
+                }
                 $topurl = $url[0].'://'.$topurl;
             }
         }else{
@@ -153,15 +151,16 @@ class BatchCheckCommand1 extends Command
         }
         return $topurl;
     }
-    private function checkTopContactForm($url) {
-        $r_url = $this->register_url($url);
-        if($r_url){
-            return $r_url;
-        }
-        $client = new Client();
-        // $url = $client->request("GET",$url)->getUri();
-        $crawler = $client->request('GET', $url);
 
+    private function checkTopContactForm($url) {
+        $client = new Client();
+        $crawler = $client->request('GET', $url);
+        $except_patterns = array('__nuxt');
+        foreach($except_patterns as $pattern) {
+            if(strpos($crawler->html(),$pattern)!==false){
+                return false;
+            }
+        }
         $contact_form_patterns = array(
             'お見積り・お問合せ',
             'お問合せ・サポート',
@@ -173,9 +172,11 @@ class BatchCheckCommand1 extends Command
             '問い合せ',
             '問い合わせ',
             '問合せ',
+            'コンタクト',
             'Contact',
             'CONTACT',
             'contact',
+            'inquiry',
             'こちらから');
         foreach($contact_form_patterns as $pattern) {
             if(strpos($crawler->html(),$pattern)!==false){
@@ -186,7 +187,7 @@ class BatchCheckCommand1 extends Command
                 $pattern = substr($pattern,1);
                 $pattern = substr($pattern,0,strpos($pattern,'<'));
                 try {
-                    if(empty($pattern) || (strlen($pattern)>15)){
+                    if(empty($pattern) || (strlen($pattern)>30)){
                         $pattern = $patternStr;
                     } 
                     if( strpos($pattern,$patternStr) !== false){
@@ -210,7 +211,6 @@ class BatchCheckCommand1 extends Command
                 }
             }
         }
-
         $alt_patterns = array(
             'お問合せ',
             'お問い合わせ',
@@ -231,12 +231,47 @@ class BatchCheckCommand1 extends Command
 
             }
         }
-        try{
-            $form = $crawler->filter('form')->form()->all();
-            if(isset($form)&&(!empty($form))){
-                return $url;
+
+        $iframes = $crawler->filter('iframe')->extract(['src']);
+        foreach($iframes as $iframe) {
+            $clientFrame = new Client();
+            $crawlerFrame = $clientFrame->request('GET', $url.'/'.$iframe);
+            foreach($contact_form_patterns as $pattern) {
+                if(strpos($crawlerFrame->html(),$pattern)!==false){
+                    $patternStr = $pattern;
+                    $str = substr($crawlerFrame->html(),strpos($crawlerFrame->html(),$pattern)-10);
+                    $pos = strpos($str,'>');
+                    $pattern = substr($str,$pos);
+                    $pattern = substr($pattern,1);
+                    $pattern = substr($pattern,0,strpos($pattern,'<'));
+                    try {
+                        if(empty($pattern) || (strlen($pattern)>30)){
+                            $pattern = $patternStr;
+                        } 
+                        if( strpos($pattern,$patternStr) !== false){
+    
+                        } else {
+                            $pattern = $patternStr;
+                        }
+                        if($crawlerFrame->selectLink($pattern)->link()){
+                            $link = $crawlerFrame->selectLink($pattern)->link()->getUri();
+                            $jsPatterns = array('javascript','JavaScript');
+                            foreach($jsPatterns as $js) {
+                                if(strpos($link,$js) !== false) {
+                                   break;
+                                }else {
+                                    return $link;
+                                }
+                            }
+                        }
+                    }catch(\Throwable $e){
+                        
+                    }
+                }
             }
-            $form = $crawler->selectButton('送信')->form()->all();
+        }
+        try{
+            $form = $crawler->filter('textarea')->getNode(0);
             if(isset($form)&&(!empty($form))){
                 return $url;
             }
@@ -247,27 +282,24 @@ class BatchCheckCommand1 extends Command
         }
     }
 
-    private function register_url($url) {
-        foreach($this->register_url as $key =>$r_url) {
-            if(strpos($key,$url)!==false){
-                return $r_url;
-            }
-        }
-        return false;
-    }
     private function checkSubContactForm($url) {
         $client = new Client();
         $crawler = $client->request('GET', $url);
         try{
-            $form = $crawler->filter('form')->form()->all();
-            if(isset($form)&&(!empty($form))){
-                return true;
+            $form1 = $crawler->filter('textarea')->getNode(0);
+            if(isset($form1)&&(!empty($form1))){
+                return $url;
             }
-            $form = $crawler->selectButton('送信')->form()->all();
-            if(isset($form)&&(!empty($form))){
-                return true;
+            $form2 = $crawler->filter('#__nuxt')->getNode(0);
+            if(isset($form2)&&(!empty($form2))){
+                if(strpos($crawler->html(),'Loading')!==false){
+                    return false;
+                }else{
+                    return $url;
+                }
             }
             return false;
+            
         }catch (\Throwable $e) {
             return false;
         }
