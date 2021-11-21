@@ -17,7 +17,7 @@ class CreateCompaniesTable extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->string('url')->nullable();
-            $table->string('contact_form_url')->nullable();
+            $table->longText('contact_form_url')->nullable();
             $table->string('source')->nullable();
             $table->string('subsource')->nullable();
             $table->tinyInteger('check_contact_form')->default(0);

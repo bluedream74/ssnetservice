@@ -88,7 +88,7 @@ class SendEmailsFourthCommand extends Command
                             
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
-                            // file_put_contents('html.txt',$crawler->text());
+                            file_put_contents('html.txt',$crawler->text());
                             // $nonStrings = array("営業お断り","カタログ","サンプル","有料","代引き","着払い");
                             // $pos = strpos($crawler->text(),"カタログ");
                             if(
@@ -109,7 +109,6 @@ class SendEmailsFourthCommand extends Command
                             try{
                                 $form = $crawler->filter('form')->form();
                                 if(empty($form->all())){
-                                    // $form = $crawler->filter
                                     $form = $crawler->selectButton('送信')->form();
                                 }
                             }catch (\Throwable $e) {
@@ -153,21 +152,9 @@ class SendEmailsFourthCommand extends Command
                                     }
                                 }
                                 
-                                // try{
-                                //     $image = $crawler->selectImage('captcha')->image();
-                                //     $imageurl = $image->getUri();
-                                // }catch(\Throwable $e){
-                                    
-                                // }
                                 if((strpos($crawler->html(),'wpcf7_recaptcha')!==false) || (strpos($crawler->html(),'g-recaptcha-response')!==false) || (strpos($crawler->html(),'recaptcha_response')!==false)) {
                                     if(isset($captcha_sitekey) && !str_contains($captcha_sitekey,",")){
                                     
-                                        // try{
-                                        //     $index = '#captchaImage'.$captcha_sitekey;
-                                        //     $imageurl = $crawler->filter($index)->image()->getUri();
-                                        // }catch(\Throwable $e){
-                                            
-                                        // }
                                         $api = new NoCaptchaProxyless();
                                         $api->setVerboseMode(true);
                                         //your anti-captcha.com account key
@@ -202,59 +189,39 @@ class SendEmailsFourthCommand extends Command
                                         }
                                     }
                                 }
-                                
-                            //     // if(isset($imageurl)&&!empty($imageurl)){
-        
-                            //     //     $apiImage = new ImageToText();
-                            //     //     $apiImage->setVerboseMode(true);
-                                            
-                            //     //     //your anti-captcha.com account key
-                            //     //     $apiImage->setKey(config('anticaptcha.key'));
-        
-                            //     //     //setting file
-                            //     //     $apiImage->setFile($imageurl);
-                            //     //     $imageurl = "";
-                            //     //     if (!$apiImage->createTask()) {
-                            //     //         continue;
-                            //     //     }
-        
-                            //     //     $taskId = $apiImage->getTaskId();
-        
-        
-                            //     //     if (!$apiImage->waitForResult()) {
-                            //     //         continue;
-                            //     //     } else {
-                            //     //         $captchaText = $apiImage->getTaskSolution();
-                            //     //         foreach($form->all() as $key=>$val) {
-                            //     //             if(strpos($key,'captcha-170')!==false){
-                            //     //                 $data['captcha-170'] = $recaptchaToken;
-                            //     //             }else if(strpos($key,'captcha')!==false){
-                            //     //                 $data['captcha'] = $recaptchaToken;
-                            //     //             }
-                            //     //         }
-                            //     //     }
-                                    
-                            //     // }
                             }catch(\Throwable $e){
-                                // file_put_contents('error.txt',$e->getMessage());
         
                             }
                             
         
                             if(!empty($form->getValues())){
                                 $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;
+
+                                foreach($form->all() as $key=>$value) {
+                                    if(!strcasecmp($value->isHidden(),'hidden')) {
+                                        $data[$key] = $value->getValue();
+                                    }
+                                }
                                 foreach($form->getValues() as $key => $value) {
-                                    $emailTexts = array('company','cn','kaisha','cop','corp','会社名');
+                                    if(isset($data[$key])||(!empty($data[$key])))continue;
+                                    $emailTexts = array('company','cn','kaisha','cop','corp','会社名','社名');
                                     foreach($emailTexts as $text) {
                                         if(strpos($key,$text)!==false){
                                             $data[$key] = $contact->company;continue;
                                         }
                                     }
         
-                                    $addressTexts = array('ご住所');
+                                    $addressTexts = array('住所','addr');
                                     foreach($addressTexts as $text) {
                                         if(strpos($key,$text)!==false){
                                             $data[$key] = $contact->address;continue;
+                                        }
+                                    }
+
+                                    $addressTexts = array('mail_add');
+                                    foreach($addressTexts as $text) {
+                                        if(strpos($key,$text)!==false){
+                                            $data[$key] = $contact->email;continue;
                                         }
                                     }
         
@@ -272,19 +239,17 @@ class SendEmailsFourthCommand extends Command
                                         }
                                     }
         
-                                    $messageTexts = array('textarea','body','content','comment','naiyo','bikou','detail','inquiry','Inquiry','note','message','MESSAGE','honbun','youken','内容','本文','item','備考欄','詳細','contact','comm');
-                                    foreach($messageTexts as $text) {
-                                        if(strpos($key,$text)!==false){
-                                            $content = str_replace('%company_name%', $company->name, $contact->content);
-                                            $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
-                                            $data[$key] = $content;
-                                            $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';break;
-                                        }
-                                    }
                                     $titleTexts = array('fax');
                                     foreach($titleTexts as $text) {
                                         if(strpos($key,$text)!==false){
                                             $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;break;
+                                        }
+                                    }
+
+                                    $titleTexts = array('郵便番号');
+                                    foreach($titleTexts as $text) {
+                                        if(!strcmp($key,$text)){
+                                            $data[$key] = $contact->postalCode1."-".$contact->postalCode2;break;
                                         }
                                     }
                                 }
@@ -295,13 +260,20 @@ class SendEmailsFourthCommand extends Command
                             foreach($form->all() as $key =>$val){
                                 try{
                                     $type = $val->getType();
-        
+                                    if($val->isReadOnly()){
+                                        continue;
+                                    }
                                     if($type == 'select'){
                                         $data[$key] = $form[$key]->getOptions()[1]['value'];
                                     }else if($type =='radio') {
                                         $data[$key] = $form[$key]->getOptions()[0]['value'];
                                     }else if($type =='checkbox') {
                                         $data[$key] = $form[$key]->getOptions()[0]['value'];
+                                    }else if($type =='textarea') {
+                                        $content = str_replace('%company_name%', $company->name, $contact->content);
+                                        $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
+                                        $data[$key] = $content;
+                                        $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';
                                     }
                                     
                                 }catch(\Throwable $e){
@@ -309,7 +281,7 @@ class SendEmailsFourthCommand extends Command
                                 }
                             }
                             
-                            $compPatterns = array('会社名','企業名','貴社名','御社名','法人名','団体名','機関名','屋号','組織名','屋号','お店の名前');
+                            $compPatterns = array('会社名','企業名','貴社名','御社名','法人名','団体名','機関名','屋号','組織名','屋号','お店の名前','社名');
                             foreach($compPatterns as $val) {
                                 if(strpos($crawler->text(),$val)!==false) {
                                     $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
@@ -342,6 +314,9 @@ class SendEmailsFourthCommand extends Command
                                     if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                         $data[$key] = $value;
                                     }else {
+                                        if(strpos($key, 'ご担当者名')!==false){
+                                            $data[$key] = $contact->surname." ".$contact->lastname;continue;
+                                        }
                                         if(strpos($key,'セイ')!==false){
                                             $data[$key] = $contact->fu_surname;
                                         }else if(strpos($key,'メイ')!==false){
@@ -459,6 +434,27 @@ class SendEmailsFourthCommand extends Command
                                     }
                                 }
                             }
+                            $namePatterns =array('FAX番号');
+                            foreach($namePatterns as $val) {
+                                if(strpos($crawler->text(),$val)!==false) {
+                                    $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
+                                    if(strpos($str,'input')){
+                                        $nameStr = substr($str,strpos($str,'name='));
+                                        $nameStr = substr($nameStr,6);
+                                        $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
+                                        foreach($form->all() as $key=>$val) {
+                                            if($key==$nameStr){
+                                                if(isset($data[$nameStr]) && !empty($data[$nameStr])){
+                                                    break;
+                                                }else {
+                                                    $data[$nameStr] = $contact->postalCode1.' '.$contact->postalCode2;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             $namePatterns = array('ふりがな','フリガナ','カナ');
                             foreach($namePatterns as $val) {
                                 if(strpos($crawler->text(),$val)!==false) {
@@ -513,21 +509,7 @@ class SendEmailsFourthCommand extends Command
                                     }
                                 }
                             }
-                            // $addPatterns = array('URL');
-                            // foreach($addPatterns as $val) {
-                            //     if(strpos($crawler->text(),$val)!==false) {
-                            //         $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
-                            //         $nameStr = substr($str,strpos($str,'name='));
-                            //         $nameStr = substr($nameStr,6);
-                            //         $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                            //         if(isset($data[$nameStr]) && !empty($data[$nameStr])){
-                            //             break;
-                            //         }else {
-                            //             $data[$nameStr] = $contact->homepageUrl;
-                            //             break;
-                            //         }
-                            //     }
-                            // }
+                           
                             $mailPatterns = array('メールアドレス','Mail アドレス');
                             foreach($mailPatterns as $val) {
                                 if(strpos($crawler->text(),$val)!==false) {
@@ -650,31 +632,6 @@ class SendEmailsFourthCommand extends Command
                                     }
                                 }
                             }
-        
-                            
-                            
-                            $contentPatterns = array('ご相談内容','ご質問','お問い合わせ内容','詳しい内容','本文','備考','要望','詳細','概要','内容',"ご依頼・ご相談");
-                            foreach($contentPatterns as $val) {
-                                if(strpos($crawler->text(),$val)!==false) {
-                                    $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
-                                    $nameStr = substr($str,strpos($str,'name='));
-                                    $nameStr = substr($nameStr,6);
-                                    $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
-                                        if($key==$nameStr){
-                                            if(isset($data[$nameStr]) && !empty($data[$nameStr])){
-                                                break;
-                                            }else {
-                                                $content = str_replace('%company_name%', $company->name, $contact->content);
-                                                $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
-                                                $data[$nameStr] = $content;
-                                                $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
                             
                             if(!empty($form->getValues())){
                                 $kana_count_check = 0;$name_count_check = 0;$phone_count_check = 0;$postal_count_check = 0;
@@ -746,28 +703,6 @@ class SendEmailsFourthCommand extends Command
                                     }
     
                                 }
-                                //exception method start
-
-                                foreach($form->getValues() as $key => $val) {
-                                    if(isset($data[$key])&&(!empty($data[$key])))continue;
-                                    if(($val!=='' || strpos($key,'wpcf7')!==false||strpos($key,'captcha')!==false)) {
-                                        if(strpos($val,'例')!==false){
-        
-                                        }else{
-                                            continue;
-                                        }
-                                    }
-                                    $messageTexts = array('Content');
-                                    foreach($messageTexts as $text) {
-                                        if(strpos($key,$text)!==false){
-                                            $content = str_replace('%company_name%', $company->name, $contact->content);
-                                            $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
-                                            $data[$key] = $content;
-                                            $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';break;
-                                        }
-                                    }
-                                }
-                                
                                 
                                 if(strpos($company->contact_form_url,"ksa.jp")!==false){
                                     $data['key'] = '319254';
@@ -782,15 +717,6 @@ class SendEmailsFourthCommand extends Command
                                     }
                                 }
         
-                                // if($form->getMethod()!=="POST"){
-                                //     $company->update([
-                                //         'status'        => '送信失敗'
-                                //     ]);
-                                //     $companyContact->update([
-                                //         'is_delivered' => 1
-                                //     ]);
-                                //     continue;
-                                // }
                                 if(isset($data['g-recaptcha-response']) || isset($data['_wpcf7_recaptcha_response'])){
                                     $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
                                 }else {
@@ -798,8 +724,7 @@ class SendEmailsFourthCommand extends Command
                                     $crawler = $client->submit($form);
                                 }
                                 
-                                // file_put_contents('html.txt',$crawler->html());
-                                $checkMessages = array("ありがとうございま","有難うございま","送信されました","&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;","完了","内容を確認させていただき");
+                                $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;","完了","内容を確認させていただき");
                                 $check = false;
                                 foreach($checkMessages as $message) {
                                     if(strpos($crawler->html(),$message)!==false){
@@ -813,22 +738,29 @@ class SendEmailsFourthCommand extends Command
                                     }
                                 }
                                 if(!$check){
-                                    $form='';
+                                    $checkform='';
                                     try{
-                                        $form = $crawler->selectButton('送信する')->form();
+                                        $checkform = $crawler->selectButton('送信する')->form();
                                     }catch (\Throwable $e) {
                                         
                                     }
                                     try{
-                                        $form = $crawler->filter('form')->form();
+                                        $checkform = $crawler->filter('form')->form();
                                     }catch (\Throwable $e) {
                                         
                                     }
                                     try{
-                                        if(isset($form) && !empty($form->all())){
+                                        if(isset($checkform) && !empty($checkform)){
+
+                                            foreach($form->getValues() as $key=>$val) {
+                                                if(isset($checkform->getValues()[$key])){
+                                                    if(strcmp($val,$checkform->getValues()[$key])){
+                                                        $checkform->fields->set($key, $val);
+                                                    }
+                                                }
+                                            }
                                         
-                                            $crawler = $client->submit($form);
-                                            // file_put_contents('html.txt',$crawler->html());
+                                            $crawler = $client->submit($checkform);
                                             $check =false;
                                             foreach($checkMessages as $message) {
                                                 if(strpos($crawler->html(),$message)!==false){
@@ -846,7 +778,7 @@ class SendEmailsFourthCommand extends Command
                                                     'status'        => '送信済み'
                                                 ]);
                                                 $companyContact->update([
-                                                    'is_delivered' => 1
+                                                    'is_delivered' => 2
                                                 ]);
                                             }
                                         }else {
@@ -854,7 +786,7 @@ class SendEmailsFourthCommand extends Command
                                                 'status'        => '送信済み'
                                             ]);
                                             $companyContact->update([
-                                                'is_delivered' => 1
+                                                'is_delivered' => 2
                                             ]);
                                         }
                                     }catch (\Throwable $e) {
