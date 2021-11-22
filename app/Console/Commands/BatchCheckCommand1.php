@@ -67,6 +67,7 @@ class BatchCheckCommand1 extends Command
             $this->register_url();
             Config::where('id',1)->update(array('registerUrl'=>'0'));
             Config::where('id',1)->update(array('checkContactForm'=>'1'));
+            return 0;
         }
         if($check_contact_form == 1){
 			$offset = 45;
