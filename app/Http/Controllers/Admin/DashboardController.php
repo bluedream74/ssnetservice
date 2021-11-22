@@ -48,7 +48,7 @@ class DashboardController extends BaseController
                 $prefectures[$value] = $value;
             }
 
-            $config = Config::where('id',1)->first()->checkContactForm;
+            $config = Config::where('id',1)->first()->registerUrl;
             $companies = $query->paginate(20);
             if (!empty($value = Arr::get(request()->all(), 'source'))) {
                 $source = Source::where('sort_no',$value)->first();
