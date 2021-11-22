@@ -111,7 +111,7 @@ class BatchCheckCommand2 extends Command
         
                 }
             }else {
-                Config::where('id',1)->update(array('checkContactForm'=>'0'));
+                // Config::where('id',1)->update(array('checkContactForm'=>'0'));
             }
             return 0;
         }
