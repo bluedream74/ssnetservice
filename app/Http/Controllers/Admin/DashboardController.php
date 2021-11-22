@@ -305,7 +305,6 @@ class DashboardController extends BaseController
     public function batchCheck(){
         $CHECK_CONTACT_FORM = Config::get()->first()->checkContactForm;
         if($CHECK_CONTACT_FORM === 0){
-            Config::where('id',1)->update(array('checkContactForm'=>'1'));
             Config::where('id',1)->update(array('registerUrl'=>'1'));
             // Company::where('check_contact_form',1)->update(['check_contact_form'=>0]);
             return back()->with(['system.message.info' => "一括チェックしています。"]);
