@@ -305,7 +305,16 @@ class SendEmailsFirstCommand extends Command
                                             $data[$key] = $form[$key]->getOptions()[1]['value'];
                                         }
                                     }else if($type =='radio') {
-                                        $data[$key] = $form[$key]->getOptions()[0]['value'];
+                                        if(in_array('その他' ,$form[$key]->getOptions())) {
+                                            foreach($form[$key]->getOptions() as $item) {
+                                                if($item['value']== 'その他'){
+                                                    $data[$key] = $item['value'];
+                                                }
+                                            }
+                                        } else {
+                                            $data[$key] = $form[$key]->getOptions()[0]['value'];
+                                        }
+                                        
                                     }else if($type =='checkbox') {
                                         $data[$key] = $form[$key]->getOptions()[0]['value'];
                                     }else if($type =='textarea') {
