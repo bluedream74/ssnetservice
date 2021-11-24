@@ -88,7 +88,6 @@ class SendEmailsFirstCommand extends Command
                             
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
-                            file_put_contents('html.txt',$crawler->text());
                             // $nonStrings = array("営業お断り","カタログ","サンプル","有料","代引き","着払い");
                             // $pos = strpos($crawler->text(),"カタログ");
                             if(
@@ -109,10 +108,46 @@ class SendEmailsFirstCommand extends Command
                             try{
                                 $form = $crawler->filter('form')->form();
                                 if(empty($form->all())){
-                                    $form = $crawler->selectButton('送信')->form();
+                                    $buttons = $crawler->filter('form button');
+                                    if($buttons->count()>0){
+                                        $buttons->each(function($button) {
+                                            if($button->extract(array('type'))[0]=="submit") {
+                                                $form = $button->form();
+                                            }
+                                        });
+                                    }
+                                    $inputs = $crawler->filter('form input')->extract(array('type'));
+                                    if(in_array('submit', $inputs)) {
+                                        $crawler->filter('form input')->each(function($input) {
+                                            if($input->extract(array('type'))[0]=="submit") {
+                                                // $this->buttonText = $input->extract(array('value'))[0];
+                                                $form = $input->form();
+                                            }
+                                        });
+                                    }
                                 }
                             }catch (\Throwable $e) {
-                                $form = $crawler->selectButton('送信')->form();
+                                try{
+                                    $buttons = $crawler->filter('form button');
+                                    if($buttons->count()>0){
+                                        $buttons->each(function($button) {
+                                            if($button->extract(array('type'))[0]=="submit") {
+                                                $form = $button->form();
+                                            }
+                                        });
+                                    }
+                                    $inputs = $crawler->filter('form input')->extract(array('type'));
+                                    if(in_array('submit', $inputs)) {
+                                        $crawler->filter('form input')->each(function($input) {
+                                            if($input->extract(array('type'))[0]=="submit") {
+                                                // $this->buttonText = $input->extract(array('value'))[0];
+                                                $form = $input->form();
+                                            }
+                                        });
+                                    }
+                                }catch (\Throwable $e) {
+
+                                }
                             }
                         
                             $data = [];
@@ -264,7 +299,11 @@ class SendEmailsFirstCommand extends Command
                                         continue;
                                     }
                                     if($type == 'select'){
-                                        $data[$key] = $form[$key]->getOptions()[1]['value'];
+                                        if(count($val->getOptions()) == 48){
+                                            $data[$key] = $contact->area;
+                                        }else {
+                                            $data[$key] = $form[$key]->getOptions()[1]['value'];
+                                        }
                                     }else if($type =='radio') {
                                         $data[$key] = $form[$key]->getOptions()[0]['value'];
                                     }else if($type =='checkbox') {
@@ -724,7 +763,7 @@ class SendEmailsFirstCommand extends Command
                                     $crawler = $client->submit($form);
                                 }
                                 
-                                $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","&#12354;&#12426;&#12364;&#12392;&#12358;&#12372;&#12374;&#12356;","完了","内容を確認させていただき");
+                                $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","完了","内容を確認させていただき");
                                 $check = false;
                                 foreach($checkMessages as $message) {
                                     if(strpos($crawler->html(),$message)!==false){
@@ -739,10 +778,13 @@ class SendEmailsFirstCommand extends Command
                                 }
                                 if(!$check){
                                     $checkform='';
-                                    try{
-                                        $checkform = $crawler->selectButton('送信する')->form();
-                                    }catch (\Throwable $e) {
-                                        
+                                    $buttons = $crawler->filter('form button');
+                                    if($buttons->count()>0){
+                                        $buttons->each(function($button) {
+                                            if($button->extract(array('type'))[0]=="submit") {
+                                                $form = $button->form();
+                                            }
+                                        });
                                     }
                                     try{
                                         $checkform = $crawler->filter('form')->form();
@@ -775,7 +817,7 @@ class SendEmailsFirstCommand extends Command
                                             }
                                             if(!$check){
                                                 $company->update([
-                                                    'status'        => '送信済み'
+                                                    'status'        => '送信失敗'
                                                 ]);
                                                 $companyContact->update([
                                                     'is_delivered' => 2
@@ -783,7 +825,7 @@ class SendEmailsFirstCommand extends Command
                                             }
                                         }else {
                                             $company->update([
-                                                'status'        => '送信済み'
+                                                'status'        => '送信失敗'
                                             ]);
                                             $companyContact->update([
                                                 'is_delivered' => 2
@@ -834,7 +876,6 @@ class SendEmailsFirstCommand extends Command
                 }
             }
         }
-        exit();
         return 0;
     }
 }
