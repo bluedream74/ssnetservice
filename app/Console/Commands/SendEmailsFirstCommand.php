@@ -817,7 +817,7 @@ class SendEmailsFirstCommand extends Command
                                             }
                                             if(!$check){
                                                 $company->update([
-                                                    'status'        => '送信失敗'
+                                                    'status'        => '送信済み'
                                                 ]);
                                                 $companyContact->update([
                                                     'is_delivered' => 2
@@ -825,7 +825,7 @@ class SendEmailsFirstCommand extends Command
                                             }
                                         }else {
                                             $company->update([
-                                                'status'        => '送信失敗'
+                                                'status'        => '送信済み'
                                             ]);
                                             $companyContact->update([
                                                 'is_delivered' => 2
