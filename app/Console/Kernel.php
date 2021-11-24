@@ -25,13 +25,13 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command("send:emailsFirst")->everyFiveMinutes()->runInBackground();
-        $schedule->command("send:emailsSecond")->everyFiveMinutes()->runInBackground();
-        $schedule->command("send:emailsThird")->everyFiveMinutes()->runInBackground();
-		$schedule->command("send:emailsFourth")->everyFiveMinutes()->runInBackground();
-        $schedule->command("batch:check1")->everyFourMinutes()->runInBackground();
-        $schedule->command("batch:check2")->everyFourMinutes()->runInBackground();
-        $schedule->command("batch:check3")->everyFourMinutes()->runInBackground();
-        $schedule->command("batch:check4")->everyFourMinutes()->runInBackground();
+        // $schedule->command("send:emailsSecond")->everyFiveMinutes()->runInBackground();
+        // $schedule->command("send:emailsThird")->everyFiveMinutes()->runInBackground();
+		// $schedule->command("send:emailsFourth")->everyFiveMinutes()->runInBackground();
+        // $schedule->command("batch:check1")->everyFourMinutes()->runInBackground();
+        // $schedule->command("batch:check2")->everyFourMinutes()->runInBackground();
+        // $schedule->command("batch:check3")->everyFourMinutes()->runInBackground();
+        // $schedule->command("batch:check4")->everyFourMinutes()->runInBackground();
     }
 
     /**
