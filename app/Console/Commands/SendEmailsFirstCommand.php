@@ -24,6 +24,8 @@ class SendEmailsFirstCommand extends Command
      * @var string
      */
     protected $description = 'Command description';
+    protected $form;
+    protected $checkform;
 
     /**
      * Create a new command instance.
@@ -83,6 +85,7 @@ class SendEmailsFirstCommand extends Command
                         $company = $companyContact->company;
                         try {
                             $data = [];
+                            
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
                             
@@ -106,13 +109,13 @@ class SendEmailsFirstCommand extends Command
                             }
                            
                             try{
-                                $form = $crawler->filter('form')->form();
-                                if(empty($form->all())){
+                                $this->form = $crawler->filter('form')->form();
+                                if(empty($this->form->all())){
                                     $buttons = $crawler->filter('form button');
                                     if($buttons->count()>0){
                                         $buttons->each(function($button) {
                                             if($button->extract(array('type'))[0]=="submit") {
-                                                $form = $button->form();
+                                                $this->form = $button->form();
                                             }
                                         });
                                     }
@@ -120,8 +123,7 @@ class SendEmailsFirstCommand extends Command
                                     if(in_array('submit', $inputs)) {
                                         $crawler->filter('form input')->each(function($input) {
                                             if($input->extract(array('type'))[0]=="submit") {
-                                                // $this->buttonText = $input->extract(array('value'))[0];
-                                                $form = $input->form();
+                                                $this->form = $input->form();
                                             }
                                         });
                                     }
@@ -132,7 +134,7 @@ class SendEmailsFirstCommand extends Command
                                     if($buttons->count()>0){
                                         $buttons->each(function($button) {
                                             if($button->extract(array('type'))[0]=="submit") {
-                                                $form = $button->form();
+                                                $this->form = $button->form();
                                             }
                                         });
                                     }
@@ -141,7 +143,7 @@ class SendEmailsFirstCommand extends Command
                                         $crawler->filter('form input')->each(function($input) {
                                             if($input->extract(array('type'))[0]=="submit") {
                                                 // $this->buttonText = $input->extract(array('value'))[0];
-                                                $form = $input->form();
+                                                $this->form = $input->form();
                                             }
                                         });
                                     }
@@ -150,7 +152,6 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                         
-                            $data = [];
                             try {
                                 if(strpos($crawler->html(),'api.js?render')!==false){
                                     $key_position = strpos($crawler->html(),'api.js?render');
@@ -212,7 +213,7 @@ class SendEmailsFirstCommand extends Command
                                             continue;
                                         } else {
                                             $recaptchaToken = $api->getTaskSolution();
-                                            foreach($form->all() as $key=>$val) {
+                                            foreach($this->form->all() as $key=>$val) {
                                                 if(strpos($key,'wpcf7_recaptcha')!==false){
                                                     $data['_wpcf7_recaptcha_response'] = $recaptchaToken;break;
                                                 }else if(strpos($key,'g-recaptcha-response')!==false){
@@ -229,15 +230,15 @@ class SendEmailsFirstCommand extends Command
                             }
                             
         
-                            if(!empty($form->getValues())){
+                            if(!empty($this->form->getValues())){
                                 $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;
 
-                                foreach($form->all() as $key=>$value) {
+                                foreach($this->form->all() as $key=>$value) {
                                     if(!strcasecmp($value->isHidden(),'hidden')) {
                                         $data[$key] = $value->getValue();
                                     }
                                 }
-                                foreach($form->getValues() as $key => $value) {
+                                foreach($this->form->getValues() as $key => $value) {
                                     if(isset($data[$key])||(!empty($data[$key])))continue;
                                     $emailTexts = array('company','cn','kaisha','cop','corp','会社','社名');
                                     foreach($emailTexts as $text) {
@@ -279,7 +280,7 @@ class SendEmailsFirstCommand extends Command
                             
                             
                             
-                            foreach($form->all() as $key =>$val){
+                            foreach($this->form->all() as $key =>$val){
                                 try{
                                     $type = $val->getType();
                                     if($val->isReadOnly()){
@@ -289,23 +290,23 @@ class SendEmailsFirstCommand extends Command
                                         if(count($val->getOptions()) >= 47){
                                             $data[$key] = $contact->area;
                                         }else {
-                                            $size = sizeof($form[$key]->getOptions());
-                                            $data[$key] = $form[$key]->getOptions()[$size-1]['value'];
+                                            $size = sizeof($this->form[$key]->getOptions());
+                                            $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
                                         }
                                     }else if($type =='radio') {
-                                        if(in_array('その他' ,$form[$key]->getOptions())) {
-                                            foreach($form[$key]->getOptions() as $item) {
+                                        if(in_array('その他' ,$this->form[$key]->getOptions())) {
+                                            foreach($this->form[$key]->getOptions() as $item) {
                                                 if($item['value']== 'その他'){
                                                     $data[$key] = $item['value'];
                                                 }
                                             }
                                         } else {
-                                            $size = sizeof($form[$key]->getOptions());
-                                            $data[$key] = $form[$key]->getOptions()[$size-1]['value'];
+                                            $size = sizeof($this->form[$key]->getOptions());
+                                            $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
                                         }
                                         
                                     }else if($type =='checkbox') {
-                                        $data[$key] = $form[$key]->getOptions()[0]['value'];
+                                        $data[$key] = $this->form[$key]->getOptions()[0]['value'];
                                     }else if(($type =='textarea') && (strpos($key,'captcha') === false)) {
                                         $content = str_replace('%company_name%', $company->name, $contact->content);
                                         $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
@@ -329,7 +330,7 @@ class SendEmailsFirstCommand extends Command
                                         $nameStr = substr($str,$pos);
                                         $nameStr = substr($nameStr,6);
                                         $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                        foreach($form->all() as $key=>$val) {
+                                        foreach($this->form->all() as $key=>$val) {
                                             if($key==$nameStr){
                                                 if(isset($data[$nameStr]) && !empty($data[$nameStr])){
                                                     break;
@@ -344,9 +345,9 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
         
-                            if(!empty($form->getValues())){
+                            if(!empty($this->form->getValues())){
                                 $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;
-                                foreach($form->getValues() as $key => $value) {
+                                foreach($this->form->getValues() as $key => $value) {
                                     if(isset($data[$key])&&(!empty($data[$key])))continue;
                                     if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                         $data[$key] = $value;
@@ -374,7 +375,7 @@ class SendEmailsFirstCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
+                                    foreach($this->form->all() as $key=>$val) {
                                         if($key==$nameStr){
                                             if(isset($data[$nameStr]) && !empty($data[$nameStr])){
                                                 break;
@@ -386,9 +387,9 @@ class SendEmailsFirstCommand extends Command
                                     }
                                 }
                             }
-                            if(!empty($form->getValues())){
+                            if(!empty($this->form->getValues())){
                                 $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;$fax_count=0;
-                                foreach($form->getValues() as $key => $value) {
+                                foreach($this->form->getValues() as $key => $value) {
                                     if(isset($data[$key])&&(!empty($data[$key])))continue;
                                     if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                         $data[$key] = $value;
@@ -424,7 +425,7 @@ class SendEmailsFirstCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
+                                    foreach($this->form->all() as $key=>$val) {
                                         if($key==$name){
                                             if(isset($data[$name]) && !empty($data[$name])){
                                                 break;
@@ -434,7 +435,7 @@ class SendEmailsFirstCommand extends Command
                                                     $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                                     $nameStr = substr($nameStr,6);
                                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                                    foreach($form->all() as $key=>$val) {
+                                                    foreach($this->form->all() as $key=>$val) {
                                                         if($key==$name){
                                                             $data[$name] = $contact->lastname;break;
                                                         }
@@ -456,7 +457,7 @@ class SendEmailsFirstCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
+                                    foreach($this->form->all() as $key=>$val) {
                                         if($key==$name){
                                             if(isset($data[$name]) && !empty($data[$name])){
                                                 break;
@@ -466,7 +467,7 @@ class SendEmailsFirstCommand extends Command
                                                     $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                                     $nameStr = substr($nameStr,6);
                                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                                    foreach($form->all() as $key=>$val) {
+                                                    foreach($this->form->all() as $key=>$val) {
                                                         if($key==$name){
                                                             $data[$name] = $contact->postalCode2;
                                                         }
@@ -490,7 +491,7 @@ class SendEmailsFirstCommand extends Command
                                         $nameStr = substr($str,strpos($str,'name='));
                                         $nameStr = substr($nameStr,6);
                                         $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                        foreach($form->all() as $key=>$val) {
+                                        foreach($this->form->all() as $key=>$val) {
                                             if($key==$nameStr){
                                                 if(isset($data[$nameStr]) && !empty($data[$nameStr])){
                                                     break;
@@ -510,7 +511,7 @@ class SendEmailsFirstCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
+                                    foreach($this->form->all() as $key=>$val) {
                                         if($key==$name){
                                             if(isset($data[$name]) && !empty($data[$name])){
                                                 break;
@@ -520,7 +521,7 @@ class SendEmailsFirstCommand extends Command
                                                     $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                                     $nameStr = substr($nameStr,6);
                                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                                    foreach($form->all() as $key=>$val) {
+                                                    foreach($this->form->all() as $key=>$val) {
                                                         if($key==$name){
                                                             $data[$name] = $contact->fu_lastname;
                                                         }
@@ -544,7 +545,7 @@ class SendEmailsFirstCommand extends Command
                                         $nameStr = substr($str,strpos($str,'name='));
                                         $nameStr = substr($nameStr,6);
                                         $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                        foreach($form->all() as $key=>$val) {
+                                        foreach($this->form->all() as $key=>$val) {
                                             if($key==$nameStr){
                                                 if(isset($data[$nameStr]) && !empty($data[$nameStr])){
                                                     break;
@@ -565,7 +566,7 @@ class SendEmailsFirstCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
+                                    foreach($this->form->all() as $key=>$val) {
                                         if($key==$nameStr){
                                             $data[$nameStr] = $contact->email;
                                             break;
@@ -580,7 +581,7 @@ class SendEmailsFirstCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
+                                    foreach($this->form->all() as $key=>$val) {
                                         if($key==$nameStr){
                                             if(isset($data[$nameStr]) && !empty($data[$nameStr])){
                                                 break;
@@ -603,7 +604,7 @@ class SendEmailsFirstCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
+                                    foreach($this->form->all() as $key=>$val) {
                                         if($key==$name){
                                             if(isset($data[$name]) && !empty($data[$name])){
                                                 break;
@@ -613,7 +614,7 @@ class SendEmailsFirstCommand extends Command
                                                     $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                                     $nameStr = substr($nameStr,6);
                                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                                    foreach($form->all() as $key=>$val) {
+                                                    foreach($this->form->all() as $key=>$val) {
                                                         if($key==$name){
                                                             $data[$name] = $contact->phoneNumber2;
                                                         }
@@ -621,7 +622,7 @@ class SendEmailsFirstCommand extends Command
                                                     $nameStr = substr($nameStr,strpos($nameStr,'name='));
                                                     $nameStr = substr($nameStr,6);
                                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
-                                                    foreach($form->all() as $key=>$val) {
+                                                    foreach($this->form->all() as $key=>$val) {
                                                         if($key==$name){
                                                             $data[$name] = $contact->phoneNumber3;
                                                         }
@@ -643,7 +644,7 @@ class SendEmailsFirstCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
+                                    foreach($this->form->all() as $key=>$val) {
                                         if($key==$nameStr){
                                             if(isset($data[$nameStr]) && !empty($data[$nameStr])){
                                                 break;
@@ -664,7 +665,7 @@ class SendEmailsFirstCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($form->all() as $key=>$val) {
+                                    foreach($this->form->all() as $key=>$val) {
                                         if($key==$nameStr){
                                             if(isset($data[$nameStr]) && !empty($data[$nameStr])){
                                                 break;
@@ -677,9 +678,9 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                             
-                            if(!empty($form->getValues())){
+                            if(!empty($this->form->getValues())){
                                 $kana_count_check = 0;$name_count_check = 0;$phone_count_check = 0;$postal_count_check = 0;
-                                foreach($form->getValues() as $key => $val) {
+                                foreach($this->form->getValues() as $key => $val) {
                                     if(isset($data[$key])&&(!empty($data[$key])))continue;
                                     if(($val!=='' || strpos($key,'wpcf7')!==false||strpos($key,'captcha')!==false)) {
                                         if(strpos($val,'例')!==false){
@@ -769,19 +770,20 @@ class SendEmailsFirstCommand extends Command
                                 }
         
                                 //end
-                                foreach($form->getValues() as $key => $val) {
+                                foreach($this->form->getValues() as $key => $val) {
                                     if((isset($data[$key]) || strpos($key,'wpcf7')!==false ||strpos($key,'captcha')!==false||strpos($key,'url')!==false)) {
                                         continue;
                                     }else {
-                                        $data[$key] = " ";
+                                        $data[$key] = "なし";
                                     }
                                 }
         
                                 if(isset($data['g-recaptcha-response']) || isset($data['_wpcf7_recaptcha_response'])){
-                                    $crawler = $client->request($form->getMethod(), $form->getUri(), $data);
+                                    $crawler = $client->request($this->form->getMethod(), $this->form->getUri(), $data);
                                 }else {
-                                    $form->setValues($data);
-                                    $crawler = $client->submit($form);
+                                    $this->form->setValues($data);
+                                    $crawler = $client->submit($this->form);
+                                    file_put_contents('html.html',utf8_decode($crawler->html()));
                                 }
                                 
                                 $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","完了","内容を確認させていただき");
@@ -813,42 +815,49 @@ class SendEmailsFirstCommand extends Command
                                         }
                                     }
                                     if(!$check){
-                                        $checkform='';
                                         $buttons = $crawler->filter('form button');
                                         if($buttons->count()>0){
                                             $buttons->each(function($button) {
                                                 if($button->extract(array('type'))[0]=="submit") {
-                                                    $checkform = $button->form();
+                                                    $this->checkform = $button->form();
                                                 }
                                             });
                                         }
                                         try{
-                                            $checkform = $crawler->selectButton('送信する')->form();
-                                        }catch (\Throwable $e) {
-                                            
-                                        }
-                                        try{
-                                            $checkform = $crawler->filter('form')->form();
-                                        }catch (\Throwable $e) {
-                                            
-                                        }
-                                        try{
-                                            if(isset($checkform) && !empty($checkform)){
-    
-                                                foreach($form->getValues() as $key=>$val) {
-                                                    if(isset($checkform->getValues()[$key])){
-                                                        if(strcmp($val,$checkform->getValues()[$key])){
-                                                            $checkform->fields->set($key, $val);
-                                                        }
+                                            $inputs = $crawler->filter('form input')->extract(array('type'));
+                                            if(in_array('submit', $inputs)) {
+                                                $crawler->filter('form input')->each(function($input) {
+                                                    if($input->extract(array('type'))[0]=="submit") {
+                                                        // $this->buttonText = $input->extract(array('value'))[0];
+                                                        $this->checkform = $input->form();
                                                     }
-                                                    // else {
-                                                    //     $checkform->set($form[$key]);
-                                                    //     $checkform->fields->set($key, $val);
-                                                    // }
-                                                }
+                                                });
+                                            }
+                                        }catch (\Throwable $e) {
                                             
-                                                $crawler = $client->submit($checkform);
-                                                // file_put_contents('html.html',$crawler->html());
+                                        }
+                                        try{
+                                            $this->checkform = $crawler->filter('form')->form();
+                                        }catch (\Throwable $e) {
+                                            
+                                        }
+                                        try{
+                                            if(isset($this->checkform) && !empty($this->checkform)){
+    
+                                                // foreach($this->form->getValues() as $key=>$val) {
+                                                //     if(isset($this->checkform->getValues()[$key])){
+                                                //         if(strcmp($val,$this->checkform->getValues()[$key])){
+                                                //             $this->checkform->fields->set($key, $val);
+                                                //         }
+                                                //     }
+                                                //     // else {
+                                                //     //     $this->checkform->set($this->form[$key]);
+                                                //     //     $this->checkform->fields->set($key, $val);
+                                                //     // }
+                                                // }
+                                            
+                                                $crawler = $client->submit($this->checkform);
+                                                
                                                 $check =false;
                                                 foreach($checkMessages as $message) {
                                                     if(strpos($crawler->html(),$message)!==false){
