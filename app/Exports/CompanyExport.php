@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Illuminate\Support\Arr;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use App\Models\Source;
 
 class CompanyExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -65,6 +66,7 @@ class CompanyExport implements FromCollection, WithHeadings, WithMapping
         }
 
         if (!empty($value = Arr::get($this->params, 'source'))) {
+			$value = Source::where('sort_no',$value)->first()->name;
             $query->where('source', $value);
         }
 
