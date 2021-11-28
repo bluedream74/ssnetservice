@@ -258,6 +258,9 @@
         </div>
 
     {{ Form::open(['route' => 'admin.delete.duplicate', 'method' => 'POST', 'id' => 'duplicateForm']) }}
+        @foreach (Request::all() as $key => $value)
+                {{ Form::hidden($key, $value) }}
+            @endforeach
     {{ Form::close() }}
 
     {{ Form::open(['route' => 'admin.delete.email', 'method' => 'POST', 'id' => 'deleteEmailForm']) }}
