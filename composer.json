@@ -52,7 +52,8 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+            "Symfony\\Component\\DomCrawler\\": "libs/dom-crawler/"
         },
         "classmap": [
             "database/seeds"
