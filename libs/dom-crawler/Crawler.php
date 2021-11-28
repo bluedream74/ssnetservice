@@ -186,6 +186,7 @@ class Crawler implements \Countable, \IteratorAggregate
         }
     }
 
+
     /**
      * Adds an HTML content to the list of nodes.
      *
