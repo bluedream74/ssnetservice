@@ -58,6 +58,7 @@ class BatchCheckCommand2 extends Command
             
             if(sizeof($companies)>0){
                 foreach($companies as $company) {
+                    sleep(2);
                     try {
                         Company::where('id',$company->id)->update(['check_contact_form'=>1]);
                         if(isset($company->contact_form_url)&&(!empty($company->contact_form_url))){

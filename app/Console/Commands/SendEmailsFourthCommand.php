@@ -81,11 +81,11 @@ class SendEmailsFourthCommand extends Command
                     $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                 
                     foreach ($companyContacts as $companyContact) {
-                            
+                        sleep(2);
                         $company = $companyContact->company;
                         try {
                             $data = [];
-                            
+                            $charset = 'UTF-8';
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
                             \Log::info($now.' send:emailsFourth : '.$company->contact_form_url);
