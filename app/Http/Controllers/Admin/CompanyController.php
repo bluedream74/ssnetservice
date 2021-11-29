@@ -208,7 +208,7 @@ class CompanyController extends BaseController
             $query->whereNull('contact_form_url');
         }
     }
-    $urls = $query->whereNotNull('url')->select('url')->distinct()->pluck('url');
+    $urls = $query->whereNotNull('url')->distinct()->pluck('url');
     
     if (sizeof($urls) < $query->whereNotNull('url')->count()) {
       foreach ($urls as $url) {
@@ -217,7 +217,7 @@ class CompanyController extends BaseController
           $host = str_replace('www.', '', $parse['host']);
 
           if ($query->where('url', 'LIKE', "%{$host}%")->count() > 1) {
-            $company = $query->where('url', 'LIKE', "%{$host}%")->oldest()->first();
+            $company = $query->where('url', 'LIKE', "%{$host}%")->latest()->first();
             if($query->where('subsource', $company->subsource)->count() == 1) {
               SubSource::where('name',$company->subsource)->delete();
             }

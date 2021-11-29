@@ -131,7 +131,7 @@ class DashboardController extends BaseController
         $contacts = Contact::orderByDesc('created_at')->paginate(20);
         foreach($contacts as $contact) {
             $contact->sent_count = $contact->companies()->where('is_delivered','2')->count();
-            $contact->stand_by_count = $contact->companies()->where('is_delivered','0')->orWhere('is_delivered','3')->count();
+            $contact->stand_by_count = $contact->companies()->where('is_delivered','0')->count()+$contact->companies()->where('is_delivered','3')->count();
         }
         return view('admin.contact', compact('contacts'));
     }
