@@ -44,9 +44,6 @@ class SendEmailsSecondCommand extends Command
      */
     public function handle()
     {
-        $out = new \Symfony\Component\Console\Output\ConsoleOutput();
-        $out->writeln("send:emailsSecond");
-
         $offset = Config::get()->first()->mailLimit;
 
         $start = Config::get()->first()->start;
@@ -91,7 +88,7 @@ class SendEmailsSecondCommand extends Command
                             
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
-                            
+                            \Log::info($today.'send:emailsSecond start'.$company->contact_form_url);
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
                             $charset = $this->getCharset($crawler->html());
