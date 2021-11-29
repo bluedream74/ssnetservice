@@ -88,10 +88,11 @@ class SendEmailsFirstCommand extends Command
                             
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
-                            \Log::info($today.'send:emailsFirst : '.$company->contact_form_url);
+                            \Log::warning($now.' send:emailsFirst : '.$company->contact_form_url);
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
                             $charset = $this->getCharset($crawler->html());
+                            
                             try{
                                 $charset = $charset[1];
                             }catch (\Throwable $e) {
