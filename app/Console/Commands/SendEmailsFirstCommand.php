@@ -56,6 +56,8 @@ class SendEmailsFirstCommand extends Command
         $startTimeCheck = $now->gte($startTimeStamp);
         $endTimeCheck = $now->lte($endTimeStamp);
 
+        $output = new Symfony\Component\Console\Output\ConsoleOutput();
+        $output->writeln("<info>start</info>");
         if( $startTimeCheck && $endTimeCheck ){
 
             $contacts = Contact::whereHas('reserve_companies')->get();
@@ -88,7 +90,7 @@ class SendEmailsFirstCommand extends Command
                             $charset = 'UTF-8';
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
-                            \Log::warning($now.' send:emailsFirst : '.$company->contact_form_url);
+                            $output->writeln("company url : ".$company->contact_form_url);
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
                             
@@ -122,22 +124,23 @@ class SendEmailsFirstCommand extends Command
                                     }
                                 }
                             }catch (\Throwable $e) {
-                                    $inputs = $crawler->filter('form input')->extract(array('type'));
-                                    if(in_array('submit', $inputs)) {
-                                        $crawler->filter('form input')->each(function($input) {
-                                            if($input->extract(array('type'))[0]=="submit") {
-                                                // $this->buttonText = $input->extract(array('value'))[0];
-                                                $this->form = $input->form();
-                                            }
-                                        });
-                                    }
+                                $inputs = $crawler->filter('form input')->extract(array('type'));
+                                if(in_array('submit', $inputs)) {
+                                    $crawler->filter('form input')->each(function($input) {
+                                        if($input->extract(array('type'))[0]=="submit") {
+                                            // $this->buttonText = $input->extract(array('value'))[0];
+                                            $this->form = $input->form();
+                                        }
+                                    });
+                                }
                             }
 
                             if(!isset($this->form)){
                                 $company->update(['status' => '送信失敗']);
                                 $companyContact->update([
                                     'is_delivered' => 1
-                                ]);continue;
+                                ]);
+                                continue;
                             }
                             $charset = $this->getCharset($crawler->html());
                             
@@ -233,9 +236,8 @@ class SendEmailsFirstCommand extends Command
                                     }
                                 }
                             }catch(\Throwable $e){
-        
+                                $output->writeln($e->getMessage());
                             }
-                            
         
                             if(!empty($this->form->getValues())){
 
@@ -282,6 +284,14 @@ class SendEmailsFirstCommand extends Command
                                     }
         
                                 }
+                            }else {
+                                $company->update([
+                                    'status'        => '送信失敗'
+                                ]);
+                                $companyContact->update([
+                                    'is_delivered' => 1
+                                ]);
+                                continue;
                             }
                             
                             foreach($this->form->all() as $key =>$val){
@@ -349,26 +359,24 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
         
-                            if(!empty($this->form->getValues())){
-                                foreach($this->form->getValues() as $key => $value) {
-                                    if(isset($data[$key])&&(!empty($data[$key])))continue;
-                                    if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
-                                        $data[$key] = $value;
-                                    }else {
-                                        if(strpos($key, 'ご担当者名')!==false){
-                                            $data[$key] = $contact->surname." ".$contact->lastname;continue;
-                                        }
-                                        if(strpos($key,'セイ')!==false){
-                                            $data[$key] = $contact->fu_surname;
-                                        }else if(strpos($key,'メイ')!==false){
-                                            $data[$key] = $contact->fu_lastname;
-                                        }
-                                        // else if(strpos($key,'姓')!==false){
-                                        //     $data[$key] = $contact->surname;
-                                        // }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
-                                        //     $data[$key] = $contact->lastname;
-                                        // }
+                            foreach($this->form->getValues() as $key => $value) {
+                                if(isset($data[$key])&&(!empty($data[$key])))continue;
+                                if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
+                                    $data[$key] = $value;
+                                }else {
+                                    if(strpos($key, 'ご担当者名')!==false){
+                                        $data[$key] = $contact->surname." ".$contact->lastname;continue;
                                     }
+                                    if(strpos($key,'セイ')!==false){
+                                        $data[$key] = $contact->fu_surname;
+                                    }else if(strpos($key,'メイ')!==false){
+                                        $data[$key] = $contact->fu_lastname;
+                                    }
+                                    // else if(strpos($key,'姓')!==false){
+                                    //     $data[$key] = $contact->surname;
+                                    // }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
+                                    //     $data[$key] = $contact->lastname;
+                                    // }
                                 }
                             }
                             $nonPatterns = array('部署');
@@ -682,230 +690,213 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                             
-                            if(!empty($this->form->getValues())){
-                                $kana_count_check = 0;$name_count_check = 0;$phone_count_check = 0;$postal_count_check = 0;
-                                foreach($this->form->getValues() as $key => $val) {
-                                    if(isset($data[$key])&&(!empty($data[$key])))continue;
-                                    if(($val!=='' || strpos($key,'wpcf7')!==false||strpos($key,'captcha')!==false)) {
-                                        if(strpos($val,'例')!==false){
-        
-                                        }else{
-                                            continue;
-                                        }
-                                    }
-                                    if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false|| strpos($key,'ふり')!==false|| strpos($key,'namek')!==false ||  strpos($key,'kn')!==false ){
-                                        if($kana_count == 1){
-                                            $data[$key] = $contact->fu_surname.' '.$contact->fu_lastname;continue;
-                                        }else if($kana_count ==2) {
-                                            if(!isset($kana_count_check) || ($kana_count_check == 0 )){
-                                                $data[$key] = $contact->fu_surname;
-                                            }else {
-                                                $data[$key] = $contact->fu_lastname;
-                                            }
-                                            $kana_count_check=1;continue;
-                                        }
-                                    }else if(strpos($key,'nam')!==false || strpos($key,'お名前')!==false){
-                                        if($name_count == 1) {
-                                            $data[$key] = $contact->surname.' '.$contact->lastname;continue;
-                                        }else if($name_count == 2) {
-                                            if(!isset($name_count_check) || ($name_count_check == 0)){
-                                                $data[$key] = $contact->surname;
-                                            }else {
-                                                $data[$key] = $contact->lastname;
-                                            }
-                                            $name_count_check=1;continue;
-                                        }
-                                    }
-                                    if($fax_count == 1) {
-                                        $titleTexts = array('fax','FAX');
-                                        foreach($titleTexts as $text) {
-                                            if(strpos($key,$text)!==false){
-                                                $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;break;
-                                            }
-                                        }
-                                    }
-
-                                    if(strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false|| strpos($key,'zip')!==false|| strpos($key,'〒')!==false){
-                                        if($postal_count==1){
-                                            $data[$key] = $contact->postalCode1.'-'.$contact->postalCode2;continue;
-                                        }else if($postal_count==2){
-                                            if(!isset($postal_count_check) && ($postal_count_check ==0)){
-                                                $data[$key] = $contact->postalCode1;
-                                            }else {
-                                                $data[$key] = $contact->postalCode2;
-                                            }
-                                            $postal_count_check=1;continue;
-                                        }
-                                    }
-                                    $emailTexts = array('mail','mail_confirm','ールアドレス','M_ADR','部署','E-Mail','メールアドレス');
-                                    foreach($emailTexts as $text) {
-                                        if(strpos($key,$text)!==false){
-                                            $data[$key] = $contact->email;break;
-                                        }
-                                    }
-                                    
-                                    if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false || strpos($key,'TEL')!==false){
-                                        if($phone_count ==1){
-                                            $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;continue;
-                                        }else if($phone_count >= 3){
-                                            if(!isset($phone_count_check) || ($phone_count_check ==0) ){
-                                                $data[$key] = $contact->phoneNumber1;
-                                                $phone_count_check=1;continue;
-                                            }else if(isset($phone_count_check) && ($phone_count_check ==1)) {
-                                                $data[$key] = $contact->phoneNumber2;
-                                                $phone_count_check = 2;continue;
-                                            }else if(isset($phone_count_check) && ($phone_count_check ==2)) {
-                                                $data[$key] = $contact->phoneNumber3;continue;
-                                            }
-                                        }
-                                    }
+                            $kana_count_check = 0;$name_count_check = 0;$phone_count_check = 0;$postal_count_check = 0;
+                            foreach($this->form->getValues() as $key => $val) {
+                                if(isset($data[$key])&&(!empty($data[$key])))continue;
+                                if(($val!=='' || strpos($key,'wpcf7')!==false||strpos($key,'captcha')!==false)) {
+                                    if(strpos($val,'例')!==false){
     
-                                }
-                                
-                                if(strpos($company->contact_form_url,"ksa.jp")!==false){
-                                    $data['key'] = '319254';
-                                }
-        
-                                //end
-                                foreach($this->form->getValues() as $key => $val) {
-                                    if((isset($data[$key]) || strpos($key,'wpcf7')!==false ||strpos($key,'captcha')!==false||strpos($key,'url')!==false)) {
+                                    }else{
                                         continue;
-                                    }else {
-                                        $data[$key] = "なし";
                                     }
                                 }
-        
-                                if(isset($data['g-recaptcha-response']) || isset($data['_wpcf7_recaptcha_response'])){
-                                    $crawler = $client->request($this->form->getMethod(), $this->form->getUri(), $data);
-                                }else {
-                                    $this->form->setValues($data);
-                                    $crawler = $client->submit($this->form);
+                                if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false|| strpos($key,'ふり')!==false|| strpos($key,'namek')!==false ||  strpos($key,'kn')!==false ){
+                                    if($kana_count == 1){
+                                        $data[$key] = $contact->fu_surname.' '.$contact->fu_lastname;continue;
+                                    }else if($kana_count ==2) {
+                                        if(!isset($kana_count_check) || ($kana_count_check == 0 )){
+                                            $data[$key] = $contact->fu_surname;
+                                        }else {
+                                            $data[$key] = $contact->fu_lastname;
+                                        }
+                                        $kana_count_check=1;continue;
+                                    }
+                                }else if(strpos($key,'nam')!==false || strpos($key,'お名前')!==false){
+                                    if($name_count == 1) {
+                                        $data[$key] = $contact->surname.' '.$contact->lastname;continue;
+                                    }else if($name_count == 2) {
+                                        if(!isset($name_count_check) || ($name_count_check == 0)){
+                                            $data[$key] = $contact->surname;
+                                        }else {
+                                            $data[$key] = $contact->lastname;
+                                        }
+                                        $name_count_check=1;continue;
+                                    }
+                                }
+                                if($fax_count == 1) {
+                                    $titleTexts = array('fax','FAX');
+                                    foreach($titleTexts as $text) {
+                                        if(strpos($key,$text)!==false){
+                                            $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;break;
+                                        }
+                                    }
+                                }
+
+                                if(strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false|| strpos($key,'zip')!==false|| strpos($key,'〒')!==false){
+                                    if($postal_count==1){
+                                        $data[$key] = $contact->postalCode1.'-'.$contact->postalCode2;continue;
+                                    }else if($postal_count==2){
+                                        if(!isset($postal_count_check) && ($postal_count_check ==0)){
+                                            $data[$key] = $contact->postalCode1;
+                                        }else {
+                                            $data[$key] = $contact->postalCode2;
+                                        }
+                                        $postal_count_check=1;continue;
+                                    }
+                                }
+                                $emailTexts = array('mail','mail_confirm','ールアドレス','M_ADR','部署','E-Mail','メールアドレス');
+                                foreach($emailTexts as $text) {
+                                    if(strpos($key,$text)!==false){
+                                        $data[$key] = $contact->email;break;
+                                    }
                                 }
                                 
-                                $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","完了","内容を確認させていただき");
-                                $failedMessages = array('必須項目','問題','ありません');
-                                $failedCheck=true;
-                                foreach($failedMessages as $message) {
+                                if(strpos($key,'tel')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false || strpos($key,'TEL')!==false){
+                                    if($phone_count ==1){
+                                        $data[$key] = $contact->phoneNumber1."-".$contact->phoneNumber2."-".$contact->phoneNumber3;continue;
+                                    }else if($phone_count >= 3){
+                                        if(!isset($phone_count_check) || ($phone_count_check ==0) ){
+                                            $data[$key] = $contact->phoneNumber1;
+                                            $phone_count_check=1;continue;
+                                        }else if(isset($phone_count_check) && ($phone_count_check ==1)) {
+                                            $data[$key] = $contact->phoneNumber2;
+                                            $phone_count_check = 2;continue;
+                                        }else if(isset($phone_count_check) && ($phone_count_check ==2)) {
+                                            $data[$key] = $contact->phoneNumber3;continue;
+                                        }
+                                    }
+                                }
+
+                            }
+                            
+                            if(strpos($company->contact_form_url,"ksa.jp")!==false){
+                                $data['key'] = '319254';
+                            }
+    
+                            //end
+                            foreach($this->form->getValues() as $key => $val) {
+                                if((isset($data[$key]) || strpos($key,'wpcf7')!==false ||strpos($key,'captcha')!==false||strpos($key,'url')!==false)) {
+                                    continue;
+                                }else {
+                                    $data[$key] = "なし";
+                                }
+                            }
+    
+                            if(isset($data['g-recaptcha-response']) || isset($data['_wpcf7_recaptcha_response'])){
+                                $crawler = $client->request($this->form->getMethod(), $this->form->getUri(), $data);
+                            }else {
+                                $this->form->setValues($data);
+                                $crawler = $client->submit($this->form);
+                            }
+                            
+                            $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","完了","内容を確認させていただき");
+                            $failedMessages = array('必須項目','問題','ありません');
+                            $failedCheck=true;
+                            foreach($failedMessages as $message) {
+                                if(strpos($crawler->html(),$message)!==false){
+                                    $company->update([
+                                        'status'        => '送信失敗'
+                                    ]);
+                                    $companyContact->update([
+                                        'is_delivered' => 1
+                                    ]);
+                                    $failedCheck = false;break;
+                                }
+                            }
+
+                            if($failedCheck) {
+                                $check = false;
+                                foreach($checkMessages as $message) {
                                     if(strpos($crawler->html(),$message)!==false){
                                         $company->update([
-                                            'status'        => '送信失敗'
+                                            'status'        => '送信済み'
                                         ]);
                                         $companyContact->update([
-                                            'is_delivered' => 1
+                                            'is_delivered' => 2
                                         ]);
-                                        $check =false;break;
+                                        $check =true;break;
                                     }
                                 }
+                                if(!$check){
+                                    try{
+                                        $this->checkform = $crawler->filter('form button')->form();
+                                        $inputs = $crawler->filter('form input')->extract(array('type'));
+                                        if(in_array('submit', $inputs)) {
+                                            $crawler->filter('form input')->each(function($input) {
+                                                if($input->extract(array('type'))[0]=="submit") {
+                                                    $this->checkform = $input->form();
+                                                }
+                                            });
+                                        }
+                                    
+                                        if(isset($this->checkform) && !empty($this->checkform)){
 
-                                if($failedCheck) {
-                                    $check = false;
-                                    foreach($checkMessages as $message) {
-                                        if(strpos($crawler->html(),$message)!==false){
+                                            // foreach($this->form->getValues() as $key=>$val) {
+                                            //     if(isset($this->checkform->getValues()[$key])){
+                                            //         if(strcmp($val,$this->checkform->getValues()[$key])){
+                                            //             $this->checkform->fields->set($key, $val);
+                                            //         }
+                                            //     }
+                                            //     // else {
+                                            //     //     $this->checkform->set($this->form[$key]);
+                                            //     //     $this->checkform->fields->set($key, $val);
+                                            //     // }
+                                            // }
+                                            if(strcasecmp($charset,'utf-8')) {
+                                                foreach($this->checkform->getValues() as $key => $val) {
+                                                    $val = mb_convert_encoding($val,$charset,'UTF-8');
+                                                    $this->checkform->fields->set($key, $val);
+                                                }
+                                            }
+                                            $crawler = $client->submit($this->checkform);
+                                            
+                                            $check =false;
+                                            foreach($checkMessages as $message) {
+                                                if(strpos($crawler->html(),$message)!==false){
+                                                    $company->update([
+                                                        'status'        => '送信済み'
+                                                    ]);
+                                                    $companyContact->update([
+                                                        'is_delivered' => 2
+                                                    ]);
+                                                    $check =true;break;
+                                                }
+                                            }
+                                            if(!$check){
+                                                $company->update([
+                                                    'status'        => '送信失敗'
+                                                ]);
+                                                $companyContact->update([
+                                                    'is_delivered' => 1
+                                                ]);
+                                            }
+                                        }else {
                                             $company->update([
                                                 'status'        => '送信済み'
                                             ]);
                                             $companyContact->update([
                                                 'is_delivered' => 2
                                             ]);
-                                            $check =true;break;
                                         }
-                                    }
-                                    if(!$check){
-                                        try{
-                                            $this->checkform = $crawler->filter('form button')->form();
-                                        }catch (\Throwable $e) {
-                                            
-                                        }
-                                        try{
-                                            $inputs = $crawler->filter('form input')->extract(array('type'));
-                                            if(in_array('submit', $inputs)) {
-                                                $crawler->filter('form input')->each(function($input) {
-                                                    if($input->extract(array('type'))[0]=="submit") {
-                                                        $this->checkform = $input->form();
-                                                    }
-                                                });
-                                            }
-                                        }catch (\Throwable $e) {
-                                            
-                                        }
-                                       
-                                        try{
-                                            if(isset($this->checkform) && !empty($this->checkform)){
-    
-                                                // foreach($this->form->getValues() as $key=>$val) {
-                                                //     if(isset($this->checkform->getValues()[$key])){
-                                                //         if(strcmp($val,$this->checkform->getValues()[$key])){
-                                                //             $this->checkform->fields->set($key, $val);
-                                                //         }
-                                                //     }
-                                                //     // else {
-                                                //     //     $this->checkform->set($this->form[$key]);
-                                                //     //     $this->checkform->fields->set($key, $val);
-                                                //     // }
-                                                // }
-                                                if(strcasecmp($charset,'utf-8')) {
-                                                    foreach($this->checkform->getValues() as $key => $val) {
-                                                        $val = mb_convert_encoding($val,$charset,'UTF-8');
-                                                        $this->checkform->fields->set($key, $val);
-                                                    }
-                                                }
-                                                $crawler = $client->submit($this->checkform);
-                                                
-                                                $check =false;
-                                                foreach($checkMessages as $message) {
-                                                    if(strpos($crawler->html(),$message)!==false){
-                                                        $company->update([
-                                                            'status'        => '送信済み'
-                                                        ]);
-                                                        $companyContact->update([
-                                                            'is_delivered' => 2
-                                                        ]);
-                                                        $check =true;break;
-                                                    }
-                                                }
-                                                if(!$check){
-                                                    $company->update([
-                                                        'status'        => '送信失敗'
-                                                    ]);
-                                                    $companyContact->update([
-                                                        'is_delivered' => 1
-                                                    ]);
-                                                }
-                                            }else {
-                                                $company->update([
-                                                    'status'        => '送信済み'
-                                                ]);
-                                                $companyContact->update([
-                                                    'is_delivered' => 2
-                                                ]);
-                                                $check =true;break;
-                                            }
-                                        }catch (\Throwable $e) {
-                                            $company->update([
-                                                'status'        => '送信失敗'
-                                            ]);
-                                            $companyContact->update([
-                                                'is_delivered' => 1
-                                            ]);
-                                        }
+                                    }catch (\Throwable $e) {
+                                        $output->writeln($e->getMessage());
+                                        $company->update([
+                                            'status'        => '送信失敗'
+                                        ]);
+                                        $companyContact->update([
+                                            'is_delivered' => 1
+                                        ]);
                                     }
                                 }
-
-                            }else {
-                                $company->update([
-                                    'status'        => '送信失敗'
-                                ]);
-                                $companyContact->update([
-                                    'is_delivered' => 1
-                                ]);
                             }
-                        }  
-                        catch (\Throwable $e) {
+                        } catch (\Throwable $e) {
+                            $output->writeln($e->getMessage());
                             $company->update(['status' => '送信失敗']);
                             $companyContact->update([
                                 'is_delivered' => 1
                             ]);
                         }
+                        $output->writeln("end company");
                     }
                 }
             }
