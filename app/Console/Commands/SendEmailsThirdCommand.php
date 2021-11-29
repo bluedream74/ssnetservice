@@ -90,24 +90,7 @@ class SendEmailsThirdCommand extends Command
                             \Log::info($now.' send:emailsThird : '.$company->contact_form_url);
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
-                            $charset = $this->getCharset($crawler->html());
-                            try{
-                                $charset = $charset[1];
-                            }catch (\Throwable $e) {
-                                $charset = 'UTF-8';
-                            }
-                            if(strcasecmp($charset,'utf-8')) {
-                                $contact->surname = mb_convert_encoding($contact->surname,$charset,'UTF-8');
-                                $contact->lastname = mb_convert_encoding($contact->lastname,$charset,'UTF-8');
-                                $contact->fu_surname = mb_convert_encoding($contact->fu_surname,$charset,'UTF-8');
-                                $contact->fu_lastname = mb_convert_encoding($contact->fu_lastname,$charset,'UTF-8');
-                                $contact->company = mb_convert_encoding($contact->company,$charset,'UTF-8');
-                                $contact->title = mb_convert_encoding($contact->title,$charset,'UTF-8');
-                                $contact->content = mb_convert_encoding($contact->content,$charset,'UTF-8');
-                                $contact->area = mb_convert_encoding($contact->area,$charset,'UTF-8');
-                                $contact->address = mb_convert_encoding($contact->address,$charset,'UTF-8');
-                                $company->name = mb_convert_encoding($company->name,$charset,'UTF-8');
-                            }
+                            
                             // $nonStrings = array("営業お断り","カタログ","サンプル","有料","代引き","着払い");
                             // $pos = strpos($crawler->text(),"カタログ");
                             if(
@@ -124,7 +107,7 @@ class SendEmailsThirdCommand extends Command
                                 ]);
                                 continue;
                             }
-                           
+
                             try{
                                 $this->form = $crawler->filter('form')->form();
                                 if(empty($this->form->all())){
@@ -146,8 +129,7 @@ class SendEmailsThirdCommand extends Command
                                     }
                                 }
                             }catch (\Throwable $e) {
-                                try{
-                                    $buttons = $crawler->filter('form button');
+                                $buttons = $crawler->filter('form button');
                                     if($buttons->count()>0){
                                         $buttons->each(function($button) {
                                             if($button->extract(array('type'))[0]=="submit") {
@@ -164,11 +146,34 @@ class SendEmailsThirdCommand extends Command
                                             }
                                         });
                                     }
-                                }catch (\Throwable $e) {
-
-                                }
                             }
-                        
+
+                            if(!isset($this->form)){
+                                $company->update(['status' => '送信失敗']);
+                                $companyContact->update([
+                                    'is_delivered' => 1
+                                ]);continue;
+                            }
+                            $charset = $this->getCharset($crawler->html());
+                            
+                            try{
+                                $charset = $charset[1];
+                                if(strcasecmp($charset,'utf-8')) {
+                                    $contact->surname = mb_convert_encoding($contact->surname,$charset,'UTF-8');
+                                    $contact->lastname = mb_convert_encoding($contact->lastname,$charset,'UTF-8');
+                                    $contact->fu_surname = mb_convert_encoding($contact->fu_surname,$charset,'UTF-8');
+                                    $contact->fu_lastname = mb_convert_encoding($contact->fu_lastname,$charset,'UTF-8');
+                                    $contact->company = mb_convert_encoding($contact->company,$charset,'UTF-8');
+                                    $contact->title = mb_convert_encoding($contact->title,$charset,'UTF-8');
+                                    $contact->content = mb_convert_encoding($contact->content,$charset,'UTF-8');
+                                    $contact->area = mb_convert_encoding($contact->area,$charset,'UTF-8');
+                                    $contact->address = mb_convert_encoding($contact->address,$charset,'UTF-8');
+                                    $company->name = mb_convert_encoding($company->name,$charset,'UTF-8');
+                                }
+                            }catch (\Throwable $e) {
+                                $charset = 'UTF-8';
+                            }
+                            
                             try {
                                 if(strpos($crawler->html(),'api.js?render')!==false){
                                     $key_position = strpos($crawler->html(),'api.js?render');
@@ -293,8 +298,6 @@ class SendEmailsThirdCommand extends Command
         
                                 }
                             }
-                            
-                            
                             
                             foreach($this->form->all() as $key =>$val){
                                 try{
@@ -921,7 +924,6 @@ class SendEmailsThirdCommand extends Command
                             }
                         }  
                         catch (\Throwable $e) {
-                            // file_put_contents('html.txt',$e->getMessage());
                             $company->update(['status' => '送信失敗']);
                             $companyContact->update([
                                 'is_delivered' => 1
