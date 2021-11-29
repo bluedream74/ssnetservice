@@ -110,16 +110,8 @@ class SendEmailsFirstCommand extends Command
                             }
 
                             try{
-                                $this->form = $crawler->filter('form')->form();
+                                $this->form = $crawler->filter('form button')->form();
                                 if(empty($this->form->all())){
-                                    $buttons = $crawler->filter('form button');
-                                    if($buttons->count()>0){
-                                        $buttons->each(function($button) {
-                                            if($button->extract(array('type'))[0]=="submit") {
-                                                $this->form = $button->form();
-                                            }
-                                        });
-                                    }
                                     $inputs = $crawler->filter('form input')->extract(array('type'));
                                     if(in_array('submit', $inputs)) {
                                         $crawler->filter('form input')->each(function($input) {
@@ -130,14 +122,6 @@ class SendEmailsFirstCommand extends Command
                                     }
                                 }
                             }catch (\Throwable $e) {
-                                $buttons = $crawler->filter('form button');
-                                    if($buttons->count()>0){
-                                        $buttons->each(function($button) {
-                                            if($button->extract(array('type'))[0]=="submit") {
-                                                $this->form = $button->form();
-                                            }
-                                        });
-                                    }
                                     $inputs = $crawler->filter('form input')->extract(array('type'));
                                     if(in_array('submit', $inputs)) {
                                         $crawler->filter('form input')->each(function($input) {
@@ -827,20 +811,16 @@ class SendEmailsFirstCommand extends Command
                                         }
                                     }
                                     if(!$check){
-                                        $buttons = $crawler->filter('form button');
-                                        if($buttons->count()>0){
-                                            $buttons->each(function($button) {
-                                                if($button->extract(array('type'))[0]=="submit") {
-                                                    $this->checkform = $button->form();
-                                                }
-                                            });
+                                        try{
+                                            $this->checkform = $crawler->filter('form button')->form();
+                                        }catch (\Throwable $e) {
+                                            
                                         }
                                         try{
                                             $inputs = $crawler->filter('form input')->extract(array('type'));
                                             if(in_array('submit', $inputs)) {
                                                 $crawler->filter('form input')->each(function($input) {
                                                     if($input->extract(array('type'))[0]=="submit") {
-                                                        // $this->buttonText = $input->extract(array('value'))[0];
                                                         $this->checkform = $input->form();
                                                     }
                                                 });
@@ -848,11 +828,7 @@ class SendEmailsFirstCommand extends Command
                                         }catch (\Throwable $e) {
                                             
                                         }
-                                        try{
-                                            $this->checkform = $crawler->filter('form')->form();
-                                        }catch (\Throwable $e) {
-                                            
-                                        }
+                                       
                                         try{
                                             if(isset($this->checkform) && !empty($this->checkform)){
     
