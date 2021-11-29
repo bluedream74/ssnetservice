@@ -44,6 +44,9 @@ class SendEmailsFirstCommand extends Command
      */
     public function handle()
     {
+        $out = new \Symfony\Component\Console\Output\ConsoleOutput();
+        $out->writeln("send:emailsFirst");
+
         $offset = Config::get()->first()->mailLimit;
 
         $start = Config::get()->first()->start;
