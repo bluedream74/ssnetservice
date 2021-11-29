@@ -78,7 +78,7 @@ class SendEmailsFirstCommand extends Command
                 if($startCheck) {
                     
                     $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
-                    $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+                    // $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                 
                     foreach ($companyContacts as $companyContact) {
                             
@@ -91,25 +91,7 @@ class SendEmailsFirstCommand extends Command
                             \Log::warning($now.' send:emailsFirst : '.$company->contact_form_url);
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
-                            $charset = $this->getCharset($crawler->html());
                             
-                            try{
-                                $charset = $charset[1];
-                            }catch (\Throwable $e) {
-                                $charset = 'UTF-8';
-                            }
-                            if(strcasecmp($charset,'utf-8')) {
-                                $contact->surname = mb_convert_encoding($contact->surname,$charset,'UTF-8');
-                                $contact->lastname = mb_convert_encoding($contact->lastname,$charset,'UTF-8');
-                                $contact->fu_surname = mb_convert_encoding($contact->fu_surname,$charset,'UTF-8');
-                                $contact->fu_lastname = mb_convert_encoding($contact->fu_lastname,$charset,'UTF-8');
-                                $contact->company = mb_convert_encoding($contact->company,$charset,'UTF-8');
-                                $contact->title = mb_convert_encoding($contact->title,$charset,'UTF-8');
-                                $contact->content = mb_convert_encoding($contact->content,$charset,'UTF-8');
-                                $contact->area = mb_convert_encoding($contact->area,$charset,'UTF-8');
-                                $contact->address = mb_convert_encoding($contact->address,$charset,'UTF-8');
-                                $company->name = mb_convert_encoding($company->name,$charset,'UTF-8');
-                            }
                             // $nonStrings = array("営業お断り","カタログ","サンプル","有料","代引き","着払い");
                             // $pos = strpos($crawler->text(),"カタログ");
                             if(
@@ -126,7 +108,7 @@ class SendEmailsFirstCommand extends Command
                                 ]);
                                 continue;
                             }
-                           
+
                             try{
                                 $this->form = $crawler->filter('form')->form();
                                 if(empty($this->form->all())){
@@ -148,8 +130,7 @@ class SendEmailsFirstCommand extends Command
                                     }
                                 }
                             }catch (\Throwable $e) {
-                                try{
-                                    $buttons = $crawler->filter('form button');
+                                $buttons = $crawler->filter('form button');
                                     if($buttons->count()>0){
                                         $buttons->each(function($button) {
                                             if($button->extract(array('type'))[0]=="submit") {
@@ -166,11 +147,34 @@ class SendEmailsFirstCommand extends Command
                                             }
                                         });
                                     }
-                                }catch (\Throwable $e) {
-
-                                }
                             }
-                        
+
+                            if(!isset($this->form)){
+                                $company->update(['status' => '送信失敗']);
+                                $companyContact->update([
+                                    'is_delivered' => 1
+                                ]);continue;
+                            }
+                            $charset = $this->getCharset($crawler->html());
+                            
+                            try{
+                                $charset = $charset[1];
+                                if(strcasecmp($charset,'utf-8')) {
+                                    $contact->surname = mb_convert_encoding($contact->surname,$charset,'UTF-8');
+                                    $contact->lastname = mb_convert_encoding($contact->lastname,$charset,'UTF-8');
+                                    $contact->fu_surname = mb_convert_encoding($contact->fu_surname,$charset,'UTF-8');
+                                    $contact->fu_lastname = mb_convert_encoding($contact->fu_lastname,$charset,'UTF-8');
+                                    $contact->company = mb_convert_encoding($contact->company,$charset,'UTF-8');
+                                    $contact->title = mb_convert_encoding($contact->title,$charset,'UTF-8');
+                                    $contact->content = mb_convert_encoding($contact->content,$charset,'UTF-8');
+                                    $contact->area = mb_convert_encoding($contact->area,$charset,'UTF-8');
+                                    $contact->address = mb_convert_encoding($contact->address,$charset,'UTF-8');
+                                    $company->name = mb_convert_encoding($company->name,$charset,'UTF-8');
+                                }
+                            }catch (\Throwable $e) {
+                                $charset = 'UTF-8';
+                            }
+                            
                             try {
                                 if(strpos($crawler->html(),'api.js?render')!==false){
                                     $key_position = strpos($crawler->html(),'api.js?render');
@@ -295,8 +299,6 @@ class SendEmailsFirstCommand extends Command
         
                                 }
                             }
-                            
-                            
                             
                             foreach($this->form->all() as $key =>$val){
                                 try{
