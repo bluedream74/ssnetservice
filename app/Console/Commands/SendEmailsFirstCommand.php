@@ -88,7 +88,7 @@ class SendEmailsFirstCommand extends Command
                             
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
-                            \Log::info($today.'send:emailsFirst start'.$company->contact_form_url);
+                            \Log::info($today.'send:emailsFirst : '.$company->contact_form_url);
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
                             $charset = $this->getCharset($crawler->html());
@@ -922,27 +922,11 @@ class SendEmailsFirstCommand extends Command
                             }
                         }  
                         catch (\Throwable $e) {
-                            // file_put_contents('html.txt',$e->getMessage());
                             $company->update(['status' => '送信失敗']);
                             $companyContact->update([
                                 'is_delivered' => 1
                             ]);
                         }
-        
-        
-                        if ($contact->is_confirmed == 0) { // Sending email to syt.iphone@gmail.com
-                            try {
-                                // \App\Jobs\SendMagazineEmailJob::dispatch("syt.iphone@gmail.com", new \App\Notifications\MailMagazineNotification($contact, "syt.iphone@gmail.com", $company->name), $company);
-                                Mail::to("syt.iphone@gmail.com")
-                                    ->send(new \App\Mail\CustomEmail($contact, "syt.iphone@gmail.com", $company->name, $company));
-        
-                                $contact->update(['is_confirmed' => 1]);
-                                // sleep(4);
-                            } catch (\Throwable $e) {
-                                \Log::error("KKKKK:  " . $e->getMessage());
-                            }
-                        }
-        
                     }
                 }
             }
