@@ -199,7 +199,7 @@ class BatchCheckCommand1 extends Command
                     }
                     if($crawler->selectLink($pattern)->link()){
                         $link = $crawler->selectLink($pattern)->link()->getUri();
-                        $jsPatterns = array('javascript','JavaScript');
+                        $jsPatterns = array('javascript','JavaScript','mailto');
                         foreach($jsPatterns as $js) {
                             if(strpos($link,$js) !== false) {
                                break;

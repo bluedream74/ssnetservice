@@ -216,7 +216,7 @@ class CompanyController extends BaseController
         try{
           $host = str_replace('www.', '', $parse['host']);
 
-          if ($query::where('url', 'LIKE', "%{$host}%")->count() > 1) {
+          if ($query->where('url', 'LIKE', "%{$host}%")->count() > 1) {
             $company = $query->where('url', 'LIKE', "%{$host}%")->oldest()->first();
             if($query->where('subsource', $company->subsource)->count() == 1) {
               SubSource::where('name',$company->subsource)->delete();
