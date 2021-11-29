@@ -88,7 +88,7 @@ class SendEmailsFourthCommand extends Command
                             
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
-                            \Log::info($today.'send:emailsFourth : '.$company->contact_form_url);
+                            \Log::info($now.' send:emailsFourth : '.$company->contact_form_url);
                             
                             $crawler = $client->request('GET', $company->contact_form_url);
                             $charset = $this->getCharset($crawler->html());
