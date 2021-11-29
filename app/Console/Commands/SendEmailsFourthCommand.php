@@ -44,6 +44,9 @@ class SendEmailsFourthCommand extends Command
      */
     public function handle()
     {
+        $out = new \Symfony\Component\Console\Output\ConsoleOutput();
+        $out->writeln("send:emailsFourth");
+
         $offset = Config::get()->first()->mailLimit;
 
         $start = Config::get()->first()->start;
