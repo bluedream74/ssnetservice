@@ -881,10 +881,10 @@ class SendEmailsFirstCommand extends Command
                                     }catch (\Throwable $e) {
                                         $output->writeln($e->getMessage());
                                         $company->update([
-                                            'status'        => '送信失敗'
+                                            'status'        => '送信済み'
                                         ]);
                                         $companyContact->update([
-                                            'is_delivered' => 1
+                                            'is_delivered' => 2
                                         ]);
                                     }
                                 }
