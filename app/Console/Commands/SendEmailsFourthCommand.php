@@ -77,10 +77,13 @@ class SendEmailsFourthCommand extends Command
                 }
                 
                 if($startCheck) {
+                    try{
+                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(3*$offset)->take($offset)->get();
+                        $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+                    }catch (\Throwable $e) {
+                        
+                    }
                     
-                    $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(3*$offset)->take($offset)->get();
-                    $companyContacts->toQuery()->update(['is_delivered'=> 3]);
-                
                     foreach ($companyContacts as $companyContact) {
                         sleep(2);
                         $company = $companyContact->company;
@@ -326,7 +329,7 @@ class SendEmailsFourthCommand extends Command
                                         $content = str_replace('%company_name%', $company->name, $contact->content);
                                         $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                         $data[$key] = $content;
-                                        $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  444'.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';
+                                        $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は 111 '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';
                                     }
                                     
                                 }catch(\Throwable $e){
@@ -722,6 +725,12 @@ class SendEmailsFourthCommand extends Command
                                         $name_count_check=1;continue;
                                     }
                                 }
+                                if(strpos($key,'姓')!==false){
+                                    $data[$key] = $contact->surname;continue;
+                                }
+                                if(strpos($key,'名')!==false){
+                                    $data[$key] = $contact->surname;continue;
+                                }
                                 if($fax_count == 1) {
                                     $titleTexts = array('fax','FAX');
                                     foreach($titleTexts as $text) {
@@ -791,8 +800,10 @@ class SendEmailsFourthCommand extends Command
                             $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","完了","内容を確認させていただき");
                             $failedMessages = array('必須項目','問題','ありません');
                             $failedCheck=true;
+                            $charset = $this->getCharset($crawler->html());
+                            $html = mb_convert_encoding($crawler->html(),$charset,'UTF-8');
                             foreach($failedMessages as $message) {
-                                if(strpos($crawler->html(),$message)!==false){
+                                if(strpos($html,$message)!==false){
                                     $company->update([
                                         'status'        => '送信失敗'
                                     ]);
@@ -806,7 +817,7 @@ class SendEmailsFourthCommand extends Command
                             if($failedCheck) {
                                 $check = false;
                                 foreach($checkMessages as $message) {
-                                    if(strpos($crawler->html(),$message)!==false){
+                                    if(strpos($html,$message)!==false){
                                         $company->update([
                                             'status'        => '送信済み'
                                         ]);
