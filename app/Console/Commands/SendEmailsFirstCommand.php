@@ -112,7 +112,17 @@ class SendEmailsFirstCommand extends Command
                             }
 
                             try{
+                                $this->form = $crawler->filter('form')->form();
+                            }catch (\Throwable $e) {
+                                
+                            }
+                            try{
                                 $this->form = $crawler->filter('form button')->form();
+                            }catch (\Throwable $e) {
+                                
+                            }
+
+                            try{
                                 if(empty($this->form->all())){
                                     $inputs = $crawler->filter('form input')->extract(array('type'));
                                     if(in_array('submit', $inputs)) {
@@ -124,15 +134,7 @@ class SendEmailsFirstCommand extends Command
                                     }
                                 }
                             }catch (\Throwable $e) {
-                                $inputs = $crawler->filter('form input')->extract(array('type'));
-                                if(in_array('submit', $inputs)) {
-                                    $crawler->filter('form input')->each(function($input) {
-                                        if($input->extract(array('type'))[0]=="submit") {
-                                            // $this->buttonText = $input->extract(array('value'))[0];
-                                            $this->form = $input->form();
-                                        }
-                                    });
-                                }
+                                
                             }
 
                             if(!isset($this->form)){
@@ -890,8 +892,9 @@ class SendEmailsFirstCommand extends Command
                         } catch (\Throwable $e) {
                             $output->writeln($e->getMessage());
                             try{
-                                $company->update(['status' => '送信失敗']);
-
+                                $company->update([
+                                    'status'        => '送信失敗'
+                                ]);
                                 $companyContact->update([
                                     'is_delivered' => 1
                                 ]);
