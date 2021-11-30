@@ -402,24 +402,28 @@ class SendEmailsThirdCommand extends Command
                                     }
                                 }
                             }
-                            $nonPatterns = array('都道府県');
-                            foreach($nonPatterns as $val) {
-                                if(strpos($crawler->text(),$val)!==false) {
-                                    $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
-                                    $nameStr = substr($str,strpos($str,'name='));
-                                    $nameStr = substr($nameStr,6);
-                                    $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
-                                    foreach($this->form->all() as $key=>$val) {
-                                        if($key==$nameStr){
-                                            if(isset($data[$nameStr]) && !empty($data[$nameStr])){
-                                                break;
-                                            }else {
-                                                $data[$nameStr] = $contact->area;
-                                                break;
+                            try{
+                                $nonPatterns = array('都道府県');
+                                foreach($nonPatterns as $val) {
+                                    if(strpos($crawler->text(),$val)!==false) {
+                                        $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
+                                        $nameStr = substr($str,strpos($str,'name='));
+                                        $nameStr = substr($nameStr,6);
+                                        $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
+                                        foreach($this->form->all() as $key=>$val) {
+                                            if($key==$nameStr){
+                                                if(isset($data[$nameStr]) && !empty($data[$nameStr])){
+                                                    break;
+                                                }else {
+                                                    $data[$nameStr] = $contact->area;
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
                                 }
+                            }catch(\Throwable $e){
+                                $output->writeln($e->getMessage());
                             }
                             $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;$fax_count=0;
                                 foreach($this->form->getValues() as $key => $value) {
