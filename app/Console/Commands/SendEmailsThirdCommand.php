@@ -54,7 +54,8 @@ class SendEmailsThirdCommand extends Command
         $now = Carbon::now();
         $startTimeCheck = $now->gte($startTimeStamp);
         $endTimeCheck = $now->lte($endTimeStamp);
-
+        $output = new \Symfony\Component\Console\Output\ConsoleOutput();
+        $output->writeln("<info>start</info>");
         if( $startTimeCheck && $endTimeCheck ){
 
             $contacts = Contact::whereHas('reserve_companies')->get();
