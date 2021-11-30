@@ -867,6 +867,7 @@ class SendEmailsThirdCommand extends Command
                                             //         $this->checkform->fields->set($key, $val);
                                             //     }
                                             // }
+                                            $client = new Client();
                                             $crawler = $client->submit($this->checkform);
                                             
                                             $check =false;
