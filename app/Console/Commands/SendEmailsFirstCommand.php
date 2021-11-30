@@ -44,7 +44,7 @@ class SendEmailsFirstCommand extends Command
      */
     public function handle()
     {
-        $offset = Config::get()->first()->mailLimit;
+        $offset = (int)(Config::get()->first()->mailLimit)*0.4;
 
         $start = Config::get()->first()->start;
         $end = Config::get()->first()->end;
@@ -327,7 +327,7 @@ class SendEmailsFirstCommand extends Command
                                         $content = str_replace('%company_name%', $company->name, $contact->content);
                                         $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                         $data[$key] = $content;
-                                        $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .mb_convert_encoding('配信停止希望の方は  ',$charset,'UTF-8').route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').mb_convert_encoding('   こちら',$charset,'UTF-8').PHP_EOL.'※※※※※※※※';
+                                        $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は  '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';
                                     }
                                     
                                 }catch(\Throwable $e){
