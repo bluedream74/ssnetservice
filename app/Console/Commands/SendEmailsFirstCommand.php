@@ -56,7 +56,7 @@ class SendEmailsFirstCommand extends Command
         $startTimeCheck = $now->gte($startTimeStamp);
         $endTimeCheck = $now->lte($endTimeStamp);
 
-        $output = new Symfony\Component\Console\Output\ConsoleOutput();
+        $output = new \Symfony\Component\Console\Output\ConsoleOutput();
         $output->writeln("<info>start</info>");
         if( $startTimeCheck && $endTimeCheck ){
 
@@ -417,8 +417,7 @@ class SendEmailsFirstCommand extends Command
                                     }
                                 }
                             }
-                            if(!empty($this->form->getValues())){
-                                $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;$fax_count=0;
+                            $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;$fax_count=0;
                                 foreach($this->form->getValues() as $key => $value) {
                                     if(isset($data[$key])&&(!empty($data[$key])))continue;
                                     if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
@@ -446,7 +445,6 @@ class SendEmailsFirstCommand extends Command
                                 if((strpos($str,'メイ')!==false)&&(strpos($str,'セイ')!==false))$kana_count=2;
                                 $str = substr($crawler->text(),strpos($crawler->text(),'カナ'),40);
                                 if((strpos($str,'メイ')!==false)&&(strpos($str,'セイ')!==false))$kana_count=2;
-                            }
 
                             $namePatterns = array('名前','氏名','担当者','差出人','ネーム');
                             foreach($namePatterns as $val) {
@@ -891,10 +889,15 @@ class SendEmailsFirstCommand extends Command
                             }
                         } catch (\Throwable $e) {
                             $output->writeln($e->getMessage());
-                            $company->update(['status' => '送信失敗']);
-                            $companyContact->update([
-                                'is_delivered' => 1
-                            ]);
+                            try{
+                                $company->update(['status' => '送信失敗']);
+
+                                $companyContact->update([
+                                    'is_delivered' => 1
+                                ]);
+                            }catch (\Throwable $e) {
+                                $output->writeln($e->getMessage());
+                            }
                         }
                         $output->writeln("end company");
                     }
