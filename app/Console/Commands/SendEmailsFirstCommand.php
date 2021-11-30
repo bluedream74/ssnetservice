@@ -802,6 +802,11 @@ class SendEmailsFirstCommand extends Command
                             $failedMessages = array('必須項目','問題','ありません');
                             $failedCheck=true;
                             $charset = $this->getCharset($crawler->html());
+                            try{
+                                $charset = $charset[1];
+                            }catch (\Throwable $e) {
+                                $charset = 'UTF-8';
+                            }
                             $html = mb_convert_encoding($crawler->html(),$charset,'UTF-8');
                             foreach($failedMessages as $message) {
                                 if(strpos($html,$message)!==false){
