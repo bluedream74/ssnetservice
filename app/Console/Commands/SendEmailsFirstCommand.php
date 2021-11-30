@@ -156,7 +156,7 @@ class SendEmailsFirstCommand extends Command
                                     $contact->company = mb_convert_encoding($contact->company,$charset,'UTF-8');
                                     $contact->title = mb_convert_encoding($contact->title,$charset,'UTF-8');
                                     $contact->content = mb_convert_encoding($contact->content,$charset,'UTF-8');
-                                    $contact->area = mb_convert_encoding($contact->area,$charset,'UTF-8');
+                                    // $contact->area = mb_convert_encoding($contact->area,$charset,'UTF-8');
                                     $contact->address = mb_convert_encoding($contact->address,$charset,'UTF-8');
                                     $company->name = mb_convert_encoding($company->name,$charset,'UTF-8');
                                 }
