@@ -144,25 +144,25 @@ class SendEmailsFirstCommand extends Command
                                 ]);
                                 continue;
                             }
-                            $charset = $this->getCharset($crawler->html());
+                            // $charset = $this->getCharset($crawler->html());
                             
-                            try{
-                                $charset = $charset[1];
-                                if(strcasecmp($charset,'utf-8')) {
-                                    $contact->surname = mb_convert_encoding($contact->surname,$charset,'UTF-8');
-                                    $contact->lastname = mb_convert_encoding($contact->lastname,$charset,'UTF-8');
-                                    $contact->fu_surname = mb_convert_encoding($contact->fu_surname,$charset,'UTF-8');
-                                    $contact->fu_lastname = mb_convert_encoding($contact->fu_lastname,$charset,'UTF-8');
-                                    $contact->company = mb_convert_encoding($contact->company,$charset,'UTF-8');
-                                    $contact->title = mb_convert_encoding($contact->title,$charset,'UTF-8');
-                                    $contact->content = mb_convert_encoding($contact->content,$charset,'UTF-8');
-                                    $contact->area = mb_convert_encoding($contact->area,$charset,'UTF-8');
-                                    $contact->address = mb_convert_encoding($contact->address,$charset,'UTF-8');
-                                    $company->name = mb_convert_encoding($company->name,$charset,'UTF-8');
-                                }
-                            }catch (\Throwable $e) {
-                                $charset = 'UTF-8';
-                            }
+                            // try{
+                            //     $charset = $charset[1];
+                            //     if(strcasecmp($charset,'utf-8')) {
+                            //         $contact->surname = mb_convert_encoding($contact->surname,$charset,'UTF-8');
+                            //         $contact->lastname = mb_convert_encoding($contact->lastname,$charset,'UTF-8');
+                            //         $contact->fu_surname = mb_convert_encoding($contact->fu_surname,$charset,'UTF-8');
+                            //         $contact->fu_lastname = mb_convert_encoding($contact->fu_lastname,$charset,'UTF-8');
+                            //         $contact->company = mb_convert_encoding($contact->company,$charset,'UTF-8');
+                            //         $contact->title = mb_convert_encoding($contact->title,$charset,'UTF-8');
+                            //         $contact->content = mb_convert_encoding($contact->content,$charset,'UTF-8');
+                            //         // $contact->area = mb_convert_encoding($contact->area,$charset,'UTF-8');
+                            //         $contact->address = mb_convert_encoding($contact->address,$charset,'UTF-8');
+                            //         $company->name = mb_convert_encoding($company->name,$charset,'UTF-8');
+                            //     }
+                            // }catch (\Throwable $e) {
+                            //     $charset = 'UTF-8';
+                            // }
                             
                             try {
                                 if(strpos($crawler->html(),'api.js?render')!==false){
@@ -842,12 +842,12 @@ class SendEmailsFirstCommand extends Command
                                             //     //     $this->checkform->fields->set($key, $val);
                                             //     // }
                                             // }
-                                            if(strcasecmp($charset,'utf-8')) {
-                                                foreach($this->checkform->getValues() as $key => $val) {
-                                                    $val = mb_convert_encoding($val,$charset,'UTF-8');
-                                                    $this->checkform->fields->set($key, $val);
-                                                }
-                                            }
+                                            // if(strcasecmp($charset,'utf-8')) {
+                                            //     foreach($this->checkform->getValues() as $key => $val) {
+                                            //         $val = mb_convert_encoding($val,$charset,'UTF-8');
+                                            //         $this->checkform->fields->set($key, $val);
+                                            //     }
+                                            // }
                                             $crawler = $client->submit($this->checkform);
                                             
                                             $check =false;
