@@ -78,9 +78,12 @@ class SendEmailsFirstCommand extends Command
                 }
                 
                 if($startCheck) {
-                    
-                    $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
-                    $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+                    try{
+                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
+                        $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+                    }catch (\Throwable $e) {
+                        
+                    }
                 
                     foreach ($companyContacts as $companyContact) {
                         sleep(2);
@@ -723,6 +726,12 @@ class SendEmailsFirstCommand extends Command
                                         $name_count_check=1;continue;
                                     }
                                 }
+                                if(strpos($key,'姓')!==false){
+                                    $data[$key] = $contact->surname;continue;
+                                }
+                                if(strpos($key,'名')!==false){
+                                    $data[$key] = $contact->surname;continue;
+                                }
                                 if($fax_count == 1) {
                                     $titleTexts = array('fax','FAX');
                                     foreach($titleTexts as $text) {
@@ -792,8 +801,10 @@ class SendEmailsFirstCommand extends Command
                             $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","完了","内容を確認させていただき");
                             $failedMessages = array('必須項目','問題','ありません');
                             $failedCheck=true;
+                            $charset = $this->getCharset($crawler->html());
+                            $html = mb_convert_encoding($crawler->html(),$charset,'UTF-8');
                             foreach($failedMessages as $message) {
-                                if(strpos($crawler->html(),$message)!==false){
+                                if(strpos($html,$message)!==false){
                                     $company->update([
                                         'status'        => '送信失敗'
                                     ]);
@@ -807,7 +818,7 @@ class SendEmailsFirstCommand extends Command
                             if($failedCheck) {
                                 $check = false;
                                 foreach($checkMessages as $message) {
-                                    if(strpos($crawler->html(),$message)!==false){
+                                    if(strpos($html,$message)!==false){
                                         $company->update([
                                             'status'        => '送信済み'
                                         ]);
