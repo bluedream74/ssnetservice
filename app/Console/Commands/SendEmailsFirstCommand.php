@@ -8,6 +8,7 @@ use App\Models\Config;
 use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class SendEmailsFirstCommand extends Command
 {
@@ -868,9 +869,8 @@ class SendEmailsFirstCommand extends Command
                                             //         $this->checkform->fields->set($key, $val);
                                             //     }
                                             // }
-                                            $client = new Client();
                                             $crawler = $client->submit($this->checkform);
-                                            
+                                            Log::info('User failed to login.', ['url' => $company->contact_form_url]);
                                             $check =false;
                                             foreach($checkMessages as $message) {
                                                 if(strpos($crawler->html(),$message)!==false){
