@@ -165,7 +165,7 @@ class CompanyController extends BaseController
   public function deleteDuplicate(Request $request)
   {
     try {
-      deleteDuplicate::dispatch($request->all()); 
+      $this->dispatch(new deleteDuplicate($request->all()));
     }catch(\Throwable $e) {
       dd($e->getMessage());
     }
