@@ -9,6 +9,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Company;
 use Illuminate\Support\Arr;
+use App\Models\Source;
+use App\Models\SubSource;
 
 class deleteDuplicate implements ShouldQueue
 {
