@@ -13,6 +13,7 @@ use App\Models\CompanyEmail;
 use Illuminate\Support\Arr;
 use App\Exports\CompanyExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Jobs\deleteDuplicate;
 
 class CompanyController extends BaseController
 {
@@ -163,86 +164,11 @@ class CompanyController extends BaseController
 
   public function deleteDuplicate(Request $request)
   {
-
-    $query = Company::query();
-    $attributes = $request->all();
-    if (!empty($value = Arr::get($attributes, 'q'))) {
-        $query->where(function ($query) use ($value) {
-            $query->where('name', 'like', "%{$value}%")
-                ->orWhere('id', 'like', "%{$value}%")
-                ->orWhere('url', 'like', "%{$value}%")
-                ->orWhere('area', 'like', "%{$value}%");
-        });
+    try {
+      deleteDuplicate::dispatch($request->all()); 
+    }catch(\Throwable $e) {
+      dd($e->getMessage());
     }
-    
-    if (!empty($value = Arr::get($attributes, 'source'))) {
-        $value = Source::where('sort_no',$value)->first()->name;
-        $query->where('source', $value);
-    }
-
-    if (!empty($value = Arr::get($attributes, 'subsource'))) {
-        $query->where('subsource', $value);
-    }
-
-    if (!empty($value = Arr::get($attributes, 'area'))) {
-        $query->where('area', 'like', "%{$value}%");
-    }
-
-    if (!empty($value = Arr::get($attributes, 'status'))) {
-        $query->where('status', $value);
-    }
-
-    if (!empty($value = Arr::get($attributes, 'phone'))) {
-        if (intval($value) === 1) {
-            $query->whereHas('phones');
-        } else {
-            $query->whereDoesntHave('phones');
-        }
-    }
-    
-    if (!empty($value = Arr::get($attributes, 'origin'))) {
-        if($value==1) {
-            $query->whereNotNull('contact_form_url');
-        }
-        if($value==2) {
-            $query->whereNull('contact_form_url');
-        }
-    }
-    $urls = $query->whereNotNull('url')->distinct()->pluck('url');
-    
-    if (sizeof($urls) < $query->whereNotNull('url')->count()) {
-      foreach ($urls as $url) {
-        $parse = parse_url($url);
-        try{
-          $host = str_replace('www.', '', $parse['host']);
-
-          if ($query->where('url', 'LIKE', "%{$host}%")->count() > 1) {
-            $company = $query->where('url', 'LIKE', "%{$host}%")->latest()->first();
-            if($query->where('subsource', $company->subsource)->count() == 1) {
-              SubSource::where('name',$company->subsource)->delete();
-            }
-            $query->where('url', 'LIKE', "%{$host}%")
-                ->where('id', '!=', $company->id)
-                ->delete();
-          }
-        }
-        catch(\Throwable $e) {
-          print_r($e->getMessage());continue;
-        }
-      }
-    }
-
-    // $emails = CompanyEmail::whereNotNull('email')->select('email')->distinct()->pluck('email');
-    // if (sizeof($emails) < CompanyEmail::whereNotNull('email')->count()) {
-    //   foreach ($emails as $email) {
-    //     if (CompanyEmail::where('email', $email)->count() > 1) {
-    //       $companyEmail = CompanyEmail::where('email', $email)->first();
-    //       CompanyEmail::where('email', $email)
-    //               ->where('id', '!=', $companyEmail->id)
-    //               ->delete();
-    //     }
-    //   }
-    // }
 
     return back()->with(['system.message.success' => '削除しました。']);
   }
