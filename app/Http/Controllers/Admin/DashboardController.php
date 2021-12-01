@@ -312,6 +312,7 @@ class DashboardController extends BaseController
             return back()->with(['system.message.info' => "一括チェックしています。"]);
         }else {
             Config::where('id',1)->update(array('checkContactForm'=>'0'));
+            Config::where('id',1)->update(array('registerUrl'=>'0'));
             return back()->with(['system.message.info' => "一括チェックが停止されました。"]);
         }
     }
