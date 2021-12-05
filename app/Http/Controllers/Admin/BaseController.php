@@ -48,6 +48,12 @@ class BaseController extends Controller
                         'role' => 'admin',
                     ],
                     [
+                        'text' => 'マスター設定',
+                        'url'  => '/admin/master/config',
+                        'icon' => 'fas fa-tachometer-alt',
+                        'role' => 'admin',
+                    ],
+                    [
                         'text' => '設定',
                         'url'  => '/admin/config',
                         'icon' => 'fas fa-cog',
@@ -65,6 +71,12 @@ class BaseController extends Controller
                     [
                         'text' => 'フォーム一覧',
                         'url'  => '/admin/contact',
+                        'icon' => 'fas fa-tachometer-alt',
+                        'role' => 'admin',
+                    ], 
+                    [
+                        'text' => '支払い管理',
+                        'url'  => '/admin//payment/settings',
                         'icon' => 'fas fa-tachometer-alt',
                         'role' => 'admin',
                     ], 
