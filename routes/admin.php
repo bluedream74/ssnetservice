@@ -75,6 +75,22 @@ Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
 
   Route::get('/config', 'DashboardController@configIndex')->name('config.index');
   Route::post('/config', 'DashboardController@updateConfig')->name('config.update');
+
+  Route::get('/users', 'UserController@index')->name('user.index');
+  Route::get('/user/edit/{id}', 'UserController@edit')->name('user.edit');
+  Route::post('/user/add', 'UserController@addUser')->name('user.add');
+  Route::post('/user/delete', 'UserController@deleteUser')->name('user.delete');
+
+  Route::post('/{user}/edit/username','UserController@editName')->name('user.edit.name');
+  Route::post('/{user}/edit/email','UserController@editEmail')->name('user.edit.email');
+  Route::post('/{user}/edit/password','UserController@editPassword')->name('user.edit.password');
+
+  Route::get('/payment/settings', 'UserController@payment')->name('payment');
+  Route::post('/payment/update', 'UserController@paymentUPdate')->name('payment.update');
+  Route::post('/payment/stop', 'UserController@subscriptionStop')->name('subscription.stop');
+  Route::post('/payment/start', 'UserController@subscriptionStart')->name('subscription.start');
+
+  Route::get('/master/config', 'UserController@config')->name('config');
 });
 
 

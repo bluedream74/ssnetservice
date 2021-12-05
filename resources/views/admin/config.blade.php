@@ -1,7 +1,7 @@
 <style>
 
 .time {
-  margin:.375rem .75rem;
+  margin:.375rem .5rem;
 }
  </style>
 @extends('layouts.admin.app')
