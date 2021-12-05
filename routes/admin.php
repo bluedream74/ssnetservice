@@ -85,7 +85,12 @@ Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
   Route::post('/{user}/edit/email','UserController@editEmail')->name('user.edit.email');
   Route::post('/{user}/edit/password','UserController@editPassword')->name('user.edit.password');
 
-  
+  Route::get('/payment/settings', 'UserController@payment')->name('payment');
+  Route::post('/payment/update', 'UserController@paymentUPdate')->name('payment.update');
+  Route::post('/payment/stop', 'UserController@subscriptionStop')->name('subscription.stop');
+  Route::post('/payment/start', 'UserController@subscriptionStart')->name('subscription.start');
+
+  Route::get('/master/config', 'UserController@config')->name('config');
 });
 
 
