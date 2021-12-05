@@ -85,4 +85,38 @@ class UserController extends BaseController
     return back()->with(['system.message.success' => '更新されました。']);
   }
 
+  public function payment() {
+    $user = \Auth::guard('admin')->user();
+    return view('admin.payment',compact('user'));
+  }
+
+  public function paymentUPdate() {
+    $user = \Auth::guard('admin')->user();
+    User::where('id',$user->id)->update([
+      'stripe_id'    =>  request()->get('stripe_id') ,
+      'card_brand'   =>  request()->get('card_brand'),
+    ]);
+    return back()->with(['system.message.success' => '更新されました。']);
+  }
+
+  public function subscriptionStop() {
+    $user = \Auth::guard('admin')->user();
+    User::where('id',$user->id)->update([
+      'subscription'    =>  1 ,
+    ]);
+    return back()->with(['system.message.success' => 'サブスクリプションが停止しました。']);
+  }
+
+  public function subscriptionStart() {
+    $user = \Auth::guard('admin')->user();
+    User::where('id',$user->id)->update([
+      'subscription'    =>  0 ,
+    ]);
+    return back()->with(['system.message.success' => 'サブスクリプションが開始されました。']);
+  }
+
+  public function config() {
+    return view('admin.master_config');
+  }
+
 }

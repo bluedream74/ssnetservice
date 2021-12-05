@@ -76,7 +76,7 @@ class BaseController extends Controller
                     ], 
                     [
                         'text' => '支払い管理',
-                        'url'  => '/admin//payment/settings',
+                        'url'  => '/admin/payment/settings',
                         'icon' => 'fas fa-tachometer-alt',
                         'role' => 'admin',
                     ], 
