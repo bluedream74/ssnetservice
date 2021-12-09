@@ -90,12 +90,16 @@ class UserController extends BaseController
   public function payment() {
     $user = \Auth::guard('admin')->user();
     $config = Config::where('id',1)->first();
-    foreach(getPlans() as $key=>$val) {
-      if($key == $config->plan) {
-        $planKey=$key;$planVal=$val;
+    if(isset($config->plan)) {
+      foreach(getPlans() as $key=>$val) {
+        if($key == $config->plan) {
+          $planKey=$key;$planVal=$val;
+        }
       }
+      return view('admin.payment',compact('user','planKey','planVal'));
+    }else {
+      return view('admin.payment',compact('user'));
     }
-    return view('admin.payment',compact('user','planKey','planVal'));
   }
 
   public function paymentUpdate(Request $request) {
