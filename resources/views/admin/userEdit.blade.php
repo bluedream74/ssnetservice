@@ -48,7 +48,7 @@
         </div>
       </div>
       <div class="row mb-3" style="justify-content:end">
-        @if($user->check)
+        @if($user->paycheck)
             <div class="text-right"><button type="button" class="btn btn-sm btn-danger stop" data-id="{{ $user->id }}">ユーザーの利用を停止</button></div>
         @else
             <div class="text-right"><button type="button" class="btn btn-sm btn-primary start" data-id="{{ $user->id }}">ユーザーの利用を継続</button></div>

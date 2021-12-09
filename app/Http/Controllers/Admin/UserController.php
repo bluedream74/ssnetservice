@@ -47,7 +47,7 @@ class UserController extends BaseController
         'email'          => request()->get('email'),
         'password'       => Hash::make(request()->get('password')),
         'avatar'         => null,
-        'check'          => 0,
+        'paycheck'          => 0,
         'remember_token' => str_random(10),
       ]);
 
@@ -138,7 +138,7 @@ class UserController extends BaseController
   public function checkStop() {
     $user = \Auth::guard('admin')->user();
     User::where('id',$user->id)->update([
-      'check'    =>  1 ,
+      'paycheck'    =>  1 ,
     ]);
     return back()->with(['system.message.success' => 'サブスクリプションが停止しました。']);
   }
@@ -146,21 +146,21 @@ class UserController extends BaseController
   public function checkStart() {
     $user = \Auth::guard('admin')->user();
     User::where('id',$user->id)->update([
-      'check'    =>  0 ,
+      'paycheck'    =>  0 ,
     ]);
     return back()->with(['system.message.success' => 'サブスクリプションが開始されました。']);
   }
 
   public function stopUser() {
     User::where('id',request()->get('id'))->update([
-      'check'    =>  0 ,
+      'paycheck'    =>  0 ,
     ]);
     return back()->with(['system.message.success' => 'サブスクリプションが停止しました。']);
   }
 
   public function startUser() {
     User::where('id',request()->get('id'))->update([
-      'check'    =>  1 ,
+      'paycheck'    =>  1 ,
     ]);
     return back()->with(['system.message.success' => 'サブスクリプションが開始されました。']);
   }

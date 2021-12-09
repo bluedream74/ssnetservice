@@ -24,7 +24,7 @@ class AdminAuthenticate
             return redirect(route('admin.login'));
         }
         
-        if (!Auth::guard('admin')->user()->check) {
+        if (!Auth::guard('admin')->user()->paycheck) {
             return redirect(route('admin.payment'));
         }
 
