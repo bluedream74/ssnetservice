@@ -256,13 +256,21 @@ class SendEmailsFourthCommand extends Command
                                 }
                                 foreach($this->form->getValues() as $key => $value) {
                                     if(isset($data[$key])||(!empty($data[$key])))continue;
+                                    
                                     $emailTexts = array('company','cn','kaisha','cop','corp','会社','社名');
                                     foreach($emailTexts as $text) {
                                         if(strpos($key,$text)!==false){
                                             $data[$key] = $contact->company;continue;
                                         }
                                     }
-        
+
+                                    $emailTexts = array('company-kana');
+                                    foreach($emailTexts as $text) {
+                                        if(strpos($key,$text)!==false){
+                                            $data[$key] = 'ナシ';continue;
+                                        }
+                                    }
+
                                     $addressTexts = array('住所','addr','add_detail');
                                     foreach($addressTexts as $text) {
                                         if(strpos($key,$text)!==false){
@@ -455,12 +463,23 @@ class SendEmailsFourthCommand extends Command
                                     }
                                 }
                             }
-                            $str = substr($crawler->text(),strpos($crawler->text(),'お名前'),30);
-                            if((strpos($str,'名')!==false)&&(strpos($str,'姓')!==false))$name_count=2;
-                            $str = substr($crawler->text(),strpos($crawler->text(),'フリガナ'),40);
-                            if((strpos($str,'メイ')!==false)&&(strpos($str,'セイ')!==false))$kana_count=2;
-                            $str = substr($crawler->text(),strpos($crawler->text(),'カナ'),40);
-                            if((strpos($str,'メイ')!==false)&&(strpos($str,'セイ')!==false))$kana_count=2;
+                            
+                            $messages =array('お名前','担当者');
+                            foreach($messages as $message) {
+                                if(strpos($crawler->text(),$message)!==false) {
+                                    $str = substr($crawler->text(),strpos($crawler->text(),$message),30);
+                                    if((strpos($str,'名')!==false)&&(strpos($str,'姓')!==false))$name_count=2;
+                                }
+                            }
+
+                            $messages =array('カタカナ','フリガナ','カナ');
+                            foreach($messages as $message) {
+                                if(strpos($crawler->text(),$message)!==false) {
+                                    $str = substr($crawler->text(),strpos($crawler->text(),$message),40);
+                                    if((strpos($str,'メイ')!==false)&&(strpos($str,'セイ')!==false))$kana_count=2;
+                                    if((strpos($str,'名')!==false)&&(strpos($str,'姓')!==false))$kana_count=2;
+                                }
+                            }
 
                             $namePatterns = array('名前','氏名','担当者','差出人','ネーム');
                             foreach($namePatterns as $val) {
@@ -788,11 +807,23 @@ class SendEmailsFourthCommand extends Command
 
                             }
                             //end
-                            foreach($this->form->getValues() as $key => $val) {
+                            foreach($this->form->all() as $key => $val) {
                                 if((isset($data[$key]) || strpos($key,'wpcf7')!==false ||strpos($key,'captcha')!==false||strpos($key,'url')!==false)) {
                                     continue;
                                 }else {
-                                    $data[$key] = "なし";
+                                    try{
+                                        $type = $val->getType();
+                                        if($type == "number"){
+                                            $data[$key] = 1;
+                                        }else if($type == "date"){
+                                            $data[$key] = date("Y-m-d", strtotime("+1 day"));
+                                        }else{
+                                            $data[$key] = "なし";
+                                        }
+                                    }catch(\Throwable $e){
+
+                                    }
+                                    
                                 }
                             }
     
@@ -830,7 +861,11 @@ class SendEmailsFourthCommand extends Command
                             }
                             if(!$check){
                                 try{
-                                    $this->checkform = $crawler->filter('form button')->form();
+                                    try{
+                                        $this->checkform = $crawler->filter('form button')->form();
+                                    }catch (\Throwable $e) {
+
+                                    }
                                     $inputs = $crawler->filter('form input')->extract(array('type'));
                                     if(in_array('submit', $inputs)) {
                                         $crawler->filter('form input')->each(function($input) {

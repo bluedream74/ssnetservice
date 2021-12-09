@@ -20,6 +20,7 @@ class Config extends Migration
             $table->Integer('mailLimit');
             $table->Integer('checkContactForm');
             $table->Integer('registerUrl');
+            $table->string('plan');
             $table->timestamps();
         });
     }
