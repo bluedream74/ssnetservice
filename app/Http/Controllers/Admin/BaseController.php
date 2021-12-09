@@ -18,7 +18,7 @@ class BaseController extends Controller
     {
         $this->renderSidemenus($events);
 
-        // $this->authUser = \Auth::guard('admin');
+        
     }
 
     public function renderSidemenus($events)
@@ -61,32 +61,44 @@ class BaseController extends Controller
                     ]
                 ];
             }else {
-                $menus = [
-                    [
-                        'text' => '会社一覧',
-                        'url'  => '/admin',
-                        'icon' => 'fas fa-tachometer-alt',
-                        'role' => 'admin',
-                    ],
-                    [
-                        'text' => 'フォーム一覧',
-                        'url'  => '/admin/contact',
-                        'icon' => 'fas fa-tachometer-alt',
-                        'role' => 'admin',
-                    ], 
-                    [
-                        'text' => '支払い管理',
-                        'url'  => '/admin/payment/settings',
-                        'icon' => 'fas fa-tachometer-alt',
-                        'role' => 'admin',
-                    ], 
-                    [
-                        'text' => '設定',
-                        'url'  => '/admin/config',
-                        'icon' => 'fas fa-cog',
-                        'role' => 'admin',
-                    ]
-                ];
+                if($this->authUser->check == 1){
+                    $menus = [
+                        [
+                            'text' => '会社一覧',
+                            'url'  => '/admin',
+                            'icon' => 'fas fa-tachometer-alt',
+                            'role' => 'admin',
+                        ],
+                        [
+                            'text' => 'フォーム一覧',
+                            'url'  => '/admin/contact',
+                            'icon' => 'fas fa-tachometer-alt',
+                            'role' => 'admin',
+                        ], 
+                        [
+                            'text' => '支払い管理',
+                            'url'  => '/admin/payment/settings',
+                            'icon' => 'fas fa-tachometer-alt',
+                            'role' => 'admin',
+                        ], 
+                        [
+                            'text' => '設定',
+                            'url'  => '/admin/config',
+                            'icon' => 'fas fa-cog',
+                            'role' => 'admin',
+                        ]
+                    ];
+                }else {
+                    $menus = [
+                        [
+                            'text' => '支払い管理',
+                            'url'  => '/admin/payment/settings',
+                            'icon' => 'fas fa-tachometer-alt',
+                            'role' => 'admin',
+                        ], 
+                    ];
+                }
+                
             }
             foreach ($menus as $menu) {
                 $event->menu->add($menu);

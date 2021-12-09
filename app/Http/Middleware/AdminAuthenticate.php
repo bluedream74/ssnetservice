@@ -23,6 +23,10 @@ class AdminAuthenticate
         if (!Auth::guard('admin')->check()) {
             return redirect(route('admin.login'));
         }
+        
+        if (!Auth::guard('admin')->user()->check) {
+            return redirect(route('admin.payment'));
+        }
 
         return $next($request);
     }
