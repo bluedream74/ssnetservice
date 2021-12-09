@@ -20,9 +20,9 @@ Route::get('/payment/settings', 'UserController@payment')->name('payment');
 Route::post('/payment/check', 'UserController@paymentUpdate')->name('payment.check');
 Route::post('/payment/stop', 'UserController@checkStop')->name('check.stop');
 Route::post('/payment/start', 'UserController@checkStart')->name('check.start');
+Route::post('logout', 'AuthController@logout')->name('logout');
 
 Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
-  Route::post('logout', 'AuthController@logout')->name('logout');
   
   // Route::get('/', function () {
   //     return redirect(route('admin.dashboard'));
