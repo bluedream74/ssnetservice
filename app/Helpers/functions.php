@@ -58,6 +58,18 @@ function getLimits()
     ];
 }
 
+function getPlans()
+{
+    return [
+        'price_1K3wuGLwiZkAtY2DIUb3WrRN' => '44,000円',
+        'price_1K3wuGLwiZkAtY2Depoa7i5t' => '66,000円',
+        'price_1K3wuGLwiZkAtY2DTn5E65de' => '77,000円',
+        'price_1K3wuGLwiZkAtY2DqNAWPUrT' => '88,000円',
+        'price_1K3wuGLwiZkAtY2D7v22VAUM' => '132,000円',
+        'price_1K3wuGLwiZkAtY2D6XRAFbA0' => '176,000円',
+    ];
+}
+
 function getCompanyStatuses()
 {
     return [

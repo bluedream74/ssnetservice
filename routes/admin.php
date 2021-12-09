@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('login', 'AuthController@showLoginForm');
 Route::post('login', 'AuthController@login')->name('login');
 
+Route::get('/payment/settings', 'UserController@payment')->name('payment');
+Route::post('/payment/check', 'UserController@paymentUpdate')->name('payment.check');
+Route::post('/payment/stop', 'UserController@checkStop')->name('check.stop');
+Route::post('/payment/start', 'UserController@checkStart')->name('check.start');
+
 Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
   Route::post('logout', 'AuthController@logout')->name('logout');
   
@@ -85,12 +90,13 @@ Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
   Route::post('/{user}/edit/email','UserController@editEmail')->name('user.edit.email');
   Route::post('/{user}/edit/password','UserController@editPassword')->name('user.edit.password');
 
-  Route::get('/payment/settings', 'UserController@payment')->name('payment');
-  Route::post('/payment/update', 'UserController@paymentUPdate')->name('payment.update');
-  Route::post('/payment/stop', 'UserController@subscriptionStop')->name('subscription.stop');
-  Route::post('/payment/start', 'UserController@subscriptionStart')->name('subscription.start');
+  Route::post('/user/stop','UserController@stopUser')->name('user.stop');
+  Route::post('/user/start','UserController@startUser')->name('user.start');
 
   Route::get('/master/config', 'UserController@config')->name('config');
+
+  Route::post('/plan/update', 'UserController@planUpdate')->name('plan.update');
+  
 });
 
 

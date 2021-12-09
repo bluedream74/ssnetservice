@@ -16,6 +16,7 @@ class VerifyCsrfToken extends Middleware
         'upload/image',
         'line/webhook',
         'webhooks/sns',
-        'image/open'
+        'image/open',
+        'webhook'
     ];
 }
