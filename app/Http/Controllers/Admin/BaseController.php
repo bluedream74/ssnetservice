@@ -61,7 +61,7 @@ class BaseController extends Controller
                     ]
                 ];
             }else {
-                if($this->authUser->check == 1){
+                if($this->authUser->paycheck == 1){
                     $menus = [
                         [
                             'text' => '会社一覧',
