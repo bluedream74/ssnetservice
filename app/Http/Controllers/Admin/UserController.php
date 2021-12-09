@@ -90,12 +90,16 @@ class UserController extends BaseController
   public function payment() {
     $user = \Auth::guard('admin')->user();
     $config = Config::where('id',1)->first();
-    foreach(getPlans() as $key=>$val) {
-      if($key == $config->plan) {
-        $planKey=$key;$planVal=$val;
+    if(isset($config->plan)) {
+      foreach(getPlans() as $key=>$val) {
+        if($key == $config->plan) {
+          $planKey=$key;$planVal=$val;
+        }
       }
+      return view('admin.payment',compact('user','planKey','planVal'));
+    }else {
+      return view('admin.payment',compact('user'));
     }
-    return view('admin.payment',compact('user','planKey','planVal'));
   }
 
   public function paymentUpdate(Request $request) {
@@ -197,246 +201,12 @@ class UserController extends BaseController
         ], 200);
     }
 
+
       switch ($event->type) {
         case 'invoice.payment_succeeded': // set state 1
-            $subscription_id = '';
-            $charge_id = '';
-            $payment_intent_id = '';
-            $amount = 0;
-
-            if(isset($event->data->object->subscription) && $event->data->object->subscription != ''){
-                $subscription_id = $event->data->object->subscription;
-            }
-            if(isset($event->data->object->charge) && $event->data->object->charge != ''){
-                $charge_id = $event->data->object->charge;
-            }
-            if(isset($event->data->object->payment_intent) && $event->data->object->payment_intent != ''){
-                $payment_intent_id = $event->data->object->payment_intent;
-            }
-            if(isset($event->data->object->total) && $event->data->object->total != ''){
-                $amount = $event->data->object->total;
-            }
-            \Log::debug('invoice.payment_succeeded subscription_id='.$subscription_id.' charge_id=' . $charge_id . ' payment_intent_id=' . $payment_intent_id);
-
-            // $invoiceResult = null;
-            // if($subscription_id){
-            //     $invoiceResult = InvoiceResult::where('subscription_id', $subscription_id);
-            //     // if($charge_id)
-            //     //     $invoiceResult = $invoiceResult->where('charge_id', $charge_id);
-            //     if($payment_intent_id)
-            //         $invoiceResult = $invoiceResult->where('payment_intent_id', $payment_intent_id);
-            //     $invoiceResult = $invoiceResult->orderBy('id', 'desc')->first();
-            // }else if($charge_id){
-            //     $invoiceResult = InvoiceResult::where('charge_id', $charge_id);
-            //     if($payment_intent_id)
-            //         $invoiceResult = $invoiceResult->where('payment_intent_id', $payment_intent_id);
-            //     $invoiceResult = $invoiceResult->orderBy('id', 'desc')->first();
-            // }
-            // if($invoiceResult != null){
-            //     $invoiceResult->update([
-            //         'subscription_id' => $subscription_id,
-            //         'charge_id' => $charge_id,
-            //         'payment_intent_id' => $payment_intent_id,
-            //         'status' => 1
-            //     ]);
-            // }else{
-                $invoice_id = '';
-                $invoice = Invoice::where('subscription_id', $subscription_id)
-                                    ->orderBy('id', 'desc')->first();
-                if($invoice)
-                    $invoice_id = $invoice->id;
-
-                $invoiceResult = InvoiceResult::create([
-                    'invoice_id' => $invoice_id,
-                    'subscription_id' => $subscription_id,
-                    'charge_id' => $charge_id,
-                    'payment_intent_id' => $payment_intent_id,
-                    'status' => 1,
-                    'amount' => $amount
-                ]);
-  //                }                         
+            User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>1));
             break;
         case 'invoice.payment_failed':
-        case 'invoice.payment_action_required': // set state 0
-            $subscription_id = '';
-            $charge_id = '';
-            $payment_intent_id = '';
-            $amount = 0;
-            if(isset($event->data->object->subscription) && $event->data->object->subscription != ''){
-                $subscription_id = $event->data->object->subscription;
-            }
-            if(isset($event->data->object->charge) && $event->data->object->charge != ''){
-                $charge_id = $event->data->object->charge;
-            }
-            if(isset($event->data->object->payment_intent) && $event->data->object->payment_intent != ''){
-                $payment_intent_id = $event->data->object->payment_intent;
-            }
-            if(isset($event->data->object->total) && $event->data->object->total != ''){
-                $amount = $event->data->object->total;
-            }
-            \Log::debug('invoice.payment_failed subscription_id='.$subscription_id.' charge_id=' . $charge_id . ' payment_intent_id=' . $payment_intent_id);
-
-            // $invoiceResult = null;
-            // if($subscription_id){
-            //     $invoiceResult = InvoiceResult::where('subscription_id', $subscription_id);
-            //     // if($charge_id)
-            //     //     $invoiceResult = $invoiceResult->where('charge_id', $charge_id);
-            //     if($payment_intent_id)
-            //         $invoiceResult = $invoiceResult->where('payment_intent_id', $payment_intent_id);
-            //     $invoiceResult = $invoiceResult->orderBy('id', 'desc')->first();
-            // }else if($charge_id){
-            //     $invoiceResult = InvoiceResult::where('charge_id', $charge_id);
-            //     if($payment_intent_id)
-            //         $invoiceResult = $invoiceResult->where('payment_intent_id', $payment_intent_id);
-            //     $invoiceResult = $invoiceResult->orderBy('id', 'desc')->first();
-            // }
-            // if($invoiceResult != null){
-            //     $invoiceResult->update([
-            //         'subscription_id' => $subscription_id,
-            //         'charge_id' => $charge_id,
-            //         'payment_intent_id' => $payment_intent_id,
-            //         'status' => 0
-            //     ]);
-            // }else{
-                $invoice_id = '';
-                $invoice = null;
-                if($subscription_id != ''){
-                    $invoice = Invoice::where('subscription_id', $subscription_id)
-                    ->orderBy('id', 'desc')->first();
-                }else if($charge_id != ''){
-                    $invoice = Invoice::where('charge_id', $charge_id)
-                    ->orderBy('id', 'desc')->first();
-                }
-                if($invoice){
-                    $invoice_id = $invoice->id;
-                    // check social invoice, and set unpaid and deactivated
-                    $social_inovoice = DB::table('gisoft_backend_invoice')
-                    ->join('gisoft_invoice_detail_accounts', 'gisoft_backend_invoice.id', '=', 'gisoft_invoice_detail_accounts.invoice_id')
-                    ->join('gisoft_social_infos', 'gisoft_invoice_detail_accounts.social_id', '=', 'gisoft_social_infos.id')
-                    ->select('gisoft_social_infos.id as social_id', 'gisoft_backend_invoice.id as invoice_id')
-                    ->where('gisoft_backend_invoice.id', $invoice_id)
-                    ->first();
-                    if($social_inovoice){
-                        Invoice::where('id', $social_inovoice->invoice_id)
-                            ->update(['is_payed' => 0]);
-
-                        Social::where('id', $social_inovoice->social_id)
-                            ->update(['is_payed' => 0, 'is_activated' => 0]);
-                    }
-
-                    // check user invoice, and set unpaid and deactivated
-                    $user_inovoice = DB::table('gisoft_backend_invoice')
-                    ->join('gisoft_invoice_detail_users', 'gisoft_backend_invoice.id', '=', 'gisoft_invoice_detail_users.invoice_id')
-                    ->join('backend_users', 'gisoft_invoice_detail_users.email', '=', 'backend_users.email')
-                    ->select('backend_users.id as user_id', 'gisoft_backend_invoice.id as invoice_id')
-                    ->where('gisoft_backend_invoice.id', $invoice_id)
-                    ->first();
-                    if($user_inovoice){
-                        Invoice::where('id', $user_inovoice->invoice_id)
-                            ->update(['is_payed' => 0]);
-
-                        User::where('id', $user_inovoice->user_id)
-                            ->update(['is_activated' => 0]);
-
-                        ConsultantDetail::where('user_id', $user_inovoice->user_id)
-                        ->update(['is_activated' => 0]);
-
-                        UserCompanyDetail::where('user_id', $user_inovoice->user_id)
-                        ->update(['is_activated' => 0]);
-
-                    }
-                }
-
-                $invoiceResult = InvoiceResult::create([
-                    'invoice_id' => $invoice_id,
-                    'subscription_id' => $subscription_id,
-                    'charge_id' => $charge_id,
-                    'payment_intent_id' => $payment_intent_id,
-                    'status' => 0,
-                    'amount' => $amount
-                ]);
-  //                }                         
-            break;
-
-        case 'charge.refunded': // set state 2
-            $subscription_id = '';
-            $charge_id = '';
-            $payment_intent_id = '';
-            $amount = 0;
-
-            if(isset($event->data->object->payment_intent) && $event->data->object->payment_intent != ''){
-                $payment_intent_id = $event->data->object->payment_intent;
-            }
-            if(isset($event->data->object->amount) && $event->data->object->amount != ''){
-                $amount = $event->data->object->amount;
-            }
-
-            \Log::debug('charge.refunded payment_intent_id='.$payment_intent_id);
-
-            $invoiceResult = InvoiceResult::where('payment_intent_id', $payment_intent_id)->orderBy('id', 'desc')->first();
-            if($invoiceResult){
-                $subscription_id = $invoiceResult->subscription_id;
-                $charge_id = $invoiceResult->charge_id;
-            }
-            
-            $invoice_id = '';
-            $invoice = null;
-            if($subscription_id != ''){
-                $invoice = Invoice::where('subscription_id', $subscription_id)
-                ->orderBy('id', 'desc')->first();
-            }else if($charge_id != ''){
-                $invoice = Invoice::where('charge_id', $charge_id)
-                ->orderBy('id', 'desc')->first();
-            }
-
-            if($invoice){
-                $invoice_id = $invoice->id;
-
-                // check social invoice, and set unpaid and deactivated
-                $social_inovoice = DB::table('gisoft_backend_invoice')
-                ->join('gisoft_invoice_detail_accounts', 'gisoft_backend_invoice.id', '=', 'gisoft_invoice_detail_accounts.invoice_id')
-                ->join('gisoft_social_infos', 'gisoft_invoice_detail_accounts.social_id', '=', 'gisoft_social_infos.id')
-                ->select('gisoft_social_infos.id as social_id', 'gisoft_backend_invoice.id as invoice_id')
-                ->where('gisoft_backend_invoice.id', $invoice_id)
-                ->first();
-                if($social_inovoice){
-                    Invoice::where('id', $social_inovoice->invoice_id)
-                        ->update(['is_payed' => 0]);
-
-                    Social::where('id', $social_inovoice->social_id)
-                        ->update(['is_payed' => 0, 'is_activated' => 0]);
-                }
-
-                // check user invoice, and set unpaid and deactivated
-                $user_inovoice = DB::table('gisoft_backend_invoice')
-                ->join('gisoft_invoice_detail_users', 'gisoft_backend_invoice.id', '=', 'gisoft_invoice_detail_users.invoice_id')
-                ->join('backend_users', 'gisoft_invoice_detail_users.email', '=', 'backend_users.email')
-                ->select('backend_users.id as user_id', 'gisoft_backend_invoice.id as invoice_id')
-                ->where('gisoft_backend_invoice.id', $invoice_id)
-                ->first();
-                if($user_inovoice){
-                    Invoice::where('id', $user_inovoice->invoice_id)
-                        ->update(['is_payed' => 0]);
-
-                    User::where('id', $user_inovoice->user_id)
-                        ->update(['is_activated' => 0]);
-
-                    ConsultantDetail::where('user_id', $user_inovoice->user_id)
-                        ->update(['is_activated' => 0]);
-
-                    UserCompanyDetail::where('user_id', $user_inovoice->user_id)
-                        ->update(['is_activated' => 0]);
-                }                    
-            }
-
-            $invoiceResult = InvoiceResult::create([
-                'invoice_id' => $invoice_id,
-                'subscription_id' => $subscription_id,
-                'charge_id' => $charge_id,
-                'payment_intent_id' => $payment_intent_id,
-                'status' => 2,
-                'amount' => $amount
-            ]);
             break;
         default:
             break;
