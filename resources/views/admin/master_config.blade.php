@@ -10,28 +10,16 @@
 @stop
 
 @section('content')
-  {{ Form::open(['route' => 'admin.payment.update', 'method' => 'POST']) }}
+  {{ Form::open(['route' => 'admin.plan.update', 'method' => 'POST']) }}
   <div class="card">
     <div class="row card-body">
-      <label class="col-sm-4">サブスクリプションプラン</label>
+      <label class="col-sm-4">プラン</label>
       <div class="col-sm-8 form-group">
-        {{ Form::select('plan', 
-          array(
-            '0' => '44,000円',
-            '1' => '66,000円',
-            '2' => '77,000円',
-            '3' => '88,000円',
-            '4' => '132,000円',
-            '5' => '176,000円',
-          ),'', 
-          ['class' => 'form-control']) }}
+        {{ Form::select('plan', getPlans() , $config->plan, ['class' => 'form-control']) }}
       </div>
-      <label class="col-sm-4">課金の開始日</label>
-      <div class="col-sm-8 form-group row">
-        <div class="time">{{Form::date('start','', ['class' => 'form-control'])}}</div>
-      </div>
+    
       <div class="col-sm-12" style="text-align:right">
-          {{ Form::button('保存する', ['class' => 'btn btn-primary pl-5 pr-5 btn-submit']) }}&nbsp;&nbsp;
+          {{ Form::submit('設定する', ['class' => 'btn btn-primary pl-5 pr-5 btn-submit']) }}&nbsp;&nbsp;
       </div>
     </div>
   </div>

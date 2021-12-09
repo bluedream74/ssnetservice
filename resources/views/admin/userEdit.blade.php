@@ -47,6 +47,13 @@
           </div>
         </div>
       </div>
+      <div class="row mb-3" style="justify-content:end">
+        @if($user->check)
+            <div class="text-right"><button type="button" class="btn btn-sm btn-danger stop" data-id="{{ $user->id }}">ユーザーの利用を停止</button></div>
+        @else
+            <div class="text-right"><button type="button" class="btn btn-sm btn-primary start" data-id="{{ $user->id }}">ユーザーの利用を継続</button></div>
+        @endif
+      </div>
     </div>
   </div>
 
@@ -121,4 +128,61 @@
     </div>
     {{ Form::close() }}
   </div>
+
+  {{ Form::open(['route' => 'admin.user.stop', 'method' => 'POST', 'id' => 'stopForm']) }}
+      {{ Form::hidden('id', '', ['id' => 'stopUserId']) }}
+  {{ Form::close() }}
+
+  {{ Form::open(['route' => 'admin.user.start', 'method' => 'POST', 'id' => 'startForm']) }}
+      {{ Form::hidden('id', '', ['id' => 'startUserId']) }}
+  {{ Form::close() }}
+@stop
+
+
+@section('scripts')
+<script>
+$('.stop').click(function() {
+  var id = $(this).data('id');
+  toastr.fire({
+      html: "このユーザの利用を停止しますか？",
+      showDenyButton: false,
+      showCancelButton: true,
+      showConfirmButton: true,
+      confirmButtonText: "停止",
+      cancelButtonText: "キャンセル",
+      confirmButtonColor: "#dc3545",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      timer: undefined
+  }).then((result) => {
+      if (result.isConfirmed) {
+          $('#stopUserId').val(id);
+          $('#stopForm').submit();
+          $('#showLoading').click();
+      }
+  })
+})
+$('.start').click(function() {
+  var id = $(this).data('id');
+  toastr.fire({
+      html: "このユーザの利用を継続しますか？",
+      showDenyButton: false,
+      showCancelButton: true,
+      showConfirmButton: true,
+      confirmButtonText: "継続",
+      cancelButtonText: "キャンセル",
+      confirmButtonColor: "#dc3545",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      timer: undefined
+  }).then((result) => {
+      if (result.isConfirmed) {
+          $('#startUserId').val(id);
+          $('#startForm').submit();
+          $('#showLoading').click();
+      }
+  })
+})
+
+</script>
 @stop

@@ -25,6 +25,7 @@
                 'password'       => Hash::make('i3x#F7SFZbkr'),
                 'avatar'         => null,
                 'remember_token' => str_random(10),
+                'check'   => true,
                 'created_at'     => Carbon::now()->subWeek(1),
                 'updated_at'     => Carbon::now()->subWeek(1),
             ]

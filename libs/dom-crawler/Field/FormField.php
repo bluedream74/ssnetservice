@@ -134,6 +134,11 @@ abstract class FormField
         return $this->node->getAttribute('type');
     }
 
+    public function getType()
+    {
+        return $this->node->getAttribute('type');
+    }
+
     /**
      * Initializes the form field.
      */

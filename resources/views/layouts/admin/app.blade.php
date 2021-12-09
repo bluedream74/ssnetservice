@@ -54,8 +54,9 @@
             })
         })
     </script>
-
+   
     <script src="{{ asset('js/admin.js') }}"></script>
+    @yield('stripe_js')
     @yield('admin_scripts')
     <!-- <script src="https://code.jquery.com/jquery-1.12.4.js"></script> -->
     @yield('scripts')
