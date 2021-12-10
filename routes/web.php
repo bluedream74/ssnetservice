@@ -28,4 +28,4 @@ Route::post('/webhooks/sns', 'SnsController@store');
 
 Route::get('/image/open', 'SnsController@openEmail')->name('image.open');
 
-Route::post('webhook', '\App\Http\Controllers\Admin\UserController@handleWebhook')->name('webhook');
+

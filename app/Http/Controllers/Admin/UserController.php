@@ -174,7 +174,7 @@ class UserController extends BaseController
     return view('admin.master_config',compact('config'));
   }
   
-  public function webhook(Request $request) {
+  public function handleWebhook(Request $request) {
     // You can find your endpoint's secret in your webhook settings
     $endpoint_secret = config('services.stripe.webhooksecret');
 
