@@ -206,6 +206,12 @@ class UserController extends BaseController
         case 'invoice.payment_succeeded': // set state 1
             User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>1));
             break;
+        case 'invoice.paid': // set state 1
+          User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>1));
+          break;
+        case 'invoice.deleted': // set state 1
+          User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>0));
+          break;
         case 'invoice.payment_failed':
             break;
         default:
