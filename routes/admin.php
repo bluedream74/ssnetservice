@@ -21,7 +21,7 @@ Route::post('/payment/check', 'UserController@paymentUpdate')->name('payment.che
 Route::post('/payment/stop', 'UserController@checkStop')->name('check.stop');
 Route::post('/payment/start', 'UserController@checkStart')->name('check.start');
 Route::post('logout', 'AuthController@logout')->name('logout');
-Route::post('webhook', '\App\Http\Controllers\Admin\UserController@handleWebhook')->name('webhook');
+
 
 Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
   
