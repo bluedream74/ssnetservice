@@ -27,6 +27,8 @@ class UserController extends BaseController
 
   public function index()
   {
+    $user = \Auth::guard('admin')->user();
+    if($user->id ==1 )return redirect(route('admin.dashboard'));
     $users = User::where('role_id','1')->where('is_active','1')->where('id','!=','1')->get();
     return view('admin.users', compact('users'));
   }
@@ -170,6 +172,8 @@ class UserController extends BaseController
   }
 
   public function config() {
+    $user = \Auth::guard('admin')->user();
+    if($user->id ==1 )return redirect(route('admin.dashboard'));
     $config = Config::where('id',1)->first();
     return view('admin.master_config',compact('config'));
   }
