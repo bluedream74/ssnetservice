@@ -203,7 +203,7 @@ class UserController extends BaseController
           User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>0));
           break;
         case 'invoice.payment_failed':
-		  User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>0));
+          User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>0));
             break;
         default:
             break;
