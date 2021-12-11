@@ -10,7 +10,8 @@ use App\Models\User;
 use App\Models\Config;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Stripe;
+use Stripe\Stripe;
+use Log;
 
 class UserController extends BaseController
 {
@@ -176,32 +177,21 @@ class UserController extends BaseController
   
   public function handleWebhook(Request $request) {
     // You can find your endpoint's secret in your webhook settings
-    $endpoint_secret = config('services.stripe.webhooksecret');
-
-    $payload = @file_get_contents('php://input');
-    $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
-    $event = null;
-
-    try
-    {
-        $event = \Stripe\Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
-    } 
-    catch(\UnexpectedValueException $e)
-    {
+    Stripe::setApiKey('sk_live_TTW4tzVPRarpsLGdVsewvRyx');
+        // set webhook for stripe payment
+        $payload = @file_get_contents('php://input');
+        $event = null;
+        try {
+            $event = \Stripe\Event::constructFrom(
+                json_decode($payload, true), null
+            );
+        } catch(\Exception $e) {
             // Invalid payload
-            return response()->json([
-                'message' => 'Invalid payload',
-            ], 200);
-    }
-    catch(\Stripe\Exception\SignatureVerificationException $e)
-    {
-        // Invalid signature
-        return response()->json([
-            'message' => 'Invalid signature',
-        ], 200);
-    }
-
-
+            http_response_code(400);
+            exit();
+        }
+		\Log::debug($event->type);
+        // Handle the event
       switch ($event->type) {
         case 'invoice.payment_succeeded': // set state 1
             User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>1));
@@ -213,6 +203,7 @@ class UserController extends BaseController
           User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>0));
           break;
         case 'invoice.payment_failed':
+          User::where('email', $event->data->object->customer_email)->update(array('paycheck'=>0));
             break;
         default:
             break;
