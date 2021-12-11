@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Models\Config;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Stripe\Stripe;
 use Log;
 
 class UserController extends BaseController
@@ -111,7 +110,7 @@ class UserController extends BaseController
     $paymentMethod = $request->paymentMethod;
     try {
 
-        Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
         
         if (is_null($user->stripe_id)) {
             $stripeCustomer = $user->createAsStripeCustomer();
@@ -177,7 +176,7 @@ class UserController extends BaseController
   
   public function handleWebhook(Request $request) {
     // You can find your endpoint's secret in your webhook settings
-    Stripe::setApiKey('sk_live_TTW4tzVPRarpsLGdVsewvRyx');
+        \Stripe\Stripe::setApiKey('sk_live_TTW4tzVPRarpsLGdVsewvRyx');
         // set webhook for stripe payment
         $payload = @file_get_contents('php://input');
         $event = null;
