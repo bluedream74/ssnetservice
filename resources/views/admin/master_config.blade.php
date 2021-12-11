@@ -17,7 +17,10 @@
       <div class="col-sm-8 form-group">
         {{ Form::select('plan', getPlans() , $config->plan, ['class' => 'form-control']) }}
       </div>
-    
+      <label class="col-sm-4">１ヶ月の配信数</label>
+      <div class="col-sm-8 form-group">
+        {{ Form::number('limitCount', $config->limitCount , ['class' => 'form-control']) }}
+      </div>
       <div class="col-sm-12" style="text-align:right">
           {{ Form::submit('設定する', ['class' => 'btn btn-primary pl-5 pr-5 btn-submit']) }}&nbsp;&nbsp;
       </div>
