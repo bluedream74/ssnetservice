@@ -212,7 +212,8 @@ class UserController extends BaseController
 
   public function planUpdate() {
     Config::where('id',1)->update([
-      'plan'    =>  request()->get('plan') ,
+      'plan'          =>  request()->get('plan') ,
+      'limitCount'    =>  request()->get('limitCount') ,
     ]);
     return back()->with(['system.message.success' => 'プランが設定されました。']);
   }
