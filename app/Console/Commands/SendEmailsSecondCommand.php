@@ -127,15 +127,13 @@ class SendEmailsSecondCommand extends Command
                             }
 
                             try{
-                                if(empty($this->form->all())){
-                                    $inputs = $crawler->filter('form input')->extract(array('type'));
-                                    if(in_array('submit', $inputs)) {
-                                        $crawler->filter('form input')->each(function($input) {
-                                            if($input->extract(array('type'))[0]=="submit") {
-                                                $this->form = $input->form();
-                                            }
-                                        });
-                                    }
+                                $inputs = $crawler->filter('form input')->extract(array('type'));
+                                if(in_array('submit', $inputs)) {
+                                    $crawler->filter('form input')->each(function($input) {
+                                        if($input->extract(array('type'))[0]=="submit") {
+                                            $this->form = $input->form();
+                                        }
+                                    });
                                 }
                             }catch (\Throwable $e) {
                                 
@@ -254,27 +252,31 @@ class SendEmailsSecondCommand extends Command
                                         $data[$key] = $value->getValue();
                                     }
                                 }
+                                $addrCheck=false;
                                 foreach($this->form->getValues() as $key => $value) {
                                     if(isset($data[$key])||(!empty($data[$key])))continue;
                                     
                                     $emailTexts = array('company','cn','kaisha','cop','corp','会社','社名');
+                                    $furiTexts = array('company-kana','company_furi','フリガナ','kcn','ふりがな');$furi_check=true;
                                     foreach($emailTexts as $text) {
                                         if(strpos($key,$text)!==false){
-                                            $data[$key] = $contact->company;continue;
-                                        }
-                                    }
-
-                                    $emailTexts = array('company-kana');
-                                    foreach($emailTexts as $text) {
-                                        if(strpos($key,$text)!==false){
-                                            $data[$key] = 'ナシ';continue;
+                                            foreach($furiTexts as $furi) {
+                                                if(strpos($key, $furi)!==false){
+                                                    $data[$key] = 'ナシ';$furi_check=false;break;
+                                                }
+                                            }
+                                            if($furi_check) {
+                                                $data[$key] = $contact->company;continue;
+                                            }
                                         }
                                     }
 
                                     $addressTexts = array('住所','addr','add_detail');
                                     foreach($addressTexts as $text) {
                                         if(strpos($key,$text)!==false){
-                                            $data[$key] = $contact->address;continue;
+                                            if(!$addrCheck){
+                                                $data[$key] = $contact->address;$addrCheck=true;continue;
+                                            }
                                         }
                                     }
 
@@ -296,6 +298,27 @@ class SendEmailsSecondCommand extends Command
                                     foreach($urlTexts as $text) {
                                         if(strpos($key,$text)!==false){
                                             $data[$key] = $contact->homepageUrl;break;
+                                        }
+                                    }
+
+                                    $urlTexts = array('丁目番地','建物名');
+                                    foreach($urlTexts as $text) {
+                                        if(strpos($key,$text)!==false){
+                                            $data[$key] = '0';break;
+                                        }
+                                    }
+
+                                    $urlTexts = array('郵便番号');
+                                    foreach($urlTexts as $text) {
+                                        if(strpos($key,$text)!==false){
+                                            $data[$key] = $contact->postalCode1." ".$contact->postalCode2;break;
+                                        }
+                                    }
+
+                                    $urlTexts = array('市区町村');
+                                    foreach($urlTexts as $text) {
+                                        if(strpos($key,$text)!==false){
+                                            $data[$key] = mb_substr($contact->address,0,3);break;
                                         }
                                     }
         
@@ -335,13 +358,16 @@ class SendEmailsSecondCommand extends Command
                                                 }
                                             }
                                         } else {
-                                            $size = sizeof($this->form[$key]->getOptions());
-                                            $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
+                                            if(($key=="性別")||(($key=="sex")))$data[$key] = $this->form[$key]->getOptions()[0]['value'];
+                                            else{
+                                                $size = sizeof($this->form[$key]->getOptions());
+                                                $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
+                                            }
                                         }
                                         
                                     }else if($type =='checkbox') {
                                         $data[$key] = $this->form[$key]->getOptions()[0]['value'];
-                                    }else if(($type =='textarea') && (strpos($key,'captcha') === false)) {
+                                    }else if(($type =='textarea') && ((strpos($key,'captcha') === false) && (strpos($key,'address') === false))) {
                                         $content = str_replace('%company_name%', $company->name, $contact->content);
                                         $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                         $data[$key] = $content;
@@ -357,6 +383,7 @@ class SendEmailsSecondCommand extends Command
                             foreach($compPatterns as $val) {
                                 if(strpos($crawler->text(),$val)!==false) {
                                     $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
+                                    $substr = mb_substr($crawler->html(),strpos($crawler->html(),$val),30);
                                     $pos = strpos($str,'name=');
                                     if($pos > 3000) {
                                         continue;
@@ -380,16 +407,16 @@ class SendEmailsSecondCommand extends Command
                             }
         
                             foreach($this->form->getValues() as $key => $value) {
-                                if(isset($data[$key])&&(!empty($data[$key])))continue;
+                                if(isset($data[$key])||(!empty($data[$key])))continue;
                                 if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                     $data[$key] = $value;
                                 }else {
                                     if(strpos($key, 'ご担当者名')!==false){
                                         $data[$key] = $contact->surname." ".$contact->lastname;continue;
                                     }
-                                    if(strpos($key,'セイ')!==false){
+                                    if((strpos($key,'セイ')!==false)||((strpos($key,'せい')!==false))){
                                         $data[$key] = $contact->fu_surname;
-                                    }else if(strpos($key,'メイ')!==false){
+                                    }else if((strpos($key,'メイ')!==false)||(strpos($key,'めい')!==false)){
                                         $data[$key] = $contact->fu_lastname;
                                     }
                                     // else if(strpos($key,'姓')!==false){
@@ -443,7 +470,7 @@ class SendEmailsSecondCommand extends Command
                             }
                             $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;$fax_count=0;
                             foreach($this->form->getValues() as $key => $value) {
-                                if(isset($data[$key])&&(!empty($data[$key])))continue;
+                                if(isset($data[$key])||(!empty($data[$key])))continue;
                                 if(($value!=='' || strpos($key,'wpcf7')!==false)&&(strpos($value,'例')===false)){
                                     $data[$key] = $value;
                                 }else {
@@ -452,7 +479,7 @@ class SendEmailsSecondCommand extends Command
                                     }else if((strpos($key,'nam')!==false || strpos($key,'名前')!==false || strpos($key,'氏名')!==false)){
                                         $name_count++;
                                     }
-                                    if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false || strpos($key,'〒')!==false){
+                                    if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false || strpos($key,'〒')!==false || strpos($key,'pcode')!==false){
                                         $postal_count++;
                                     }
                                     if(strpos($key,'tel')!==false || strpos($key,'TEL')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
@@ -467,15 +494,16 @@ class SendEmailsSecondCommand extends Command
                             $messages =array('お名前','担当者');
                             foreach($messages as $message) {
                                 if(strpos($crawler->text(),$message)!==false) {
-                                    $str = substr($crawler->text(),strpos($crawler->text(),$message),30);
-                                    if((strpos($str,'名')!==false)&&(strpos($str,'姓')!==false))$name_count=2;
+                                    $str = mb_substr($crawler->html(),mb_strpos($crawler->html(),$message),100);$name_count=1;
+                                    if(strpos($str,'姓')!==false)
+                                        $name_count=2;
                                 }
                             }
 
-                            $messages =array('カタカナ','フリガナ','カナ');
+                            $messages =array('カタカナ','フリガナ','カナ','ふりがな');
                             foreach($messages as $message) {
                                 if(strpos($crawler->text(),$message)!==false) {
-                                    $str = substr($crawler->text(),strpos($crawler->text(),$message),40);
+                                    $str = mb_substr($crawler->text(),mb_strpos($crawler->text(),$message),40);
                                     if((strpos($str,'メイ')!==false)&&(strpos($str,'セイ')!==false))$kana_count=2;
                                     if((strpos($str,'名')!==false)&&(strpos($str,'姓')!==false))$kana_count=2;
                                 }
@@ -488,6 +516,12 @@ class SendEmailsSecondCommand extends Command
                                     $nameStr = substr($str,strpos($str,'name='));
                                     $nameStr = substr($nameStr,6);
                                     $name = substr($nameStr,0,strpos($nameStr,'"'));
+                                    // if(strpos($name,"お名前")!==false){
+                                    //     $str = $nameStr;
+                                    //     $nameStr = substr($str,strpos($str,'name='));
+                                    //     $nameStr = substr($nameStr,6);
+                                    //     $name = substr($nameStr,0,strpos($nameStr,'"'));
+                                    // }
                                     foreach($this->form->all() as $key=>$val) {
                                         if($key==$name){
                                             if(isset($data[$name]) && !empty($data[$name])){
@@ -600,7 +634,7 @@ class SendEmailsSecondCommand extends Command
                                 }
                             }
                             
-                            $addPatterns = array('住所','所在地','市区','番地','町名');
+                            $addPatterns = array('住所','所在地','市区','町名');
                             foreach($addPatterns as $val) {
                                 if(strpos($crawler->text(),$val)!==false) {
                                     $str = substr($crawler->html(),strpos($crawler->html(),$val)-6);
@@ -610,7 +644,7 @@ class SendEmailsSecondCommand extends Command
                                         $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
                                         foreach($this->form->all() as $key=>$val) {
                                             if($key==$nameStr){
-                                                if(isset($data[$nameStr]) && !empty($data[$nameStr])){
+                                                if(isset($data[$nameStr])){
                                                     break;
                                                 }else {
                                                     $data[$nameStr] = $contact->address;
@@ -621,7 +655,7 @@ class SendEmailsSecondCommand extends Command
                                     }
                                 }
                             }
-                           
+
                             $mailPatterns = array('メールアドレス','Mail アドレス');
                             foreach($mailPatterns as $val) {
                                 if(strpos($crawler->text(),$val)!==false) {
@@ -631,8 +665,12 @@ class SendEmailsSecondCommand extends Command
                                     $nameStr = substr($nameStr,0,strpos($nameStr,'"'));
                                     foreach($this->form->all() as $key=>$val) {
                                         if($key==$nameStr){
-                                            $data[$nameStr] = $contact->email;
-                                            break;
+                                            if(isset($data[$nameStr])){
+                                                break;
+                                            }else {
+                                                $data[$nameStr] = $contact->email;
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -723,8 +761,9 @@ class SendEmailsSecondCommand extends Command
                             }
                             
                             $kana_count_check = 0;$name_count_check = 0;$phone_count_check = 0;$postal_count_check = 0;
+                            $surname_check=false;
                             foreach($this->form->getValues() as $key => $val) {
-                                if(isset($data[$key])&&(!empty($data[$key])))continue;
+                                if(isset($data[$key])||(!empty($data[$key])))continue;
                                 if(($val!=='' || strpos($key,'wpcf7')!==false||strpos($key,'captcha')!==false)) {
                                     if(strpos($val,'例')!==false){
     
@@ -756,10 +795,14 @@ class SendEmailsSecondCommand extends Command
                                     }
                                 }
                                 if(strpos($key,'姓')!==false){
-                                    $data[$key] = $contact->surname;continue;
+                                    $data[$key] = $contact->surname;$surname_check=true;continue;
                                 }
                                 if(strpos($key,'名')!==false){
-                                    $data[$key] = $contact->surname;continue;
+                                    if($surname_check) {
+                                        $data[$key] = $contact->lastname;continue;
+                                    }else{
+                                        $data[$key] = $contact->surname." ".$contact->lastname;continue;
+                                    }
                                 }
                                 if($fax_count == 1) {
                                     $titleTexts = array('fax','FAX');
@@ -770,7 +813,7 @@ class SendEmailsSecondCommand extends Command
                                     }
                                 }
 
-                                if(strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false|| strpos($key,'zip')!==false|| strpos($key,'〒')!==false){
+                                if(strpos($key,'post')!==false || strpos($key,'yubin')!==false || strpos($key,'郵便番号')!==false|| strpos($key,'zip')!==false|| strpos($key,'〒')!==false || strpos($key,'pcode')!==false){
                                     if($postal_count==1){
                                         $data[$key] = $contact->postalCode1.'-'.$contact->postalCode2;continue;
                                     }else if($postal_count==2){

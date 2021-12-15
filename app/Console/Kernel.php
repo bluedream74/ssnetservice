@@ -32,7 +32,7 @@ class Kernel extends ConsoleKernel
         $schedule->command("batch:check2")->everyFourMinutes()->runInBackground();
         $schedule->command("batch:check3")->everyFourMinutes()->runInBackground();
         $schedule->command("batch:check4")->everyFourMinutes()->runInBackground();
-        $schedule->command("reset:payment")->monthly()->runInBackground();
+        // $schedule->command("reset:payment")->monthly()->runInBackground();
     }
 
     /**
