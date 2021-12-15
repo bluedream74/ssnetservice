@@ -39,7 +39,12 @@
         
   </div>
     <div class="form-group">
-        <button id="card-button" class="btn btn-lg btn-block btn-success btn-order">サブスクリプション</button>
+        @if($user->paycheck)
+            <br>サブスクリプションが完了しました。
+            <!-- <button id="card-button" class="btn btn-lg btn-block btn-danger btn-order">サブスクリプション停止</button> -->
+        @else
+            <button id="card-button" class="btn btn-lg btn-block btn-success btn-order">サブスクリプション</button>
+        @endif
     </div>
     <div class="row">
       <div class="col-md-12">

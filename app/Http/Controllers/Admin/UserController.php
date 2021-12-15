@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\Config;
+use App\Models\Subscriptions;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Log;
@@ -117,28 +118,31 @@ class UserController extends BaseController
         if (is_null($user->stripe_id)) {
             $stripeCustomer = $user->createAsStripeCustomer();
         }
+        // if($user->paycheck) {
+        //   $res = $user->subscription('test')->cancel();
+        // } 
+        $subscription = Subscriptions::where('user_id',$user->id)->first()->toArray();
+        if(empty($subscription)){
+            \Stripe\Customer::createSource(
+              $user->stripe_id,
+              ['source' => $token]
+          );
 
-        \Stripe\Customer::createSource(
-            $user->stripe_id,
-            ['source' => $token]
-        );
-
-        $user->newSubscription('test',$input['plan'])
-            ->create($paymentMethod, [
-            'email' => $user->email,
+          $user->newSubscription('test',$input['plan'])
+              ->create($paymentMethod, [
+              'email' => $user->email,
+          ]);
+        }
+        $user = \Auth::guard('admin')->user();
+        User::where('id',$user->id)->update([
+          'paycheck'    =>  1 ,
         ]);
-
         return back()->with('success','サブスクリプションが完了しました。');
+        
     } catch (Exception $e) {
         return back()->with('success',$e->getMessage());
     }
 
-    
-    User::where('id',$user->id)->update([
-      'stripe_id'    =>  request()->get('stripe_id') ,
-      'card_brand'   =>  request()->get('card_brand'),
-    ]);
-    return back()->with(['system.message.success' => '更新されました。']);
   }
 
   public function checkStop() {
