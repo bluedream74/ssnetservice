@@ -90,7 +90,7 @@ class SendEmailsSecondCommand extends Command
                         $company = $companyContact->company;
                         try {
                             $data = [];
-                            $this->form = "";
+                            $this->form = "";$this->checkform="";
                             $charset = 'UTF-8';
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
@@ -139,7 +139,7 @@ class SendEmailsSecondCommand extends Command
                                 
                             }
 
-                            if($this->form == ""){
+                            if(empty($this->form)){
                                 $company->update(['status' => '送信失敗']);
                                 $companyContact->update([
                                     'is_delivered' => 1
@@ -917,7 +917,14 @@ class SendEmailsSecondCommand extends Command
                                             }
                                         });
                                     }
-                                
+                                    if(empty($this->checkform)){
+                                        $company->update(['status' => '送信失敗']);
+                                        $companyContact->update([
+                                            'is_delivered' => 1
+                                        ]);
+                                        $output->writeln("failed");
+                                        continue;
+                                    } 
                                     if(isset($this->checkform) && !empty($this->checkform)){
 
                                         // foreach($this->form->getValues() as $key=>$val) {
