@@ -23,6 +23,7 @@ class ConfigSeeder extends Seeder
                 'mailLimit'         => 55,
                 'checkContactForm'  => '0',
                 'registerUrl'       => '0',
+                'plan'              => 'price_1K3wuGLwiZkAtY2DIUb3WrRN',
             ]
         ]);
     }
