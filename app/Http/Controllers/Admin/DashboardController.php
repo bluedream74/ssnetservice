@@ -58,12 +58,15 @@ class DashboardController extends BaseController
                 foreach($subsource as $value){
                     $subsources[$value->name] = $value->name;
                 }
-            }
-            if(isset($subsources)){
-                return view('admin.index', compact('companies', 'prefectures','subsources', 'config'));
             }else {
-                return view('admin.index', compact('companies', 'prefectures' , 'config'));
+                $subsource = SubSource::all();
+                foreach($subsource as $value){
+                    $subsources[$value->name] = $value->name;
+                }
             }
+                
+            return view('admin.index', compact('companies', 'prefectures','subsources', 'config'));
+            
         }catch (\Throwable $e) {
             return redirect(route('admin.dashboard'));
         }
