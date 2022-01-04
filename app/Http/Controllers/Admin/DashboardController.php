@@ -65,7 +65,11 @@ class DashboardController extends BaseController
                 }
             }
                 
-            return view('admin.index', compact('companies', 'prefectures','subsources', 'config'));
+            if(isset($subsources)){
+                return view('admin.index', compact('companies', 'prefectures','subsources', 'config'));
+            } else {
+                return view('admin.index', compact('companies', 'prefectures', 'config'));
+            }
             
         }catch (\Throwable $e) {
             return redirect(route('admin.dashboard'));
