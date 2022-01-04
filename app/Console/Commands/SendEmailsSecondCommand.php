@@ -186,16 +186,16 @@ class SendEmailsSecondCommand extends Command
                             }
                             if($continue_check)continue;
 
-                            if(strcasecmp($charset,'utf-8')) {
-                                $contact->surname = mb_convert_encoding($contact->surname,'UTF-8',$charset);
-                                $contact->lastname = mb_convert_encoding($contact->lastname,'UTF-8',$charset);
-                                $contact->fu_surname = mb_convert_encoding($contact->fu_surname,'UTF-8',$charset);
-                                $contact->fu_lastname = mb_convert_encoding($contact->fu_lastname,'UTF-8',$charset);
-                                $contact->company = mb_convert_encoding($contact->company,'UTF-8',$charset);
-                                $contact->title = mb_convert_encoding($contact->title,'UTF-8',$charset);
-                                $contact->content = mb_convert_encoding($contact->content,'UTF-8',$charset);
-                                $contact->area = mb_convert_encoding($contact->area,'UTF-8',$charset);
-                            }
+                            // if(strcasecmp($charset,'utf-8')) {
+                            //     $contact->surname = mb_convert_encoding($contact->surname,'UTF-8',$charset);
+                            //     $contact->lastname = mb_convert_encoding($contact->lastname,'UTF-8',$charset);
+                            //     $contact->fu_surname = mb_convert_encoding($contact->fu_surname,'UTF-8',$charset);
+                            //     $contact->fu_lastname = mb_convert_encoding($contact->fu_lastname,'UTF-8',$charset);
+                            //     $contact->company = mb_convert_encoding($contact->company,'UTF-8',$charset);
+                            //     $contact->title = mb_convert_encoding($contact->title,'UTF-8',$charset);
+                            //     $contact->content = mb_convert_encoding($contact->content,'UTF-8',$charset);
+                            //     $contact->area = mb_convert_encoding($contact->area,'UTF-8',$charset);
+                            // }
 
                             try {
                                 if(strpos($crawler->html(),'api.js?render')!==false){
