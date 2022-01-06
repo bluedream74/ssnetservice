@@ -7,7 +7,19 @@ use App\Models\Contact;
 use App\Models\Config;
 use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
+use LaravelAnticaptcha\Anticaptcha\ImageToText;
 use Illuminate\Support\Carbon;
+
+use Facebook\WebDriver\Chrome\ChromeOptions;
+use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Laravel\Dusk\Browser;
+use Laravel\Dusk\Chrome\ChromeProcess;
+use Laravel\Dusk\ElementResolver;
+use Illuminate\Http\Request;
+use Facebook\WebDriver\WebDriverBy;
+use Exception;
+
 
 class SendEmailsFourthCommand extends Command
 {
@@ -25,6 +37,7 @@ class SendEmailsFourthCommand extends Command
      */
     protected $description = 'Command description';
     protected $form;
+    protected $formHtml;
     protected $checkform;
 
     /**
@@ -90,7 +103,7 @@ class SendEmailsFourthCommand extends Command
                         $company = $companyContact->company;
                         try {
                             $data = [];
-                            $this->form = "";$this->checkform="";$html="";$html_text="";
+                            $this->form = "";$this->checkform="";$html="";$html_text="";$footerhtml="";
                             $charset = 'UTF-8';
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
@@ -107,7 +120,7 @@ class SendEmailsFourthCommand extends Command
                             
                             $this->html=$crawler->html();
                             $this->html_text=$crawler->text();
-
+                            
                             $crawler->filter('form')->each(function($form) {
                                 try {
                                     if(strcasecmp($form->form()->getMethod(),'get')){
@@ -173,9 +186,14 @@ class SendEmailsFourthCommand extends Command
                             $html = $this->html;
                             $html_text = $this->html_text;
 
-                            $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求");$continue_check=false;
+                            try {
+                                $footerhtml=$crawler->filter('#footer')->html();
+                            }catch(\Throwable $e){
+
+                            }
+                            $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ");$continue_check=false;
                             foreach($nonStrings as $str) {
-                                if(strpos($html_text,$str)!==false) {
+                                if((strpos($footerhtml,$str)!==false)) {
                                     $company->update(['status' => '送信失敗']);
                                     $companyContact->update([
                                         'is_delivered' => 1
@@ -196,89 +214,6 @@ class SendEmailsFourthCommand extends Command
                             //     $contact->content = mb_convert_encoding($contact->content,'UTF-8',$charset);
                             //     $contact->area = mb_convert_encoding($contact->area,'UTF-8',$charset);
                             // }
-
-                            try {
-                                if(strpos($crawler->html(),'api.js?render')!==false){
-                                    $key_position = strpos($crawler->html(),'api.js?render');
-                                    if(isset($key_position)){
-                                        $captcha_sitekey = substr($crawler->html(),$key_position+14,40);
-                                    }
-                                }else if(strpos($crawler->html(),'changeCaptcha')!==false){
-                                    $key_position = strpos($crawler->html(),'changeCaptcha');
-                                    if(isset($key_position)){
-                                        $captcha_sitekey = substr($crawler->html(),$key_position+15,40);
-                                    }
-                                }else if(strpos($crawler->text(),'sitekey')!==false){
-                                    $key_position = strpos($crawler->text(),'sitekey');
-                                    if(isset($key_position)){
-                                        if((substr($crawler->text(),$key_position+9,1)=="'"||(substr($crawler->text(),$key_position+9,1)=='"'))){
-                                            $captcha_sitekey = substr($crawler->text(),$key_position+10,40);
-                                        }else if((substr($crawler->text(),$key_position+11,1)=="'"||(substr($crawler->text(),$key_position+11,1)=='"'))){
-                                            $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
-                                        }
-                                    }
-                                }
-                                if(!isset($captcha_sitekey) || str_contains($captcha_sitekey,",")){ 
-                                    if(strpos($crawler->html(),'data-sitekey')!==false){
-                                        $key_position = strpos($crawler->html(),'data-sitekey');
-                                        if(isset($key_position)){
-                                            $captcha_sitekey = substr($crawler->html(),$key_position+14,40);
-                                        }
-                                    }else if(strpos($crawler->html(),'wpcf7submit')!==false){
-                                        $key_position = strpos($crawler->html(),'wpcf7submit');
-                                        if(isset($key_position)){
-                                            $str = substr($crawler->html(),$key_position);
-                                            $captcha_sitekey = substr($str,strpos($str,'grecaptcha')+13,40);
-                                        }
-                                    }
-                                }
-                                if((strpos($crawler->html(),'wpcf7_recaptcha')!==false) || (strpos($crawler->html(),'g-recaptcha')!==false) || (strpos($crawler->html(),'recaptcha_response')!==false)) {
-                                    if(isset($captcha_sitekey) && !str_contains($captcha_sitekey,",")){
-                                    
-                                        $api = new NoCaptchaProxyless();
-                                        $api->setVerboseMode(true);
-                                        $api->setKey(config('anticaptcha.key'));
-                                        //recaptcha key from target website
-                                        $api->setWebsiteURL($company->contact_form_url);
-                                        $api->setWebsiteKey($captcha_sitekey);
-                                        try{
-                                            if (!$api->createTask()) {
-                                                continue;
-                                            }
-                                        }catch(\Throwable $e){
-                                            // file_put_contents('ve.txt',$e->getMessage());
-                                        }
-                                       
-                                        $taskId = $api->getTaskId();
-                                    
-                                        if (!$api->waitForResult()) {
-                                            continue;
-                                        } else {
-                                            $recaptchaToken = $api->getTaskSolution();
-                                            if((strpos($html,'g-recaptcha')!==false)&&(strpos($html,'g-recaptcha-response')==false)) {
-                                                $domdocument = new \DOMDocument();
-                                                $ff = $domdocument->createElement('input');
-                                                $ff->setAttribute('name', 'g-recaptcha-response');
-                                                $ff->setAttribute('value', $recaptchaToken);
-                                                $formField = new \Symfony\Component\DomCrawler\Field\InputFormField($ff);
-                                                $this->form->set($formField);
-                                            }else {
-                                                foreach($this->form->all() as $key=>$val) {
-                                                    if(strpos($key,'wpcf7_recaptcha')!==false){
-                                                        $data['_wpcf7_recaptcha_response'] = $recaptchaToken;break;
-                                                    }else if(strpos($key,'g-recaptcha-response')!==false){
-                                                        $data['g-recaptcha-response'] = $recaptchaToken;break;
-                                                    }else if(strpos($key,'recaptcha_response')!==false){
-                                                        $data['recaptcha_response'] = $recaptchaToken;break;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }catch(\Throwable $e){
-                                $output->writeln($e->getMessage());
-                            }
         
                             if(!empty($this->form->getValues())){
 
@@ -570,6 +505,12 @@ class SendEmailsFourthCommand extends Command
                                         }
                                     }
                                 }
+                            }else if($name_count==1) {
+                                if((strpos($key,'shop')!==false || strpos($key,'company')!==false || strpos($key,'cp')!==false)){
+
+                                }else if((strpos($key,'nam')!==false || strpos($key,'名前')!==false || strpos($key,'氏名')!==false)){
+                                    $data[$key] = $contact->surname." ".$contact->lastname;
+                                }
                             }
 
                             if($postal_count==2) {
@@ -581,6 +522,12 @@ class SendEmailsFourthCommand extends Command
                                         }else if($n==1) {
                                             $data[$key] = $contact->postalCode2;$n++;
                                         }
+                                    }
+                                }
+                            }else if($postal_count==1){
+                                foreach($this->form->getValues() as $key => $value) {
+                                    if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false || strpos($key,'〒')!==false || strpos($key,'pcode')!==false){
+                                        $data[$key] = $contact->postalCode1.$contact->postalCode2;
                                     }
                                 }
                             }
@@ -598,6 +545,12 @@ class SendEmailsFourthCommand extends Command
                                         }
                                     }
                                 }
+                            }else if($phone_count==1) {
+                                foreach($this->form->getValues() as $key => $value) {
+                                    if(strpos($key,'tel')!==false || strpos($key,'TEL')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
+                                        $data[$key] = $contact->phoneNumber1.$contact->phoneNumber2.$contact->phoneNumber3;
+                                    }
+                                }
                             }
 
                             if($fax_count==3) {
@@ -613,9 +566,15 @@ class SendEmailsFourthCommand extends Command
                                         }
                                     }
                                 }
+                            }else if($fax_count==1){
+                                foreach($this->form->getValues() as $key => $value) {
+                                    if(strpos($key,'fax')!==false || strpos($key,'FAX')!==false ){
+                                        $data[$key] = $contact->phoneNumber1.$contact->phoneNumber2.$contact->phoneNumber3;
+                                    }
+                                }
                             }
                             
-                            $messages =array('名前','担当者','氏名');
+                            $messages =array('名前','担当者','氏名','お名前(かな)');
                             foreach($messages as $message) {
                                 if(strpos($html_text,$message)!==false) {
                                     $str = mb_substr($html,mb_strpos($html,$message),200);
@@ -1007,132 +966,375 @@ class SendEmailsFourthCommand extends Command
                                     
                                 }
                             }
-                            $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","内容を確認させていただき","成功しました","完了いたしま");
-                            $thank_check=true;
-                            foreach($checkMessages as $message) {
-                                if(strpos($crawler->html(),$message) !==false ) {
-                                    $thank_check=false;
-                                }
+                            
+                            $javascriptCheck=false;
+                            if((strpos($this->html,'onclick')!==false)||(strpos($this->html,'onClick')!==false)||(strpos($this->html,'recaptcha')!==false)||($this->form->getUri()==$company->contact_form_url)){
+                                $javascriptCheck=true;
                             }
-                            $crawler = $client->submit($this->form, $data);
-                            
-                            $failedCheck=true;
-                            
-                            $check = false;
-                            if($thank_check) {
-                                foreach($checkMessages as $message) {
-                                    if(strpos($crawler->html(),$message)!==false){
+                            if($javascriptCheck) {
+                                $process = (new ChromeProcess)->toProcess();
+                                if ($process->isStarted()) {
+                                    $process->stop();
+                                }
+                                $process->start();
+                        
+                                $options = (new ChromeOptions)->addArguments(collect([
+                                    '--window-size=1920,1080',
+                                ])->unless($this->hasHeadlessDisabled(), function ($items) {
+                                    return $items->merge([
+                                        '--disable-gpu',
+                                        '--headless',
+                                    ]);
+                                })->all());
+                                $driver   =    RemoteWebDriver::create(
+                                    $_ENV['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',
+                                    DesiredCapabilities::chrome()->setCapability(
+                                        ChromeOptions::CAPABILITY, $options
+                                    )
+                                );
+                                $driver->manage()->window()->maximize();
+                                $browser = new Browser($driver, new ElementResolver($driver, ''));
+                                $names = collect($data);
+                                $browser->visit($company->contact_form_url);
+                                $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
+                                foreach($names as $key => $name){
+                                    foreach($this->form->all() as $key1=>$value1) {
+                                        if((strpos($key,'wpcf7')!==false)){
+                                            continue;
+                                        }
+                                        if($key==$key1) {
+                                            try {
+                                                switch($value1->getType()){
+                                                    case 'checkbox':
+                                                        $browser->click('input[type="checkbox"][name="'.$key.'"]');
+                                                        // $browser->check($key);
+                                                        break;
+                                                    case 'select':
+                                                        $browser->select($key,$name);
+                                                        break;
+                                                    case 'radio':
+                                                        // $browser->radio($key,$name);
+                                                        $browser->click('input[type="radio"][name="'.$key.'"]');
+                                                        break;
+                                                    case 'hidden':
+                                                        break;
+                                                    default:
+                                                        $browser->type($key, $name);
+                                                        break;
+                                                }
+                                            }catch (Exception $exception) {
+
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                                $confirmElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"確認")] | //input[contains(@value,"確認") and @type!="hidden"] | //a[contains(text(),"確認")]'));
+                                $sendElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"送信")] | //input[contains(@value,"送信") and @type!="hidden"] | //a[contains(text(),"送信")]'));
+                                $nextElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"次へ")] | //input[contains(@value,"次へ") and @type!="hidden"] | //a[contains(text(),"次へ")]'));
+                                if(count($confirmElements)>=1) {
+                                    foreach($confirmElements as $confirmElement) {
+                                        try {
+                                            $confirmElement->click();
+                                        }catch (Exception $exception) {
+
+                                        }
+                                    }
+                                }
+                                if(count($sendElements)>=1) {
+                                    foreach($sendElements as $sendElement){
+                                        try {
+                                            $sendElement->click();
+                                        }catch (Exception $exception) {
+                                            
+                                        }
+                                    }
+                                }
+                                if(count($nextElements)>=1) {
+                                    foreach($nextElements as $nextElement){
+                                        try {
+                                            $nextElement->click();
+                                        }catch (Exception $exception) {
+                                            
+                                        }
+                                    }
+                                }
+                                $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
+                                try {
+                                    $checkConfirmElements = $browser->driver->findElements(WebDriverBy::xpath('//*[contains(text(),"ありがとうございま")] | //*[contains(text(),"有難うございま")] | //*[contains(text(),"送信しました")] | //*[contains(text(),"送信されました")] | //*[contains(text(),"成功しました")] | //*[contains(text(),"完了いたしま")]| //*[contains(text(),"送信いたしました")]| //*[contains(text(),"内容を確認させていただき")]| //*[contains(text(),"自動返信メール")]'));
+                                    if(count($checkConfirmElements)>=1) {
                                         $company->update([
                                             'status'        => '送信済み'
                                         ]);
                                         $companyContact->update([
                                             'is_delivered' => 2
                                         ]);
-                                        $check =true;break;
-                                    }
-                                }
-                            }
-                            if(!$check){
-                                try{
-                                    $crawler->filter('form')->each(function($form) {
-                                        try {
-                                            if(strcasecmp($form->form()->getMethod(),'get')){
-                                                if((strpos($form->form()->getName(),'login')!==false)||(strpos($form->form()->getName(),'search')!==false)){
-        
-                                                }else {
-                                                    $this->checkform = $form->form();
-                                                    $form->filter('input')->each(function($input) {
-                                                        try {
-                                                            if((strpos($input->outerhtml(),'送信')!==false)||(strpos($input->outerhtml(),'back')!==false)||(strpos($input->outerhtml(),'修正')!==false)){
+                                    }else {
+                                        $confirmElements="";$sendElements="";$nextElements="";
+                                        $confirmElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"確認")] | //input[contains(@value,"確認") and @type!="hidden"] | //a[contains(text(),"確認")]'));
+                                        $sendElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"送信")] | //input[contains(@value,"送信") and @type!="hidden"] | //a[contains(text(),"送信")]'));
+                                        $nextElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"次へ")] | //input[contains(@value,"次へ") and @type!="hidden"] | //a[contains(text(),"次へ")]'));
+                                        if(count($confirmElements)>=1) {
+                                            foreach($confirmElements as $confirmElement) {
+                                                try {
+                                                    $confirmElement->click();
+                                                }catch (Exception $exception) {
 
-                                                            }else {
-                                                                $this->checkform = $input->form();
-                                                            }
-                                                        }catch(\Throwable $e){
-                        
-                                                        }
-                                                    }); 
                                                 }
                                             }
-                                        }catch(\Throwable $e){
-        
                                         }
-                                    });
-
-                                    if(empty($this->checkform)){
-                                        $iframes = $crawler->filter('iframe')->extract(['src']);
-                                        foreach($iframes as $iframe) {
-                                            $clientFrame = new Client();
-                                            $crawlerFrame = $clientFrame->request('GET', $iframe);
-                                            $crawlerFrame->filter('form')->each(function($form) {
+                                        if(count($sendElements)>=1) {
+                                            foreach($sendElements as $sendElement){
                                                 try {
-                                                    if(strcasecmp($form->form()->getMethod(),'get')){
-                                                        if((strpos($form->form()->getName(),'login')!==false)||(strpos($form->form()->getName(),'search')!==false)){
-                
-                                                        }else {
-                                                            $this->checkform = $form->form();
-                                                            $form->filter('input')->each(function($input) {
-                                                                try {
-                                                                    if((strpos($input->outerhtml(),'送信')!==false)||(strpos($input->outerhtml(),'back')!==false)||(strpos($input->outerhtml(),'修正')!==false)){
-        
-                                                                    }else {
-                                                                        $this->checkform = $input->form();
-                                                                    }
-                                                                }catch(\Throwable $e){
-                                
-                                                                }
-                                                            }); 
-                                                        }
-                                                    }
-                                                }catch(\Throwable $e){
-                
+                                                    $sendElement->click();
+                                                }catch (Exception $exception) {
+                                                    
                                                 }
-                                            });
+                                            }
                                         }
-                                        
-                                    } 
-                                    if(empty($this->checkform)){
-                                        $company->update(['status' => '送信失敗']);
-                                        $companyContact->update([
-                                            'is_delivered' => 1
-                                        ]);
-                                        $output->writeln("failed");
-                                        continue;
+                                        if(count($nextElements)>=1) {
+                                            foreach($nextElements as $nextElement){
+                                                try {
+                                                    $nextElement->click();
+                                                }catch (Exception $exception) {
+                                                    
+                                                }
+                                            }
+                                        }
+                                        $checkConfirmElements = $browser->driver->findElements(WebDriverBy::xpath('//*[contains(text(),"ありがとうございま")] | //*[contains(text(),"有難うございま")] | //*[contains(text(),"送信しました")] | //*[contains(text(),"送信されました")] | //*[contains(text(),"成功しました")] | //*[contains(text(),"完了いたしま")]| //*[contains(text(),"送信いたしました")]| //*[contains(text(),"内容を確認させていただき")]| //*[contains(text(),"自動返信メール")]'));
+                                        if(count($checkConfirmElements)>=1) {
+                                            $company->update([
+                                                'status'        => '送信済み'
+                                            ]);
+                                            $companyContact->update([
+                                                'is_delivered' => 2
+                                            ]);
+                                        }
+                                        $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
                                     }
                                     
-                                    if(isset($this->checkform) && !empty($this->checkform->all())){
-
-                                        $this->checkform->setValues($data);
-                                        $crawler = $client->submit($this->checkform);
-                                       
-                                        // $company->update([
-                                        //     'status'        => '送信済み'
-                                        // ]);
-                                        // $companyContact->update([
-                                        //     'is_delivered' => 2
-                                        // ]);
-
-                                        $check =false;
-                                        foreach($checkMessages as $message) {
-                                            if(strpos($crawler->html(),$message)!==false){
-                                                $company->update([
-                                                    'status'        => '送信済み'
-                                                ]);
-                                                $companyContact->update([
-                                                    'is_delivered' => 2
-                                                ]);
-                                                $check =true;break;
+                                } catch (Exception $exception) {
+                                   
+                                }
+                                $browser->quit();
+                                $process->stop();
+                            }else {
+                                
+                                try {
+                                    // $captchaImg = $crawler->filter('.captcha img')->extract(['src'])[0];
+                                    if(strpos($crawler->html(),'api.js?render')!==false){
+                                        $key_position = strpos($crawler->html(),'api.js?render');
+                                        if(isset($key_position)){
+                                            $captcha_sitekey = substr($crawler->html(),$key_position+14,40);
+                                        }
+                                    }else if(strpos($crawler->html(),'changeCaptcha')!==false){
+                                        $key_position = strpos($crawler->html(),'changeCaptcha');
+                                        if(isset($key_position)){
+                                            $captcha_sitekey = substr($crawler->html(),$key_position+15,40);
+                                        }
+                                    }else if(strpos($crawler->text(),'sitekey')!==false){
+                                        $key_position = strpos($crawler->text(),'sitekey');
+                                        if(isset($key_position)){
+                                            if((substr($crawler->text(),$key_position+9,1)=="'"||(substr($crawler->text(),$key_position+9,1)=='"'))){
+                                                $captcha_sitekey = substr($crawler->text(),$key_position+10,40);
+                                            }else if((substr($crawler->text(),$key_position+11,1)=="'"||(substr($crawler->text(),$key_position+11,1)=='"'))){
+                                                $captcha_sitekey = substr($crawler->text(),$key_position+12,40);
                                             }
                                         }
-                                        if(!$check){
+                                    }
+                                    if(!isset($captcha_sitekey) || str_contains($captcha_sitekey,",")){ 
+                                        if(strpos($crawler->html(),'data-sitekey')!==false){
+                                            $key_position = strpos($crawler->html(),'data-sitekey');
+                                            if(isset($key_position)){
+                                                $captcha_sitekey = substr($crawler->html(),$key_position+14,40);
+                                            }
+                                        }else if(strpos($crawler->html(),'wpcf7submit')!==false){
+                                            $key_position = strpos($crawler->html(),'wpcf7submit');
+                                            if(isset($key_position)){
+                                                $str = substr($crawler->html(),$key_position);
+                                                $captcha_sitekey = substr($str,strpos($str,'grecaptcha')+13,40);
+                                            }
+                                        }
+                                    }
+                                
+                                    if(strpos($crawler->html(),'recaptcha')!==false) {
+                                        if(isset($captcha_sitekey) && !str_contains($captcha_sitekey,",")){
+                                        
+                                            $api = new NoCaptchaProxyless();
+                                            $api->setVerboseMode(true);
+                                            $api->setKey(config('anticaptcha.key'));
+                                            //recaptcha key from target website
+                                            $api->setWebsiteURL($company->contact_form_url);
+                                            $api->setWebsiteKey($captcha_sitekey);
+                                            try{
+                                                if (!$api->createTask()) {
+                                                    continue;
+                                                }
+                                            }catch(\Throwable $e){
+                                                // file_put_contents('ve.txt',$e->getMessage());
+                                            }
+                                        
+                                            $taskId = $api->getTaskId();
+                                        
+                                            if (!$api->waitForResult()) {
+                                                continue;
+                                            } else {
+                                                $recaptchaToken = $api->getTaskSolution();
+                                                if((strpos($html,'g-recaptcha')!==false)&&(strpos($html,'g-recaptcha-response')==false)) {
+                                                    $domdocument = new \DOMDocument();
+                                                    $ff = $domdocument->createElement('input');
+                                                    $ff->setAttribute('name', 'g-recaptcha-response');
+                                                    $ff->setAttribute('value', $recaptchaToken);
+                                                    $formField = new \Symfony\Component\DomCrawler\Field\InputFormField($ff);
+                                                    $this->form->set($formField);
+                                                }else {
+                                                    foreach($this->form->all() as $key=>$val) {
+                                                        if(strpos($key,'recaptcha')!==false){
+                                                            $data[$key] = $recaptchaToken;break;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }catch(\Throwable $e){
+                                    $output->writeln($e->getMessage());
+                                }
+
+                                $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","内容を確認させていただき","成功しました","完了いたしま");
+                                $thank_check=true;
+                                foreach($checkMessages as $message) {
+                                    if(strpos($crawler->html(),$message) !==false ) {
+                                        $thank_check=false;
+                                    }
+                                }
+                                $crawler = $client->submit($this->form,$data);
+                                $failedCheck=true;
+                                
+                                $check = false;
+                                if($thank_check) {
+                                    foreach($checkMessages as $message) {
+                                        if(strpos($crawler->html(),$message)!==false){
                                             $company->update([
-                                                'status'        => '送信失敗'
+                                                'status'        => '送信済み'
                                             ]);
+                                            $companyContact->update([
+                                                'is_delivered' => 2
+                                            ]);
+                                            $check =true;break;
+                                        }
+                                    }
+                                }
+                                if(!$check){
+                                    try{
+                                        $crawler->filter('form')->each(function($form) {
+                                            try {
+                                                if(strcasecmp($form->form()->getMethod(),'get')){
+                                                    if((strpos($form->form()->getName(),'login')!==false)||(strpos($form->form()->getName(),'search')!==false)){
+            
+                                                    }else {
+                                                        $this->checkform = $form->form();
+                                                        $form->filter('input')->each(function($input) {
+                                                            try {
+                                                                if((strpos($input->outerhtml(),'送信')!==false)||(strpos($input->outerhtml(),'back')!==false)||(strpos($input->outerhtml(),'修正')!==false)){
+    
+                                                                }else {
+                                                                    $this->checkform = $input->form();
+                                                                }
+                                                            }catch(\Throwable $e){
+                            
+                                                            }
+                                                        }); 
+                                                    }
+                                                }
+                                            }catch(\Throwable $e){
+            
+                                            }
+                                        });
+    
+                                        if(empty($this->checkform)){
+                                            $iframes = $crawler->filter('iframe')->extract(['src']);
+                                            foreach($iframes as $iframe) {
+                                                $clientFrame = new Client();
+                                                $crawlerFrame = $clientFrame->request('GET', $iframe);
+                                                $crawlerFrame->filter('form')->each(function($form) {
+                                                    try {
+                                                        if(strcasecmp($form->form()->getMethod(),'get')){
+                                                            if((strpos($form->form()->getName(),'login')!==false)||(strpos($form->form()->getName(),'search')!==false)){
+                    
+                                                            }else {
+                                                                $this->checkform = $form->form();
+                                                                $form->filter('input')->each(function($input) {
+                                                                    try {
+                                                                        if((strpos($input->outerhtml(),'送信')!==false)||(strpos($input->outerhtml(),'back')!==false)||(strpos($input->outerhtml(),'修正')!==false)){
+            
+                                                                        }else {
+                                                                            $this->checkform = $input->form();
+                                                                        }
+                                                                    }catch(\Throwable $e){
+                                    
+                                                                    }
+                                                                }); 
+                                                            }
+                                                        }
+                                                    }catch(\Throwable $e){
+                    
+                                                    }
+                                                });
+                                            }
+                                            
+                                        } 
+                                        if(empty($this->checkform)){
+                                            $company->update(['status' => '送信失敗']);
                                             $companyContact->update([
                                                 'is_delivered' => 1
                                             ]);
+                                            $output->writeln("failed");
+                                            continue;
                                         }
-                                    }else {
+                                        
+                                        if(isset($this->checkform) && !empty($this->checkform->all())){
+    
+                                            $this->checkform->setValues($data);
+                                            $crawler = $client->submit($this->checkform);
+                                           
+                                            // $company->update([
+                                            //     'status'        => '送信済み'
+                                            // ]);
+                                            // $companyContact->update([
+                                            //     'is_delivered' => 2
+                                            // ]);
+    
+                                            $check =false;
+                                            foreach($checkMessages as $message) {
+                                                if(strpos($crawler->html(),$message)!==false){
+                                                    $company->update([
+                                                        'status'        => '送信済み'
+                                                    ]);
+                                                    $companyContact->update([
+                                                        'is_delivered' => 2
+                                                    ]);
+                                                    $check =true;break;
+                                                }
+                                            }
+                                            if(!$check){
+                                                $company->update([
+                                                    'status'        => '送信失敗'
+                                                ]);
+                                                $companyContact->update([
+                                                    'is_delivered' => 1
+                                                ]);
+                                            }
+                                        }else {
+                                            $company->update([
+                                                'status'        => '送信済み'
+                                            ]);
+                                            $companyContact->update([
+                                                'is_delivered' => 2
+                                            ]);
+                                        }
+                                    }catch (\Throwable $e) {
+                                        $output->writeln($e->getMessage());
                                         $company->update([
                                             'status'        => '送信済み'
                                         ]);
@@ -1140,18 +1342,11 @@ class SendEmailsFourthCommand extends Command
                                             'is_delivered' => 2
                                         ]);
                                     }
-                                }catch (\Throwable $e) {
-                                    $output->writeln($e->getMessage());
-                                    $company->update([
-                                        'status'        => '送信済み'
-                                    ]);
-                                    $companyContact->update([
-                                        'is_delivered' => 2
-                                    ]);
                                 }
                             }
+                           
                         } catch (\Throwable $e) {
-                            $output->writeln($e->getMessage());
+                                $output->writeln($e->getMessage());
                             try{
                                 $company->update([
                                     'status'        => '送信失敗'
@@ -1164,6 +1359,7 @@ class SendEmailsFourthCommand extends Command
                             }
                         }
                         $output->writeln("end company");
+
                     }
                 }
             }
@@ -1174,5 +1370,10 @@ class SendEmailsFourthCommand extends Command
     public function getCharset(string $htmlContent) {
         preg_match('/\<meta[^\>]+charset *= *["\']?([a-zA-Z\-0-9_:.]+)/i', $htmlContent, $matches);
         return $matches;
+    }
+    protected function hasHeadlessDisabled()
+    {
+        return isset($_SERVER['DUSK_HEADLESS_DISABLED']) ||
+               isset($_ENV['DUSK_HEADLESS_DISABLED']);
     }
 }

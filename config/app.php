@@ -180,6 +180,7 @@ return [
 
         UniSharp\LaravelFilemanager\LaravelFilemanagerServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
+        \Laravel\Dusk\DuskServiceProvider::class,
 
     ],
 
