@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         // Cashier::ignoreMigrations();
+        $this->app->register(\Laravel\Dusk\DuskServiceProvider::class);
     }
 
     /**
@@ -34,7 +35,8 @@ class AppServiceProvider extends ServiceProvider
             $authUser = Auth::user();
             $view->with('authUser', $authUser);
         });
-	Schema::defaultStringLength(191);
+        
+        Schema::defaultStringLength(191);
         Paginator::defaultView('vendor.pagination.default');
     }
 }
