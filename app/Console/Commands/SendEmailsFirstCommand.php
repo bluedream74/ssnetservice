@@ -984,6 +984,8 @@ class SendEmailsFirstCommand extends Command
                                     return $items->merge([
                                         '--disable-gpu',
                                         '--headless',
+                                        '--no-sandbox',
+                                        '--disable-dev-shm-usage',
                                     ]);
                                 })->all());
                                 $driver   =    RemoteWebDriver::create(
