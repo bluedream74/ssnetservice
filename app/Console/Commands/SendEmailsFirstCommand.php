@@ -175,9 +175,9 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                             if(empty($this->form) || (!strcasecmp($this->form->getMethod(),'get'))){
-                                $company->update(['status' => '送信失敗']);
+                                $company->update(['status' => 'フォームなし']);
                                 $companyContact->update([
-                                    'is_delivered' => 1
+                                    'is_delivered' => 4
                                 ]);
                                 $output->writeln("failed");
                                 continue;
@@ -194,9 +194,9 @@ class SendEmailsFirstCommand extends Command
                             $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ");$continue_check=false;
                             foreach($nonStrings as $str) {
                                 if((strpos($footerhtml,$str)!==false)) {
-                                    $company->update(['status' => '送信失敗']);
+                                    $company->update(['status' => 'NGワードあり']);
                                     $companyContact->update([
-                                        'is_delivered' => 1
+                                        'is_delivered' => 5
                                     ]);
                                     $continue_check=true;
                                     break;
