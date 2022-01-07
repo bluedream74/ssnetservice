@@ -124,7 +124,7 @@
             <div class="row mb-3">
                 <label class="col-sm-4">ステータス</label>
                 <div class="col-sm-4">
-                    {{ Form::select('status', ['2' => '配信済み', '1' => '送信失敗'], Request::get('status'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'status']) }}
+                    {{ Form::select('status', ['1' => '送信失敗','2' => '配信済み','3' => '送信予定','4' => 'フォームなし','5' => 'NGワードあり' ], Request::get('status'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'status']) }}
                 </div>
                 <div class="col-sm-4">
                     {{ Form::submit('検索', ['class' => 'btn btn-sm btn-primary']) }}
