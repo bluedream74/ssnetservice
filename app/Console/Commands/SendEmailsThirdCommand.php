@@ -1297,7 +1297,7 @@ class SendEmailsThirdCommand extends Command
                                         
                                         if(isset($this->checkform) && !empty($this->checkform->all())){
     
-                                            $this->checkform->setValues($data);
+                                            // $this->checkform->setValues($data);
                                             $crawler = $client->submit($this->checkform);
                                            
                                             // $company->update([
