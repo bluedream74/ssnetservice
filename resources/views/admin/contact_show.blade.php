@@ -156,14 +156,27 @@
                             @endforeach
                         </td>
                         <td style="max-width: 400px; width: 200px;">
-                            @if (($companyContact->is_delivered === 1))
-                                <span class="badge badge-danger">送信失敗</span>
-                            @elseif (($companyContact->is_delivered === 2))
-                                <span class="badge badge-success">送信済み</span>
-                            @else
-                                <span class="badge badge-warning">送信予定</span>
-                            @endif
-                        </td>
+                            @switch($companyContact->is_delivered)
+                                @case(1)
+                                    <span class="badge badge-danger">送信失敗</span>
+                                    @break
+                                @case(2)
+                                    <span class="badge badge-success">送信済み</span>
+                                    @break
+                                @case(3)
+                                    <span class="badge badge-success">送信予定</span>
+                                    @break
+                                @case(4)
+                                    <span class="badge badge-warning">フォームなし</span>
+                                    @break
+                                @case(5)
+                                    <span class="badge badge-warning">NGワードあり</span>
+                                    @break
+                                @default
+                                    <span class="badge badge-success">送信予定</span>
+                                    @break
+                            @endswitch
+                           
                     </tr>
                 @endforeach
                 </tbody>
