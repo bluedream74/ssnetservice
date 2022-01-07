@@ -1111,6 +1111,13 @@ class SendEmailsFirstCommand extends Command
                                             $companyContact->update([
                                                 'is_delivered' => 2
                                             ]);
+                                        }else {
+                                            $company->update([
+                                                'status'        => '送信失敗'
+                                            ]);
+                                            $companyContact->update([
+                                                'is_delivered' => 1
+                                            ]);
                                         }
                                         $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
                                     }
