@@ -550,7 +550,6 @@ class DashboardController extends BaseController
         if (!empty($value = Arr::get(request()->all(), 'status'))) {
             $query->where('is_delivered',$value);
         }
-
         
         $companies = $query->paginate(20);
 
