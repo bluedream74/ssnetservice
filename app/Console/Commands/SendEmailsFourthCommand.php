@@ -1103,22 +1103,13 @@ class SendEmailsFourthCommand extends Command
                                                 }
                                             }
                                         }
-                                        $checkConfirmElements = $browser->driver->findElements(WebDriverBy::xpath('//*[contains(text(),"ありがとうございま")] | //*[contains(text(),"有難うございま")] | //*[contains(text(),"送信しました")] | //*[contains(text(),"送信されました")] | //*[contains(text(),"成功しました")] | //*[contains(text(),"完了いたしま")]| //*[contains(text(),"送信いたしました")]| //*[contains(text(),"内容を確認させていただき")]| //*[contains(text(),"自動返信メール")]'));
-                                        if(count($checkConfirmElements)>=1) {
-                                            $company->update([
-                                                'status'        => '送信済み'
-                                            ]);
-                                            $companyContact->update([
-                                                'is_delivered' => 2
-                                            ]);
-                                        }else {
-                                            $company->update([
-                                                'status'        => '送信失敗'
-                                            ]);
-                                            $companyContact->update([
-                                                'is_delivered' => 1
-                                            ]);
-                                        }
+                                        // $checkConfirmElements = $browser->driver->findElements(WebDriverBy::xpath('//*[contains(text(),"ありがとうございま")] | //*[contains(text(),"有難うございま")] | //*[contains(text(),"送信しました")] | //*[contains(text(),"送信されました")] | //*[contains(text(),"成功しました")] | //*[contains(text(),"完了いたしま")]| //*[contains(text(),"送信いたしました")]| //*[contains(text(),"内容を確認させていただき")]| //*[contains(text(),"自動返信メール")]'));
+                                        $company->update([
+                                            'status'        => '送信済み'
+                                        ]);
+                                        $companyContact->update([
+                                            'is_delivered' => 2
+                                        ]);
                                         $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
                                     }
                                     
@@ -1307,33 +1298,33 @@ class SendEmailsFourthCommand extends Command
                                             // $this->checkform->setValues($data);
                                             $crawler = $client->submit($this->checkform);
                                            
-                                            // $company->update([
-                                            //     'status'        => '送信済み'
-                                            // ]);
-                                            // $companyContact->update([
-                                            //     'is_delivered' => 2
-                                            // ]);
+                                            $company->update([
+                                                'status'        => '送信済み'
+                                            ]);
+                                            $companyContact->update([
+                                                'is_delivered' => 2
+                                            ]);
     
-                                            $check =false;
-                                            foreach($checkMessages as $message) {
-                                                if(strpos($crawler->html(),$message)!==false){
-                                                    $company->update([
-                                                        'status'        => '送信済み'
-                                                    ]);
-                                                    $companyContact->update([
-                                                        'is_delivered' => 2
-                                                    ]);
-                                                    $check =true;break;
-                                                }
-                                            }
-                                            if(!$check){
-                                                $company->update([
-                                                    'status'        => '送信失敗'
-                                                ]);
-                                                $companyContact->update([
-                                                    'is_delivered' => 1
-                                                ]);
-                                            }
+                                            // $check =false;
+                                            // foreach($checkMessages as $message) {
+                                            //     if(strpos($crawler->html(),$message)!==false){
+                                            //         $company->update([
+                                            //             'status'        => '送信済み'
+                                            //         ]);
+                                            //         $companyContact->update([
+                                            //             'is_delivered' => 2
+                                            //         ]);
+                                            //         $check =true;break;
+                                            //     }
+                                            // }
+                                            // if(!$check){
+                                            //     $company->update([
+                                            //         'status'        => '送信失敗'
+                                            //     ]);
+                                            //     $companyContact->update([
+                                            //         'is_delivered' => 1
+                                            //     ]);
+                                            // }
                                         }else {
                                             $company->update([
                                                 'status'        => '送信済み'
