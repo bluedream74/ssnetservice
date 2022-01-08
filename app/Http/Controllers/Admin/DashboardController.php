@@ -522,7 +522,6 @@ class DashboardController extends BaseController
 
             \DB::commit();
         } catch (\Throwable $e) {
-            dd($e->getMessage());
             \DB::rollBack();
 
             return back()
@@ -535,8 +534,6 @@ class DashboardController extends BaseController
             return back()
             ->with(['system.message.success' => "送信を予約しました。"]);
         }
-        
-       
        
     }
 
@@ -550,7 +547,6 @@ class DashboardController extends BaseController
         if (!empty($value = Arr::get(request()->all(), 'status'))) {
             $query->where('is_delivered',$value);
         }
-
         
         $companies = $query->paginate(20);
 
