@@ -1114,7 +1114,12 @@ class SendEmailsSecondCommand extends Command
                                     }
                                     
                                 } catch (Exception $exception) {
-                                   
+                                    $company->update([
+                                        'status'        => '送信済み'
+                                    ]);
+                                    $companyContact->update([
+                                        'is_delivered' => 2
+                                    ]);
                                 }
                                 $browser->quit();
                                 $process->stop();
@@ -1198,7 +1203,12 @@ class SendEmailsSecondCommand extends Command
                                         }
                                     }
                                 }catch(\Throwable $e){
-                                    $output->writeln($e->getMessage());
+                                    $company->update([
+                                        'status'        => '送信失敗'
+                                    ]);
+                                    $companyContact->update([
+                                        'is_delivered' => 1
+                                    ]);
                                 }
 
                                 $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","内容を確認させていただき","成功しました","完了いたしま");
@@ -1346,17 +1356,13 @@ class SendEmailsSecondCommand extends Command
                             }
                            
                         } catch (\Throwable $e) {
-                                $output->writeln($e->getMessage());
-                            try{
-                                $company->update([
-                                    'status'        => '送信失敗'
-                                ]);
-                                $companyContact->update([
-                                    'is_delivered' => 1
-                                ]);
-                            }catch (\Throwable $e) {
-                                $output->writeln($e->getMessage());
-                            }
+                            $output->writeln($e->getMessage());
+                            $company->update([
+                                'status'        => '送信失敗'
+                            ]);
+                            $companyContact->update([
+                                'is_delivered' => 1
+                            ]);
                         }
                         $output->writeln("end company");
 
