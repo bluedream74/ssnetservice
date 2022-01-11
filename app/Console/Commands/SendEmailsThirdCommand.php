@@ -968,7 +968,11 @@ class SendEmailsThirdCommand extends Command
                             }
                             
                             $javascriptCheck=false;
-                            if((strpos($this->html,'onclick')!==false)||(strpos($this->html,'onClick')!==false)||(strpos($this->html,'recaptcha')!==false)||($this->form->getUri()==$company->contact_form_url)){
+                            if((strpos($this->html,'onclick')!==false)||(strpos($this->html,'recaptcha')!==false)||($this->form->getUri()==$company->contact_form_url)){
+                                $javascriptCheck=true;
+                            }else if((strpos($this->html,'type="submit"')!==false)){
+                                $javascriptCheck=false;
+                            }else{
                                 $javascriptCheck=true;
                             }
                             if($javascriptCheck) {
@@ -998,7 +1002,6 @@ class SendEmailsThirdCommand extends Command
                                 $browser = new Browser($driver, new ElementResolver($driver, ''));
                                 $names = collect($data);
                                 $browser->visit($company->contact_form_url);
-                                $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
                                 foreach($names as $key => $name){
                                     foreach($this->form->all() as $key1=>$value1) {
                                         if((strpos($key,'wpcf7')!==false)){
@@ -1061,7 +1064,7 @@ class SendEmailsThirdCommand extends Command
                                         }
                                     }
                                 }
-                                $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
+                                // $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
                                 try {
                                     $checkConfirmElements = $browser->driver->findElements(WebDriverBy::xpath('//*[contains(text(),"ありがとうございま")] | //*[contains(text(),"有難うございま")] | //*[contains(text(),"送信しました")] | //*[contains(text(),"送信されました")] | //*[contains(text(),"成功しました")] | //*[contains(text(),"完了いたしま")]| //*[contains(text(),"送信いたしました")]| //*[contains(text(),"内容を確認させていただき")]| //*[contains(text(),"自動返信メール")]'));
                                     if(count($checkConfirmElements)>=1) {
@@ -1110,7 +1113,7 @@ class SendEmailsThirdCommand extends Command
                                         $companyContact->update([
                                             'is_delivered' => 2
                                         ]);
-                                        $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
+                                        // $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
                                     }
                                     
                                 } catch (Exception $exception) {
@@ -1122,6 +1125,7 @@ class SendEmailsThirdCommand extends Command
                                     ]);
                                 }
                                 $browser->quit();
+                                $browser->driver->quit();
                                 $process->stop();
                             }else {
                                 
