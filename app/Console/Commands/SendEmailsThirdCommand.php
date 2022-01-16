@@ -293,6 +293,9 @@ class SendEmailsThirdCommand extends Command
                                         if(strpos($key,$text)!==false){
                                             foreach($furiTexts as $furi) {
                                                 if(strpos($key, $furi)!==false){
+                                                    if(isset($data[$key]) && !empty($data[$key])){
+                                                        continue;
+                                                    }
                                                     $data[$key] = 'ナシ';$furi_check=false;break;
                                                 }
                                             }
@@ -306,6 +309,9 @@ class SendEmailsThirdCommand extends Command
                                     foreach($addressTexts as $text) {
                                         if(strpos($key,$text)!==false){
                                             if(!$addrCheck){
+                                                if(isset($data[$key]) && !empty($data[$key])){
+                                                    continue;
+                                                }
                                                 $data[$key] = $contact->address;$addrCheck=true;continue;
                                             }
                                         }
@@ -314,6 +320,9 @@ class SendEmailsThirdCommand extends Command
                                     $addressTexts = array('mail_add');
                                     foreach($addressTexts as $text) {
                                         if(strpos($key,$text)!==false){
+                                            if(isset($data[$key]) && !empty($data[$key])){
+                                                continue;
+                                            }
                                             $data[$key] = $contact->email;continue;
                                         }
                                     }
@@ -321,6 +330,9 @@ class SendEmailsThirdCommand extends Command
                                     $titleTexts = array('title','subject','件名');
                                     foreach($titleTexts as $text) {
                                         if(strpos($key,$text)!==false){
+                                            if(isset($data[$key]) && !empty($data[$key])){
+                                                continue;
+                                            }
                                             $data[$key] = $contact->title;break;
                                         }
                                     }
@@ -328,6 +340,9 @@ class SendEmailsThirdCommand extends Command
                                     $urlTexts = array('URL','url','HP');
                                     foreach($urlTexts as $text) {
                                         if(strpos($key,$text)!==false){
+                                            if(isset($data[$key]) && !empty($data[$key])){
+                                                continue;
+                                            }
                                             $data[$key] = $contact->homepageUrl;break;
                                         }
                                     }
@@ -335,6 +350,9 @@ class SendEmailsThirdCommand extends Command
                                     $urlTexts = array('丁目番地','建物名');
                                     foreach($urlTexts as $text) {
                                         if(strpos($key,$text)!==false){
+                                            if(isset($data[$key]) && !empty($data[$key])){
+                                                continue;
+                                            }
                                             $data[$key] = '0';break;
                                         }
                                     }
@@ -342,6 +360,9 @@ class SendEmailsThirdCommand extends Command
                                     $urlTexts = array('郵便番号');
                                     foreach($urlTexts as $text) {
                                         if(strpos($key,$text)!==false){
+                                            if(isset($data[$key]) && !empty($data[$key])){
+                                                continue;
+                                            }
                                             $data[$key] = $contact->postalCode1.$contact->postalCode2;break;
                                         }
                                     }
@@ -349,6 +370,9 @@ class SendEmailsThirdCommand extends Command
                                     $urlTexts = array('市区町村');
                                     foreach($urlTexts as $text) {
                                         if(strpos($key,$text)!==false){
+                                            if(isset($data[$key]) && !empty($data[$key])){
+                                                continue;
+                                            }
                                             $data[$key] = mb_substr($contact->address,0,3);break;
                                         }
                                     }
@@ -483,6 +507,9 @@ class SendEmailsThirdCommand extends Command
                                 $n=0;
                                 foreach($this->form->getValues() as $key => $value) {
                                     if(strpos($key,'kana')!==false || strpos($key,'フリガナ')!==false || strpos($key,'Kana')!==false|| strpos($key,'namek')!==false || strpos($key,'f-')!==false ||  strpos($key,'ふり')!==false|| strpos($key,'kn')!==false ){
+                                        if(isset($data[$key]) && !empty($data[$key])){
+                                            continue;
+                                        }
                                         if($n==0) {
                                             $data[$key] = $contact->fu_surname;$n++;
                                         }else if($n==1) {
@@ -498,6 +525,9 @@ class SendEmailsThirdCommand extends Command
                                     if((strpos($key,'shop')!==false || strpos($key,'company')!==false || strpos($key,'cp')!==false)){
 
                                     }else if((strpos($key,'nam')!==false || strpos($key,'名前')!==false || strpos($key,'氏名')!==false)){
+                                        if(isset($data[$key]) && !empty($data[$key])){
+                                            continue;
+                                        }
                                         if($n==0) {
                                             $data[$key] = $contact->surname;$n++;
                                         }else if($n==1) {
@@ -509,6 +539,9 @@ class SendEmailsThirdCommand extends Command
                                 if((strpos($key,'shop')!==false || strpos($key,'company')!==false || strpos($key,'cp')!==false)){
 
                                 }else if((strpos($key,'nam')!==false || strpos($key,'名前')!==false || strpos($key,'氏名')!==false)){
+                                    if(isset($data[$key]) && !empty($data[$key])){
+                                        continue;
+                                    }
                                     $data[$key] = $contact->surname." ".$contact->lastname;
                                 }
                             }
@@ -517,6 +550,9 @@ class SendEmailsThirdCommand extends Command
                                 $n=0;
                                 foreach($this->form->getValues() as $key => $value) {
                                     if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false || strpos($key,'〒')!==false || strpos($key,'pcode')!==false){
+                                        if(isset($data[$key]) && !empty($data[$key])){
+                                            continue;
+                                        }
                                         if($n==0) {
                                             $data[$key] = $contact->postalCode1;$n++;
                                         }else if($n==1) {
@@ -527,6 +563,9 @@ class SendEmailsThirdCommand extends Command
                             }else if($postal_count==1){
                                 foreach($this->form->getValues() as $key => $value) {
                                     if(strpos($key,'post')!==false || strpos($key,'郵便番号')!==false || strpos($key,'yubin')!==false || strpos($key,'zip')!==false || strpos($key,'〒')!==false || strpos($key,'pcode')!==false){
+                                        if(isset($data[$key]) && !empty($data[$key])){
+                                            continue;
+                                        }
                                         $data[$key] = $contact->postalCode1.$contact->postalCode2;
                                     }
                                 }
@@ -536,6 +575,9 @@ class SendEmailsThirdCommand extends Command
                                 $n=0;
                                 foreach($this->form->getValues() as $key => $value) {
                                     if(strpos($key,'tel')!==false || strpos($key,'TEL')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
+                                        if(isset($data[$key]) && !empty($data[$key])){
+                                            continue;
+                                        }
                                         if($n==0) {
                                             $data[$key] = $contact->phoneNumber1;$n++;
                                         }else if($n==1) {
@@ -548,6 +590,9 @@ class SendEmailsThirdCommand extends Command
                             }else if($phone_count==1) {
                                 foreach($this->form->getValues() as $key => $value) {
                                     if(strpos($key,'tel')!==false || strpos($key,'TEL')!==false || strpos($key,'phone')!==false || strpos($key,'電話番号')!==false){
+                                        if(isset($data[$key]) && !empty($data[$key])){
+                                            continue;
+                                        }
                                         $data[$key] = $contact->phoneNumber1.$contact->phoneNumber2.$contact->phoneNumber3;
                                     }
                                 }
@@ -569,6 +614,9 @@ class SendEmailsThirdCommand extends Command
                             }else if($fax_count==1){
                                 foreach($this->form->getValues() as $key => $value) {
                                     if(strpos($key,'fax')!==false || strpos($key,'FAX')!==false ){
+                                        if(isset($data[$key]) && !empty($data[$key])){
+                                            continue;
+                                        }
                                         $data[$key] = $contact->phoneNumber1.$contact->phoneNumber2.$contact->phoneNumber3;
                                     }
                                 }
