@@ -523,7 +523,7 @@ class DashboardController extends BaseController
             \DB::commit();
         } catch (\Throwable $e) {
             \DB::rollBack();
-
+dd($e->getMessage());
             return back()
                 ->with(['system.message.danger' => "送信できませんでした。"]);
         }
