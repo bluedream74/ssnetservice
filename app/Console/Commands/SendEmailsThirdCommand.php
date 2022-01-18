@@ -1026,6 +1026,7 @@ class SendEmailsThirdCommand extends Command
                                             case 'select':
                                                 $size = sizeof($this->form[$key]->getOptions());
                                                 $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
+                                                break;
                                             case 'default':
                                                 $data[$key] = "きょうわ";
                                                 break;
