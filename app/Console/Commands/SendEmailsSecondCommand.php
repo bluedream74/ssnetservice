@@ -1016,12 +1016,19 @@ class SendEmailsSecondCommand extends Command
                                 }else {
                                     try{
                                         $type = $val->getType();
-                                        if($type == "number"){
-                                            $data[$key] = 1;
-                                        }else if($type == "date"){
-                                            $data[$key] = date("Y-m-d", strtotime("+1 day"));
-                                        }else{
-                                            $data[$key] = "きょうわ";
+                                        switch($type){
+                                            case 'number':
+                                                $data[$key] = 1;
+                                                break;
+                                            case 'date':
+                                                $data[$key] = date("Y-m-d", strtotime("+1 day"));
+                                                break;
+                                            case 'select':
+                                                $size = sizeof($this->form[$key]->getOptions());
+                                                $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
+                                            case 'default':
+                                                $data[$key] = "きょうわ";
+                                                break;
                                         }
                                     }catch(\Throwable $e){
                                         $output->writeln($e->getMessage());
