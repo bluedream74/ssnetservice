@@ -2,15 +2,14 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Http\Request;
 use Illuminate\Console\Command;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
-use Laravel\Dusk\Browser;
-use Laravel\Dusk\Chrome\ChromeProcess;
-use Laravel\Dusk\ElementResolver;
-use Illuminate\Http\Request;
+use Facebook\WebDriver\WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverBy;
+use Illuminate\Support\Facades\Cookie;
 use Exception;
 
 class SendEmails extends Command
@@ -47,41 +46,72 @@ class SendEmails extends Command
      */
     public function handle()
     {
-        $process = (new ChromeProcess)->toProcess();
-        if ($process->isStarted()) {
-            $process->stop();
-        }
-        $process->start();
+        $options = new ChromeOptions();
+        $options->addArguments(["--headless","--disable-gpu", "--no-sandbox"]);
 
-        $options = (new ChromeOptions)->addArguments(collect([
-            '--window-size=1920,1080',
-        ])->unless($this->hasHeadlessDisabled(), function ($items) {
-            return $items->merge([
-                '--disable-gpu',
-                '--headless',
-                '--no-sandbox',
-                '--disable-dev-shm-usage',
-            ]);
-        })->all());
-        $driver   =    RemoteWebDriver::create(
-            $_ENV['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',
-            DesiredCapabilities::chrome()->setCapability(
-                ChromeOptions::CAPABILITY, $options
-            )
+        $caps = DesiredCapabilities::chrome();
+	      $caps->setCapability('acceptSslCerts', false);
+        $caps->setCapability(ChromeOptions::CAPABILITY, $options);
+        $caps->setPlatform("Linux");
+        $serverUrl = 'http://localhost:4444';
+		
+        $driver = RemoteWebDriver::create($serverUrl, $caps,5000);
+	      
+        $driver->get('https://en.wikipedia.org/wiki/Selenium_(software)');
+
+        // write 'PHP' in the search box
+        $driver->findElement(WebDriverBy::id('searchInput')) // find search input element
+            ->sendKeys('PHP') // fill the search box
+            ->submit(); // submit the whole form
+
+        // wait until 'PHP' is shown in the page heading element
+        $driver->wait()->until(
+            WebDriverExpectedCondition::elementTextContains(WebDriverBy::id('firstHeading'), 'PHP')
         );
-        $driver->manage()->window()->maximize();
-        $browser = new Browser($driver, new ElementResolver($driver, ''));
-        $browser->visit('https://pancakeswap.finance/swap');
+
+        // print title of the current page to output
+        echo "The title is '" . $driver->getTitle() . "'\n";
+
+        // print URL of current page to output
+        echo "The current URL is '" . $driver->getCurrentURL() . "'\n";
+
+        // find element of 'History' item in menu
+        $historyButton = $driver->findElement(
+            WebDriverBy::cssSelector('#ca-history a')
+        );
+
+        // read text of the element and print it to output
+        echo "About to click to button with text: '" . $historyButton->getText() . "'\n";
+
+        // click the element to navigate to revision history page
+        $historyButton->click();
+
+        // wait until the target page is loaded
+        $driver->wait()->until(
+            WebDriverExpectedCondition::titleContains('Revision history')
+        );
+
+        // print the title of the current page
+        echo "The title is '" . $driver->getTitle() . "'\n";
+
+        // print the URI of the current page
+
+        echo "The current URI is '" . $driver->getCurrentURL() . "'\n";
+
+        // delete all cookies
+        $cookies = $driver->manage()->getCookies();
+        print_r($cookies);
+        $driver->manage()->deleteAllCookies();
+
+
+
+        // dump current cookies to output
+
+
+
+        $driver->quit();
         
-        $browser->driver->takeScreenshot(base_path('logged.png'));
-        $browser->quit();
-        $browser->driver->quit();
-        $process->stop();
         return 0;
     }
-    protected function hasHeadlessDisabled()
-    {
-        return isset($_SERVER['DUSK_HEADLESS_DISABLED']) ||
-               isset($_ENV['DUSK_HEADLESS_DISABLED']);
-    }
+   
 }
