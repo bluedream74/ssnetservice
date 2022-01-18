@@ -13,11 +13,9 @@ use Illuminate\Support\Carbon;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
-use Laravel\Dusk\Browser;
-use Laravel\Dusk\Chrome\ChromeProcess;
-use Laravel\Dusk\ElementResolver;
-use Illuminate\Http\Request;
+use Facebook\WebDriver\WebDriverExpectedCondition;
 use Facebook\WebDriver\WebDriverBy;
+use Facebook\WebDriver\WebDriverDimension;
 use Exception;
 
 
@@ -108,7 +106,6 @@ class SendEmailsFirstCommand extends Command
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
                             $output->writeln("company url : ".$company->contact_form_url);
-                            
                             $crawler = $client->request('GET', $company->contact_form_url);
 
                             $charset = $this->getCharset($crawler->html());
@@ -118,26 +115,37 @@ class SendEmailsFirstCommand extends Command
                                 $charset = 'UTF-8';
                             }
                             
+                            if(count($crawler->filter('textarea'))==0) {
+                                $company->update(['status' => 'フォームなし']);
+                                $companyContact->update([
+                                    'is_delivered' => 4
+                                ]);
+                                $output->writeln("フォームなし");
+                                continue;
+                            }
                             $this->html=$crawler->html();
                             $this->html_text=$crawler->text();
                             
                             $crawler->filter('form')->each(function($form) {
                                 try {
-                                    if(strcasecmp($form->form()->getMethod(),'get')){
-                                        if((strpos($form->form()->getName(),'login')!==false)||(strpos($form->form()->getName(),'search')!==false)){
-
-                                        }else {
-                                            $check=true;
-                                            foreach($form->form()->all() as $key => $val) {
-                                                if((strpos($key,'login')!==false)||(strpos($key,'register')!==false)||(strpos($key,'password')!==false)){
-                                                    $check=false;
-                                                }
-                                            }
-                                            if($check) {
-                                                $this->form = $form->form();
-                                                $this->html = $form->outerhtml();
-                                                $this->html_text = $form->text();
-                                            }
+                                    $check=false;
+                                    foreach($form->form()->all() as $val) {
+                                        $type = $val->getType();
+                                        if($val->isReadOnly()){
+                                            continue;
+                                        }
+                                        switch($type) {
+                                            case 'textarea': 
+                                                $check=true;
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                        if($check) {
+                                            $this->form = $form->form();
+                                            $this->html = $form->outerhtml();
+                                            $this->html_text = $form->text();
+                                            break;
                                         }
                                     }
                                 }catch(\Throwable $e){
@@ -151,21 +159,24 @@ class SendEmailsFirstCommand extends Command
                                     $crawlerFrame = $clientFrame->request('GET', $iframe);
                                     $crawlerFrame->filter('form')->each(function($form) {
                                         try {
-                                            if(strcasecmp($form->form()->getMethod(),'get')){
-                                                if((strpos($form->form()->getName(),'login')!==false)||(strpos($form->form()->getName(),'search')!==false)){
-        
-                                                }else {
-                                                    $check=true;
-                                                    foreach($form->form()->all() as $key => $val) {
-                                                        if((strpos($key,'login')!==false)||(strpos($key,'register')!==false)||(strpos($key,'password')!==false)){
-                                                            $check=false;
-                                                        }
-                                                    }
-                                                    if($check) {
-                                                        $this->form = $form->form();
-                                                        $this->html = $form->outerhtml();
-                                                        $this->html_text = $form->text();
-                                                    }
+                                            $check=false;
+                                            foreach($form->form()->all() as $val) {
+                                                $type = $val->getType();
+                                                if($val->isReadOnly()){
+                                                    continue;
+                                                }
+                                                switch($type) {
+                                                    case 'textarea': 
+                                                        $check=true;
+                                                        break;
+                                                    default:
+                                                        break;
+                                                }
+                                                if($check) {
+                                                    $this->form = $form->form();
+                                                    $this->html = $form->outerhtml();
+                                                    $this->html_text = $form->text();
+                                                    break;
                                                 }
                                             }
                                         }catch(\Throwable $e){
@@ -175,11 +186,13 @@ class SendEmailsFirstCommand extends Command
                                 }
                             }
                             if(empty($this->form) || (!strcasecmp($this->form->getMethod(),'get'))){
-                                $company->update(['status' => 'フォームなし']);
-                                $companyContact->update([
-                                    'is_delivered' => 4
+                                $company->update([
+                                    'status'        => '送信失敗'
                                 ]);
-                                $output->writeln("failed");
+                                $companyContact->update([
+                                    'is_delivered' => 1
+                                ]);
+                                $output->writeln("フォームなし");
                                 continue;
                             } 
                             $output->writeln("continue");
@@ -189,7 +202,7 @@ class SendEmailsFirstCommand extends Command
                             try {
                                 $footerhtml=$crawler->filter('#footer')->html();
                             }catch(\Throwable $e){
-
+                                $output->writeln("footerなし");
                             }
                             $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ");$continue_check=false;
                             foreach($nonStrings as $str) {
@@ -385,6 +398,7 @@ class SendEmailsFirstCommand extends Command
                                 $companyContact->update([
                                     'is_delivered' => 1
                                 ]);
+                                $output->writeln("フォームなし");
                                 continue;
                             }
                             
@@ -1001,20 +1015,28 @@ class SendEmailsFirstCommand extends Command
                                 }else {
                                     try{
                                         $type = $val->getType();
-                                        if($type == "number"){
-                                            $data[$key] = 1;
-                                        }else if($type == "date"){
-                                            $data[$key] = date("Y-m-d", strtotime("+1 day"));
-                                        }else{
-                                            $data[$key] = "きょうわ";
+                                        switch($type){
+                                            case 'number':
+                                                $data[$key] = 1;
+                                                break;
+                                            case 'date':
+                                                $data[$key] = date("Y-m-d", strtotime("+1 day"));
+                                                break;
+                                            case 'select':
+                                                $size = sizeof($this->form[$key]->getOptions());
+                                                $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
+                                                break;
+                                            case 'default':
+                                                $data[$key] = "きょうわ";
+                                                break;
                                         }
                                     }catch(\Throwable $e){
-
+                                        $output->writeln($e->getMessage());
                                     }
                                     
                                 }
                             }
-                            
+                                
                             $javascriptCheck=false;
                             if((strpos($this->html,'onclick')!==false)||(strpos($this->html,'recaptcha')!==false)||($this->form->getUri()==$company->contact_form_url)){
                                 $javascriptCheck=true;
@@ -1024,115 +1046,71 @@ class SendEmailsFirstCommand extends Command
                                 $javascriptCheck=true;
                             }
                             if($javascriptCheck) {
-                                $process = (new ChromeProcess)->toProcess();
-                                if ($process->isStarted()) {
-                                    $process->stop();
-                                }
-                                $process->start();
-                        
-                                $options = (new ChromeOptions)->addArguments(collect([
-                                    '--window-size=1920,1080',
-                                ])->unless($this->hasHeadlessDisabled(), function ($items) {
-                                    return $items->merge([
-                                        '--disable-gpu',
-                                        '--headless',
-                                        '--no-sandbox',
-                                        '--disable-dev-shm-usage',
-                                    ]);
-                                })->all());
-                                $driver   =    RemoteWebDriver::create(
-                                    $_ENV['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',
-                                    DesiredCapabilities::chrome()->setCapability(
-                                        ChromeOptions::CAPABILITY, $options
-                                    )
-                                );
-                                $driver->manage()->window()->maximize();
-                                $browser = new Browser($driver, new ElementResolver($driver, ''));
-                                $names = collect($data);
-                                $browser->visit($company->contact_form_url);
-                                foreach($names as $key => $name){
-                                    foreach($this->form->all() as $key1=>$value1) {
-                                        if((strpos($key,'wpcf7')!==false)){
-                                            continue;
-                                        }
-                                        if($key==$key1) {
-                                            try {
-                                                switch($value1->getType()){
-                                                    case 'checkbox':
-                                                        $browser->click('input[type="checkbox"][name="'.$key.'"]');
-                                                        // $browser->check($key);
-                                                        break;
-                                                    case 'select':
-                                                        $browser->select($key,$name);
-                                                        break;
-                                                    case 'radio':
-                                                        // $browser->radio($key,$name);
-                                                        $browser->click('input[type="radio"][name="'.$key.'"]');
-                                                        break;
-                                                    case 'hidden':
-                                                        break;
-                                                    default:
-                                                        $browser->type($key, $name);
-                                                        break;
-                                                }
-                                            }catch (Exception $exception) {
-
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-                                $confirmElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"確認")] | //input[contains(@value,"確認") and @type!="hidden"] | //a[contains(text(),"確認")]'));
-                                $sendElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"送信")] | //input[contains(@value,"送信") and @type!="hidden"] | //a[contains(text(),"送信")]'));
-                                $nextElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"次へ")] | //input[contains(@value,"次へ") and @type!="hidden"] | //a[contains(text(),"次へ")]'));
-                                if(count($confirmElements)>=1) {
-                                    foreach($confirmElements as $confirmElement) {
-                                        try {
-                                            $confirmElement->click();
-                                        }catch (Exception $exception) {
-
-                                        }
-                                    }
-                                }
-                                if(count($sendElements)>=1) {
-                                    foreach($sendElements as $sendElement){
-                                        try {
-                                            $sendElement->click();
-                                        }catch (Exception $exception) {
-                                            
-                                        }
-                                    }
-                                }
-                                if(count($nextElements)>=1) {
-                                    foreach($nextElements as $nextElement){
-                                        try {
-                                            $nextElement->click();
-                                        }catch (Exception $exception) {
-                                            
-                                        }
-                                    }
-                                }
-                                // $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
+                                
                                 try {
-                                    $checkConfirmElements = $browser->driver->findElements(WebDriverBy::xpath('//*[contains(text(),"ありがとうございま")] | //*[contains(text(),"有難うございま")] | //*[contains(text(),"送信しました")] | //*[contains(text(),"送信されました")] | //*[contains(text(),"成功しました")] | //*[contains(text(),"完了いたしま")]| //*[contains(text(),"送信いたしました")]| //*[contains(text(),"内容を確認させていただき")]| //*[contains(text(),"自動返信メール")]'));
-                                    if(count($checkConfirmElements)>=1) {
-                                        $company->update([
-                                            'status'        => '送信済み'
-                                        ]);
-                                        $companyContact->update([
-                                            'is_delivered' => 2
-                                        ]);
-                                    }else {
-                                        $confirmElements="";$sendElements="";$nextElements="";
-                                        $confirmElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"確認")] | //input[contains(@value,"確認") and @type!="hidden"] | //a[contains(text(),"確認")]'));
-                                        $sendElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"送信")] | //input[contains(@value,"送信") and @type!="hidden"] | //a[contains(text(),"送信")]'));
-                                        $nextElements = $browser->driver->findElements(WebDriverBy::xpath('//button[contains(text(),"次へ")] | //input[contains(@value,"次へ") and @type!="hidden"] | //a[contains(text(),"次へ")]'));
+                                    try {
+                                        
+                                        $options = new ChromeOptions();
+                                        $options->addArguments(["--headless","--disable-gpu", "--no-sandbox"]);
+    
+                                        $caps = DesiredCapabilities::chrome();
+                                        $caps->setCapability('acceptSslCerts', false);
+                                        $caps->setCapability(ChromeOptions::CAPABILITY, $options);
+                                        // $caps->setPlatform("Linux");
+                                        $serverUrl = 'http://localhost:4444';
+    
+                                        $driver = RemoteWebDriver::create($serverUrl, $caps,5000);
+    
+                                        $driver->get($company->contact_form_url);
+    
+                                        $driver->manage()->window()->setSize(new WebDriverDimension(1225, 1996));
+                                        $names = collect($data);
+    
+                                        foreach($names as $key => $name){
+                                            foreach($this->form->all() as $key1=>$value1) {
+                                                if((strpos($key,'wpcf7')!==false)){
+                                                    continue;
+                                                }
+                                                if($key==$key1) {
+                                                    try {
+                                                        switch($value1->getType()){
+                                                            case 'checkbox':
+                                                                $driver->findElement(WebDriverBy::cssSelector('input[type="checkbox"][name="'.$key.'"]'))->click();
+                                                                break;
+                                                            case 'select':
+                                                                $driver->findElement(WebDriverBy::cssSelector('select[name="'.$key.'"] option[value="'.$name.'"]'))->click();
+                                                                break;
+                                                            case 'radio':
+                                                                $driver->findElement(WebDriverBy::cssSelector('input[type="radio"][name="'.$key.'"]'))->click();
+                                                                break;
+                                                            case 'hidden':
+                                                                break;
+                                                            case 'textarea':
+                                                                $driver->findElement(WebDriverBy::cssSelector('textarea[name="'.$key.'"]'))->sendKeys($name);
+                                                                break;
+                                                            default:
+                                                                $driver->findElement(WebDriverBy::cssSelector('input[name="'.$key.'"]'))->sendKeys($name);
+                                                                break;
+                                                        }
+                                                    }catch (Exception $e) {
+                                                        // dd($e->getMessage());
+                                                    }
+                                                    // $driver->takeScreenshot('log.png');
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // $driver->takeScreenshot('log.png');
+                                        $confirmElements = $driver->findElements(WebDriverBy::xpath('//button[contains(text(),"確認")] | //input[contains(@value,"確認") and @type!="hidden"] | //a[contains(text(),"確認")]'));
+                                        $sendElements = $driver->findElements(WebDriverBy::xpath('//button[contains(text(),"送信")] | //input[contains(@value,"送信") and @type!="hidden"] | //a[contains(text(),"送信")]'));
+                                        $nextElements = $driver->findElements(WebDriverBy::xpath('//button[contains(text(),"次へ")] | //input[contains(@value,"次へ") and @type!="hidden"] | //a[contains(text(),"次へ")]'));
                                         if(count($confirmElements)>=1) {
                                             foreach($confirmElements as $confirmElement) {
                                                 try {
                                                     $confirmElement->click();
                                                 }catch (Exception $exception) {
-
+    
                                                 }
                                             }
                                         }
@@ -1154,27 +1132,86 @@ class SendEmailsFirstCommand extends Command
                                                 }
                                             }
                                         }
-                                        // $checkConfirmElements = $browser->driver->findElements(WebDriverBy::xpath('//*[contains(text(),"ありがとうございま")] | //*[contains(text(),"有難うございま")] | //*[contains(text(),"送信しました")] | //*[contains(text(),"送信されました")] | //*[contains(text(),"成功しました")] | //*[contains(text(),"完了いたしま")]| //*[contains(text(),"送信いたしました")]| //*[contains(text(),"内容を確認させていただき")]| //*[contains(text(),"自動返信メール")]'));
+                                    } catch (Exception $e) {
                                         $company->update([
                                             'status'        => '送信済み'
                                         ]);
                                         $companyContact->update([
                                             'is_delivered' => 2
                                         ]);
-                                        // $browser->driver->takeScreenshot(base_path('tests/Browser/screenshots/logged.png'));
                                     }
-                                    
-                                } catch (Exception $exception) {
+                                    // $driver->takeScreenshot('log.png');
+                                    try {
+                                        $checkConfirmElements = $driver->findElements(WebDriverBy::xpath('//*[contains(text(),"ありがとうございま")] | //*[contains(text(),"有難うございま")] | //*[contains(text(),"送信しました")] | //*[contains(text(),"送信されました")] | //*[contains(text(),"成功しました")] | //*[contains(text(),"完了いたしま")]| //*[contains(text(),"送信いたしました")]| //*[contains(text(),"内容を確認させていただき")]| //*[contains(text(),"自動返信メール")]'));
+                                        if(count($checkConfirmElements)>=1) {
+                                            $company->update([
+                                                'status'        => '送信済み'
+                                            ]);
+                                            $companyContact->update([
+                                                'is_delivered' => 2
+                                            ]);
+                                        }else {
+                                            $confirmElements="";$sendElements="";$nextElements="";
+                                            $confirmElements = $driver->findElements(WebDriverBy::xpath('//button[contains(text(),"確認")] | //input[contains(@value,"確認") and @type!="hidden"] | //a[contains(text(),"確認")]'));
+                                            $sendElements = $driver->findElements(WebDriverBy::xpath('//button[contains(text(),"送信")] | //input[contains(@value,"送信") and @type!="hidden"] | //a[contains(text(),"送信")]'));
+                                            $nextElements = $driver->findElements(WebDriverBy::xpath('//button[contains(text(),"次へ")] | //input[contains(@value,"次へ") and @type!="hidden"] | //a[contains(text(),"次へ")]'));
+                                            if(count($confirmElements)>=1) {
+                                                foreach($confirmElements as $confirmElement) {
+                                                    try {
+                                                        $confirmElement->click();
+                                                    }catch (Exception $exception) {
+    
+                                                    }
+                                                }
+                                            }
+                                            if(count($sendElements)>=1) {
+                                                foreach($sendElements as $sendElement){
+                                                    try {
+                                                        $sendElement->click();
+                                                    }catch (Exception $exception) {
+                                                        
+                                                    }
+                                                }
+                                            }
+                                            if(count($nextElements)>=1) {
+                                                foreach($nextElements as $nextElement){
+                                                    try {
+                                                        $nextElement->click();
+                                                    }catch (Exception $exception) {
+                                                        
+                                                    }
+                                                }
+                                            }
+                                            // $checkConfirmElements = $driver->findElements(WebDriverBy::xpath('//*[contains(text(),"ありがとうございま")] | //*[contains(text(),"有難うございま")] | //*[contains(text(),"送信しました")] | //*[contains(text(),"送信されました")] | //*[contains(text(),"成功しました")] | //*[contains(text(),"完了いたしま")]| //*[contains(text(),"送信いたしました")]| //*[contains(text(),"内容を確認させていただき")]| //*[contains(text(),"自動返信メール")]'));
+                                            $company->update([
+                                                'status'        => '送信済み'
+                                            ]);
+                                            $companyContact->update([
+                                                'is_delivered' => 2
+                                            ]);
+                                        }
+                                        
+                                    } catch (Exception $e) {
+                                        $company->update([
+                                            'status'        => '送信済み'
+                                        ]);
+                                        $companyContact->update([
+                                            'is_delivered' => 2
+                                        ]);
+                                    }
+                                    $driver->manage()->deleteAllCookies();
+                                    $driver->quit();
+                                }catch (Exception $e) {
                                     $company->update([
                                         'status'        => '送信済み'
                                     ]);
                                     $companyContact->update([
                                         'is_delivered' => 2
                                     ]);
+                                    $driver->manage()->deleteAllCookies();
+                                    $driver->quit();
                                 }
-                                $browser->quit();
-                                $browser->driver->quit();
-                                $process->stop();
+                            
                             }else {
                                 
                                 try {
@@ -1261,6 +1298,7 @@ class SendEmailsFirstCommand extends Command
                                     $companyContact->update([
                                         'is_delivered' => 1
                                     ]);
+                                    continue;
                                 }
 
                                 $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","内容を確認させていただき","成功しました","完了いたしま");
@@ -1359,34 +1397,28 @@ class SendEmailsFirstCommand extends Command
     
                                             // $this->checkform->setValues($data);
                                             $crawler = $client->submit($this->checkform);
-                                           
-                                            $company->update([
-                                                'status'        => '送信済み'
-                                            ]);
-                                            $companyContact->update([
-                                                'is_delivered' => 2
-                                            ]);
     
-                                            // $check =false;
-                                            // foreach($checkMessages as $message) {
-                                            //     if(strpos($crawler->html(),$message)!==false){
-                                            //         $company->update([
-                                            //             'status'        => '送信済み'
-                                            //         ]);
-                                            //         $companyContact->update([
-                                            //             'is_delivered' => 2
-                                            //         ]);
-                                            //         $check =true;break;
-                                            //     }
-                                            // }
-                                            // if(!$check){
-                                            //     $company->update([
-                                            //         'status'        => '送信失敗'
-                                            //     ]);
-                                            //     $companyContact->update([
-                                            //         'is_delivered' => 1
-                                            //     ]);
-                                            // }
+                                            $check =false;
+                                            foreach($checkMessages as $message) {
+                                                if(strpos($crawler->html(),$message)!==false){
+                                                    $company->update([
+                                                        'status'        => '送信済み'
+                                                    ]);
+                                                    $companyContact->update([
+                                                        'is_delivered' => 2
+                                                    ]);
+                                                    $check =true;break;
+                                                }
+                                            }
+                                            if(!$check){
+                                                $company->update([
+                                                    'status'        => '送信失敗'
+                                                ]);
+                                                $companyContact->update([
+                                                    'is_delivered' => 1
+                                                ]);
+                                                continue;
+                                            }
                                         }else {
                                             $company->update([
                                                 'status'        => '送信済み'
@@ -1394,6 +1426,7 @@ class SendEmailsFirstCommand extends Command
                                             $companyContact->update([
                                                 'is_delivered' => 2
                                             ]);
+                                            continue;
                                         }
                                     }catch (\Throwable $e) {
                                         $output->writeln($e->getMessage());
@@ -1403,18 +1436,18 @@ class SendEmailsFirstCommand extends Command
                                         $companyContact->update([
                                             'is_delivered' => 2
                                         ]);
+                                        continue;
                                     }
                                 }
                             }
                            
                         } catch (\Throwable $e) {
-                            $output->writeln($e->getMessage());
-                            $company->update([
-                                'status'        => '送信失敗'
-                            ]);
+                            $company->update(['status' => 'フォームなし']);
                             $companyContact->update([
-                                'is_delivered' => 1
+                                'is_delivered' => 4
                             ]);
+                            $output->writeln($e->getMessage());
+                            continue;
                         }
                         $output->writeln("end company");
 
@@ -1429,9 +1462,5 @@ class SendEmailsFirstCommand extends Command
         preg_match('/\<meta[^\>]+charset *= *["\']?([a-zA-Z\-0-9_:.]+)/i', $htmlContent, $matches);
         return $matches;
     }
-    protected function hasHeadlessDisabled()
-    {
-        return isset($_SERVER['DUSK_HEADLESS_DISABLED']) ||
-               isset($_ENV['DUSK_HEADLESS_DISABLED']);
-    }
+    
 }
