@@ -106,7 +106,6 @@ class SendEmailsFirstCommand extends Command
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
                             $output->writeln("company url : ".$company->contact_form_url);
-                            $company->contact_form_url='https://www.k-aizen.co.jp/FS-APL/FS-Form/form.cgi?Code=otoiawase';
                             $crawler = $client->request('GET', $company->contact_form_url);
 
                             $charset = $this->getCharset($crawler->html());
