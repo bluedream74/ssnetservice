@@ -19,14 +19,14 @@ use Facebook\WebDriver\WebDriverDimension;
 use Exception;
 
 
-class SendEmailsSecondCommand extends Command
+class SendEmails10Command extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'send:emailsSecond';
+    protected $signature = 'send:emails10';
 
     /**
      * The console command description.
@@ -55,7 +55,7 @@ class SendEmailsSecondCommand extends Command
      */
     public function handle()
     {
-        $offset = (int)(Config::get()->first()->mailLimit)*0.6;
+        $offset = env('MAIL_LIMIT');
 
         $start = Config::get()->first()->start;
         $end = Config::get()->first()->end;
@@ -90,13 +90,16 @@ class SendEmailsSecondCommand extends Command
                 
                 if($startCheck) {
                     try{
-                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip($offset)->take($offset)->get();
+                        sleep(2*9);
+                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
                         $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                     }catch (\Throwable $e) {
                         
                     }
                 
                     foreach ($companyContacts as $companyContact) {
+                        $endTimeCheck = $now->lte($endTimeStamp);
+                        if(!$endTimeCheck)continue;
                         sleep(2);
                         $company = $companyContact->company;
                         try {
@@ -106,7 +109,6 @@ class SendEmailsSecondCommand extends Command
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
                             $output->writeln("company url : ".$company->contact_form_url);
-                            
                             $crawler = $client->request('GET', $company->contact_form_url);
 
                             $charset = $this->getCharset($crawler->html());
