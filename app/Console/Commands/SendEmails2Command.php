@@ -19,14 +19,14 @@ use Facebook\WebDriver\WebDriverDimension;
 use Exception;
 
 
-class SendEmailsFirstCommand extends Command
+class SendEmails2Command extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'send:emailsFirst';
+    protected $signature = 'send:emails2';
 
     /**
      * The console command description.
@@ -55,7 +55,7 @@ class SendEmailsFirstCommand extends Command
      */
     public function handle()
     {
-        $offset = (int)(Config::get()->first()->mailLimit)*0.4;
+        $offset = env('MAIL_LIMIT');
 
         $start = Config::get()->first()->start;
         $end = Config::get()->first()->end;
@@ -90,6 +90,7 @@ class SendEmailsFirstCommand extends Command
                 
                 if($startCheck) {
                     try{
+                        sleep(2);
                         $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
                         $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                     }catch (\Throwable $e) {
@@ -97,6 +98,8 @@ class SendEmailsFirstCommand extends Command
                     }
                 
                     foreach ($companyContacts as $companyContact) {
+                        $endTimeCheck = $now->lte($endTimeStamp);
+                        if(!$endTimeCheck)continue;
                         sleep(2);
                         $company = $companyContact->company;
                         try {
