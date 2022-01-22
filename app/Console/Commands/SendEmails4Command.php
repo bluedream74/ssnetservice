@@ -55,7 +55,7 @@ class SendEmails4Command extends Command
      */
     public function handle()
     {
-        $offset = (int)(Config::get()->first()->mailLimit);
+        $offset = env('MAIL_LIMIT');
 
         $start = Config::get()->first()->start;
         $end = Config::get()->first()->end;
@@ -90,7 +90,8 @@ class SendEmails4Command extends Command
                 
                 if($startCheck) {
                     try{
-                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(3*$offset)->take($offset)->get();
+                        sleep(2*3);
+                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
                         $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                     }catch (\Throwable $e) {
                         
@@ -108,7 +109,6 @@ class SendEmails4Command extends Command
                             $client = new Client();
                             if($company->contact_form_url=='')continue;
                             $output->writeln("company url : ".$company->contact_form_url);
-                            
                             $crawler = $client->request('GET', $company->contact_form_url);
 
                             $charset = $this->getCharset($crawler->html());

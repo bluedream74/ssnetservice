@@ -19,14 +19,14 @@ use Facebook\WebDriver\WebDriverDimension;
 use Exception;
 
 
-class SendEmails2Command extends Command
+class SendEmails10Command extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'send:emails2';
+    protected $signature = 'send:emails10';
 
     /**
      * The console command description.
@@ -90,7 +90,7 @@ class SendEmails2Command extends Command
                 
                 if($startCheck) {
                     try{
-                        sleep(2);
+                        sleep(2*9);
                         $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
                         $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                     }catch (\Throwable $e) {
