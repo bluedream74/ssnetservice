@@ -55,8 +55,7 @@ class SendEmails1Command extends Command
      */
     public function handle()
     {
-        $offset = (int)(Config::get()->first()->mailLimit);
-        $ex_numbers = (int)(Config::get()->first()->mailLimit)*0.4;
+        $offset = env('MAIL_LIMIT');
 
         $start = Config::get()->first()->start;
         $end = Config::get()->first()->end;
@@ -91,7 +90,7 @@ class SendEmails1Command extends Command
                 
                 if($startCheck) {
                     try{
-                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($ex_numbers)->get();
+                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
                         $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                     }catch (\Throwable $e) {
                         
