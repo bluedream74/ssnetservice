@@ -195,7 +195,7 @@ class SendEmails3Command extends Command
                                 $companyContact->update([
                                     'is_delivered' => 1
                                 ]);
-                                $output->writeln("フォームなし");
+                                $output->writeln("送信失敗");
                                 continue;
                             } 
                             $output->writeln("continue");
@@ -396,10 +396,10 @@ class SendEmails3Command extends Command
                                 }
                             }else {
                                 $company->update([
-                                    'status'        => '送信失敗'
+                                    'status'        => 'フォームなし'
                                 ]);
                                 $companyContact->update([
-                                    'is_delivered' => 1
+                                    'is_delivered' => 3
                                 ]);
                                 $output->writeln("フォームなし");
                                 continue;
@@ -1392,7 +1392,7 @@ class SendEmails3Command extends Command
                                             $companyContact->update([
                                                 'is_delivered' => 1
                                             ]);
-                                            $output->writeln("failed");
+                                            $output->writeln("送信失敗");
                                             continue;
                                         }
                                         
@@ -1400,28 +1400,35 @@ class SendEmails3Command extends Command
     
                                             // $this->checkform->setValues($data);
                                             $crawler = $client->submit($this->checkform);
-    
-                                            $check =false;
-                                            foreach($checkMessages as $message) {
-                                                if(strpos($crawler->html(),$message)!==false){
-                                                    $company->update([
-                                                        'status'        => '送信済み'
-                                                    ]);
-                                                    $companyContact->update([
-                                                        'is_delivered' => 2
-                                                    ]);
-                                                    $check =true;break;
-                                                }
-                                            }
-                                            if(!$check){
-                                                $company->update([
-                                                    'status'        => '送信失敗'
-                                                ]);
-                                                $companyContact->update([
-                                                    'is_delivered' => 1
-                                                ]);
-                                                continue;
-                                            }
+                                            $company->update([
+                                                'status'        => '送信済み'
+                                            ]);
+                                            $companyContact->update([
+                                                'is_delivered' => 2
+                                            ]);
+                                            continue;
+
+                                            // $check =false;
+                                            // foreach($checkMessages as $message) {
+                                            //     if(strpos($crawler->html(),$message)!==false){
+                                            //         $company->update([
+                                            //             'status'        => '送信済み'
+                                            //         ]);
+                                            //         $companyContact->update([
+                                            //             'is_delivered' => 2
+                                            //         ]);
+                                            //         $check =true;break;
+                                            //     }
+                                            // }
+                                            // if(!$check){
+                                            //     $company->update([
+                                            //         'status'        => '送信失敗'
+                                            //     ]);
+                                            //     $companyContact->update([
+                                            //         'is_delivered' => 1
+                                            //     ]);
+                                            //     continue;
+                                            // }
                                         }else {
                                             $company->update([
                                                 'status'        => '送信済み'
@@ -1445,11 +1452,12 @@ class SendEmails3Command extends Command
                             }
                            
                         } catch (\Throwable $e) {
-                            $company->update(['status' => 'フォームなし']);
-                            $companyContact->update([
-                                'is_delivered' => 4
+                            $company->update([
+                                'status'        => '送信失敗'
                             ]);
-                            $output->writeln($e->getMessage());
+                            $companyContact->update([
+                                'is_delivered' => 1
+                            ]);
                             continue;
                         }
                         $output->writeln("end company");
