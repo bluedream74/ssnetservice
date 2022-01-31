@@ -61,14 +61,14 @@ class BatchCheckCommand1 extends Command
 
     public function handle()
     {
-        $check_contact_form = Config::get()->first()->checkContactForm;
         $registerUrl = Config::get()->first()->registerUrl;
         if($registerUrl){
             $this->register_url();
             Config::where('id',1)->update(array('registerUrl'=>'0'));
             Config::where('id',1)->update(array('checkContactForm'=>'1'));
-            return 0;
+            // return 0;
         }
+        $check_contact_form = Config::get()->first()->checkContactForm;
         if($check_contact_form == 1){
 			$offset = 45;
             $companies = Company::where('check_contact_form',0)->skip(0)->take($offset)->get();
