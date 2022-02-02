@@ -1041,7 +1041,7 @@ class SendEmails10Command extends Command
                             }
                                 
                             $javascriptCheck=false;
-                            if (strpos($this->html,'recaptcha')!==false) {
+                            if (strpos($crawler->html(),'recaptcha')!==false) {
                                 $javascriptCheck=false;
                             } else if((strpos($this->html,'onclick')!==false)||($this->form->getUri()==$company->contact_form_url)){
                                 $javascriptCheck=true;
