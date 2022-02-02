@@ -1040,7 +1040,9 @@ class SendEmails1Command extends Command
                             }
                                 
                             $javascriptCheck=false;
-                            if((strpos($this->html,'onclick')!==false)||(strpos($this->html,'recaptcha')!==false)||($this->form->getUri()==$company->contact_form_url)){
+                            if (strpos($this->html,'recaptcha')!==false) {
+                                $javascriptCheck=false;
+                            } else if((strpos($this->html,'onclick')!==false)||($this->form->getUri()==$company->contact_form_url)){
                                 $javascriptCheck=true;
                             }else if((strpos($this->html,'type="submit"')!==false)){
                                 $javascriptCheck=false;
@@ -1399,6 +1401,17 @@ class SendEmails1Command extends Command
     
                                             // $this->checkform->setValues($data);
                                             $crawler = $client->submit($this->checkform);
+
+                                            if(strpos($crawler->html(), "失敗")!==false){
+                                                $company->update([
+                                                    'status'        => '送信失敗'
+                                                ]);
+                                                $companyContact->update([
+                                                    'is_delivered' => 1
+                                                ]);
+                                                continue;
+                                            }
+
                                             $company->update([
                                                 'status'        => '送信済み'
                                             ]);
