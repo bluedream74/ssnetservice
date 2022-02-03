@@ -1305,6 +1305,9 @@ class SendEmails1Command extends Command
                                     continue;
                                 }
 
+                                sleep(3);
+                                $crawler = $client->submit($this->form,$data);
+
                                 $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","内容を確認させていただき","成功しました","完了いたしま");
                                 $thank_check=true;
                                 foreach($checkMessages as $message) {
@@ -1312,7 +1315,7 @@ class SendEmails1Command extends Command
                                         $thank_check=false;
                                     }
                                 }
-                                $crawler = $client->submit($this->form,$data);
+
                                 $failedCheck=true;
                                 
                                 $check = false;
