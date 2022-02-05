@@ -1219,6 +1219,9 @@ class SendEmails1Command extends Command
                             }else {
                                 
                                 try {
+                                    if (isset($captcha_sitekey)) {
+                                        unset($captcha_sitekey);
+                                    }
                                     // $captchaImg = $crawler->filter('.captcha img')->extract(['src'])[0];
                                     if(strpos($crawler->html(),'api.js?render')!==false){
                                         $key_position = strpos($crawler->html(),'api.js?render');
