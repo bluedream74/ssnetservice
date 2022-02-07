@@ -105,7 +105,8 @@ class SendEmails1Command extends Command
                             $data = [];
                             $this->form = "";$this->checkform="";$html="";$html_text="";$footerhtml="";
                             $charset = 'UTF-8';
-                            $client = new Client();
+                            //$client = new Client();
+                            $client = new Client(\Symfony\Component\HttpClient\HttpClient::create(['verify_peer' => false, 'verify_host' => false]));
                             if($company->contact_form_url=='')continue;
                             $output->writeln("company url : ".$company->contact_form_url);
                             $crawler = $client->request('GET', $company->contact_form_url);
