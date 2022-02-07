@@ -90,17 +90,16 @@ class SendEmails10Command extends Command
                 
                 if($startCheck) {
                     try{
-                        sleep(2*9);
                         $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
                         $companyContacts->toQuery()->update(['is_delivered'=> 3]);
                     }catch (\Throwable $e) {
-                        
+                        $output->writeln($e);
                     }
                 
                     foreach ($companyContacts as $companyContact) {
                         $endTimeCheck = $now->lte($endTimeStamp);
                         if(!$endTimeCheck)continue;
-                        sleep(2);
+                        sleep(2*9);
                         $company = $companyContact->company;
                         try {
                             $data = [];
@@ -116,6 +115,7 @@ class SendEmails10Command extends Command
                                 $charset = $charset[1];
                             }catch (\Throwable $e) {
                                 $charset = 'UTF-8';
+                                $output->writeln($e);
                             }
                             
                             if(count($crawler->filter('textarea'))==0) {
@@ -152,7 +152,7 @@ class SendEmails10Command extends Command
                                         }
                                     }
                                 }catch(\Throwable $e){
-
+                                    $output->writeln($e);
                                 }
                             });
                             if(empty($this->form)) {
@@ -183,7 +183,7 @@ class SendEmails10Command extends Command
                                                 }
                                             }
                                         }catch(\Throwable $e){
-        
+                                            $output->writeln($e);
                                         }
                                     });
                                 }
@@ -204,21 +204,24 @@ class SendEmails10Command extends Command
 
                             try {
                                 $footerhtml=$crawler->filter('#footer')->html();
+
+                                $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ");
+                                $continue_check=false;
+                                foreach($nonStrings as $str) {
+                                    if((strpos($footerhtml,$str)!==false)) {
+                                        $company->update(['status' => 'NGワードあり']);
+                                        $companyContact->update([
+                                            'is_delivered' => 5
+                                        ]);
+                                        $continue_check=true;
+                                        break;
+                                    }
+                                }
+                                if($continue_check)
+                                    continue;
                             }catch(\Throwable $e){
                                 $output->writeln("footerなし");
                             }
-                            $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ");$continue_check=false;
-                            foreach($nonStrings as $str) {
-                                if((strpos($footerhtml,$str)!==false)) {
-                                    $company->update(['status' => 'NGワードあり']);
-                                    $companyContact->update([
-                                        'is_delivered' => 5
-                                    ]);
-                                    $continue_check=true;
-                                    break;
-                                }
-                            }
-                            if($continue_check)continue;
 
                             // if(strcasecmp($charset,'utf-8')) {
                             //     $contact->surname = mb_convert_encoding($contact->surname,'UTF-8',$charset);
@@ -285,7 +288,7 @@ class SendEmails10Command extends Command
                                                     $content = str_replace('%company_name%', $company->name, $contact->content);
                                                     $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                                     $data[$key] = $content;
-                                                    $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';
+                                                    // $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';
                                                 }
                                                 break;
                                             case 'email': 
@@ -296,6 +299,7 @@ class SendEmails10Command extends Command
                                         }
                                         
                                     }catch(\Throwable $e){
+                                        $output->writeln($e);
                                         continue;
                                     }
                                 }
@@ -493,7 +497,7 @@ class SendEmails10Command extends Command
                                     }
                                 }
                             }catch(\Throwable $e){
-                                $output->writeln($e->getMessage());
+                                $output->writeln($e);
                             }
                             $name_count = 0;$kana_count = 0;$postal_count = 0;$phone_count = 0;$fax_count=0;
                             foreach($this->form->getValues() as $key => $value) {
@@ -645,6 +649,8 @@ class SendEmails10Command extends Command
                                     $str = mb_substr($html,mb_strpos($html,$message),200);
                                     if(strpos($str,'姓')!==false)
                                         $name_count=2;
+                                    if(strpos($str,'name1')!==false)
+                                        $name_count=2;
                                 }
                             }
 
@@ -654,6 +660,7 @@ class SendEmails10Command extends Command
                                     $str = mb_substr($html_text,mb_strpos($html_text,$message),40);
                                     if((strpos($str,'メイ')!==false)&&(strpos($str,'セイ')!==false))$kana_count=2;
                                     if((strpos($str,'名')!==false)&&(strpos($str,'姓')!==false))$kana_count=2;
+                                    if((strpos($str,'kana1')!==false)&&(strpos($str,'kana2')!==false))$kana_count=2;
                                 }
                             }
 
@@ -1034,7 +1041,7 @@ class SendEmails10Command extends Command
                                                 break;
                                         }
                                     }catch(\Throwable $e){
-                                        $output->writeln($e->getMessage());
+                                        $output->writeln($e);
                                     }
                                     
                                 }
@@ -1274,6 +1281,7 @@ class SendEmails10Command extends Command
                                                 }
                                             }catch(\Throwable $e){
                                                 // file_put_contents('ve.txt',$e->getMessage());
+                                                $output->writeln($e);
                                             }
                                         
                                             $taskId = $api->getTaskId();
@@ -1306,8 +1314,12 @@ class SendEmails10Command extends Command
                                     $companyContact->update([
                                         'is_delivered' => 1
                                     ]);
+                                    $output->writeln($e);
                                     continue;
                                 }
+
+                                sleep(3);
+                                $crawler = $client->submit($this->form,$data);
 
                                 $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","内容を確認させていただき","成功しました","完了いたしま");
                                 $thank_check=true;
@@ -1316,8 +1328,6 @@ class SendEmails10Command extends Command
                                         $thank_check=false;
                                     }
                                 }
-                                $crawler = $client->submit($this->form,$data);
-                                $failedCheck=true;
                                 
                                 $check = false;
                                 if($thank_check) {
@@ -1356,7 +1366,7 @@ class SendEmails10Command extends Command
                                                     }
                                                 }
                                             }catch(\Throwable $e){
-            
+                                                $output->writeln($e);
                                             }
                                         });
     
@@ -1386,25 +1396,25 @@ class SendEmails10Command extends Command
                                                             }
                                                         }
                                                     }catch(\Throwable $e){
-                    
+                                                        $output->writeln($e);
                                                     }
                                                 });
                                             }
-                                            
                                         } 
-                                        if(empty($this->checkform)){
-                                            $company->update(['status' => '送信失敗']);
-                                            $companyContact->update([
-                                                'is_delivered' => 1
-                                            ]);
-                                            $output->writeln("送信失敗");
-                                            continue;
-                                        }
-                                        
-                                        if(isset($this->checkform) && !empty($this->checkform->all())){
+                                        // if(empty($this->checkform)){
+                                        //     $company->update(['status' => '送信失敗']);
+                                        //     $companyContact->update([
+                                        //         'is_delivered' => 1
+                                        //     ]);
+                                        //     $output->writeln("送信失敗1");
+                                        //     continue;
+                                        // }
+                                        // var_dump($this->checkform);
+                                        if(isset($this->checkform) && is_object($this->checkform) && !empty($this->checkform->all())){
     
                                             // $this->checkform->setValues($data);
                                             $crawler = $client->submit($this->checkform);
+                                            // var_dump($crawler);
 
                                             if(strpos($crawler->html(), "失敗")!==false){
                                                 $company->update([
@@ -1462,6 +1472,7 @@ class SendEmails10Command extends Command
                                         $companyContact->update([
                                             'is_delivered' => 2
                                         ]);
+                                        $output->writeln($e);
                                         continue;
                                     }
                                 }
@@ -1474,6 +1485,7 @@ class SendEmails10Command extends Command
                             $companyContact->update([
                                 'is_delivered' => 1
                             ]);
+                            $output->writeln($e);
                             continue;
                         }
                         $output->writeln("end company");
