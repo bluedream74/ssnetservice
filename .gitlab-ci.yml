@@ -1,0 +1,71 @@
+stages:
+  - build
+  - cron
+  - database
+
+
+.setting-ssh: &setting-ssh |
+  eval $(ssh-agent -s) && echo "$UR_SSH_KEY" | ssh-add -
+  mkdir -p ~/.ssh
+  echo -e "Host *\n\tStrictHostKeyChecking no\n\tControlMaster auto\n\tControlPath /tmp/ansible-%r@%h:%p\n\tControlPersist 15m\n\tPreferredAuthentications publickey
+  \n\n" > ~/.ssh/config
+  chmod go-wrx ~/.ssh
+
+  
+composer:
+  image: digidinostrungdd/phpcomposer:7.4
+  stage: build
+  script:
+    - echo "${UR_ENV}" > .env
+    - /usr/local/bin/composer install
+    - php artisan key:generate
+    - php artisan passport:install --force
+    #- php artisan l5-swagger:generate
+    - php artisan optimize:clear
+    - php artisan config:cache
+  artifacts:
+    paths:
+      - vendor/
+      - storage/
+  tags:
+    - develop
+  only:
+    - develop
+  when: on_success
+
+sync2hrm:
+  image: digidinostrungdd/phpcomposer:7.4
+  stage: cron
+  cache: {}
+  script:
+    - *setting-ssh
+    - echo "${UR_ENV}" > .env
+    - ssh -ttttttttttt $UR_DEPLOY_USER@$UR_BATCH_HOST 'sudo chown -R thangnv:thangnv /var/www/uruemon/'
+    - rsync -azP --exclude='.git' --exclude=storage/logs/ --delete ./ $UR_DEPLOY_USER@$UR_BATCH_HOST:$UR_DEPLOY_DIR/
+    - ssh -ttttttttttt $UR_DEPLOY_USER@$UR_BATCH_HOST 'cd /var/www/uruemon && sudo php artisan storage:link'
+    - ssh -ttttttttttt $UR_DEPLOY_USER@$UR_BATCH_HOST 'sudo chown -R nginx:nginx /var/www/uruemon/'
+    - ssh -ttttttttttt $UR_DEPLOY_USER@$UR_BATCH_HOST 'sudo find /var/www/uruemon/ -type d -exec chmod 755 -R {} \;'
+    - ssh -ttttttttttt $UR_DEPLOY_USER@$UR_BATCH_HOST 'sudo find /var/www/uruemon/ -type f -exec chmod 644 {} \;'
+
+  dependencies:
+    - composer
+  tags:
+    - develop
+  only:
+    - develop
+  when: on_success
+
+dbmigration_hrm:
+  image: digidinostrungdd/phpcomposer:7.4
+  stage: database
+  cache: {}
+  script:
+    - *setting-ssh
+    - ssh $UR_DEPLOY_USER@$UR_BATCH_HOST "cd $UR_DEPLOY_DIR && sudo php artisan migrate --force"
+  dependencies:
+    - composer
+  tags:
+    - develop
+  only:
+    - develop
+  when: manual
