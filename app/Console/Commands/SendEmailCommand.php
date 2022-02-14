@@ -19,7 +19,7 @@ use Facebook\WebDriver\WebDriverDimension;
 use Exception;
 
 
-class SendEmails5Command extends Command
+class SendEmailsCommand extends Command
 {
     /**
      * The name and signature of the console command.
