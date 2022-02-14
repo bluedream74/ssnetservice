@@ -25,18 +25,18 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command("send:emails1")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
-        $schedule->command("send:emails2")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
-        $schedule->command("send:emails3")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
-        $schedule->command("send:emails4")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails1")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails2")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails3")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails4")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
 
-        $schedule->command("send:emails5")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
-        $schedule->command("send:emails6")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
-        $schedule->command("send:emails7")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
-        $schedule->command("send:emails8")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails5")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails6")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails7")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails8")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
 
-        $schedule->command("send:emails9")->everyFourMinutes()->runInBackground()->withoutOverlapping();
-        $schedule->command("send:emails10")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails9")->everyFourMinutes()->runInBackground()->withoutOverlapping();
+        // $schedule->command("send:emails10")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
 
         $schedule->command("batch:check1")->everyFourMinutes()->runInBackground()->withoutOverlapping()->when(function (){
             return Config::get()->first()->checkContactForm;
