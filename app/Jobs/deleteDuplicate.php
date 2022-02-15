@@ -90,7 +90,7 @@ class deleteDuplicate implements ShouldQueue
             $query = Company::query();
             if ($query->where('url', 'LIKE', "%{$host}%")->count() > 1) {
                 $company = $query->where('url', 'LIKE', "%{$host}%")->latest()->first();
-                if($query->where('subsource', $company->subsource)->count() == 1) {
+                if(Company::where('subsource', $company->subsource)->count() == 1) {
                 SubSource::where('name',$company->subsource)->delete();
                 }
                 $query->where('url', 'LIKE', "%{$host}%")
