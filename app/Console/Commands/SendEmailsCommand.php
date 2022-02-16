@@ -1089,16 +1089,16 @@ class SendEmailsCommand extends Command
                                                             case 'checkbox':
                                                                 if (strpos($key, '[0]') !== false) {
                                                                     $flag = 0;
-                                                                    try {
-                                                                        clickCheckbox:
-                                                                        $driver->findElement(WebDriverBy::cssSelector('input[type="checkbox"][name="'.$key.'"]'))->click();
-
-                                                                    } catch (Exception $e) {
-                                                                        if ($flag > 0) break;
-                                                                        $key = str_replace('[0]', '[]', $key);
-                                                                        $flag++;
-                                                                        goto clickCheckbox;
-                                                                    }
+                                                                    do {
+                                                                        try {
+                                                                            $driver->findElement(WebDriverBy::cssSelector('input[type="checkbox"][name="'.$key.'"]'))->click();
+                                                                            $flag = 1;
+                                                                        } catch (Exception $e) {
+                                                                            if ($flag == 2) break;
+                                                                            $key = str_replace('[0]', '[]', $key);
+                                                                            $flag = 2;
+                                                                        }
+                                                                    } while ($flag === 0 || $flag === 2);
                                                                 } else {
                                                                     $driver->findElement(WebDriverBy::cssSelector('input[type="checkbox"][name="'.$key.'"]'))->click();
                                                                 }
