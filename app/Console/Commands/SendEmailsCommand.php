@@ -1087,7 +1087,21 @@ class SendEmailsCommand extends Command
                                                     try {
                                                         switch($value1->getType()){
                                                             case 'checkbox':
-                                                                $driver->findElement(WebDriverBy::cssSelector('input[type="checkbox"][name="'.$key.'"]'))->click();
+                                                                if (strpos($key, '[0]') !== false) {
+                                                                    $flag = 0;
+                                                                    try {
+                                                                        clickCheckbox:
+                                                                        $driver->findElement(WebDriverBy::cssSelector('input[type="checkbox"][name="'.$key.'"]'))->click();
+
+                                                                    } catch (Exception $e) {
+                                                                        if ($flag > 0) break;
+                                                                        $key = str_replace('[0]', '[]', $key);
+                                                                        $flag++;
+                                                                        goto clickCheckbox;
+                                                                    }
+                                                                } else {
+                                                                    $driver->findElement(WebDriverBy::cssSelector('input[type="checkbox"][name="'.$key.'"]'))->click();
+                                                                }
                                                                 break;
                                                             case 'select':
                                                                 $driver->findElement(WebDriverBy::cssSelector('select[name="'.$key.'"] option[value="'.$name.'"]'))->click();
