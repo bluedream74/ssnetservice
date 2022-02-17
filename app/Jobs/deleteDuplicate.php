@@ -90,6 +90,9 @@ class deleteDuplicate implements ShouldQueue
             $parse = parse_url($url);
             try{
             $host = $parse['path'];
+            if (!$host || !strlen($host)) {
+                continue;
+            }
             $query = Company::query();
             if ($query->where('url', 'LIKE', "%{$host}%")->count() > 1) {
                 $company = $query->where('url', 'LIKE', "%{$host}%")->latest()->first();
