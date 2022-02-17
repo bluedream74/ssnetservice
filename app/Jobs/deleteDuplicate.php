@@ -80,20 +80,23 @@ class deleteDuplicate implements ShouldQueue
             }
         }
         
-        $urls = $query->whereNotNull('url')->distinct()->pluck('url');
+        $urls = $query->whereNotNull('url')
+                        ->selectRaw("SUBSTRING_INDEX(SUBSTRING_INDEX(REPLACE(REPLACE(REPLACE(LOWER(url), 'https://', ''), 'http://', ''), 'www.', ''), '/', 1), '?', 1) as url")
+                        ->distinct()
+                        ->pluck('url');
         
         if (sizeof($urls) < $query->whereNotNull('url')->count()) {
         foreach ($urls as $url) {
             $parse = parse_url($url);
             try{
-            $host = str_replace('www.', '', $parse['host']);
+            $host = $parse['path'];
             $query = Company::query();
             if ($query->where('url', 'LIKE', "%{$host}%")->count() > 1) {
                 $company = $query->where('url', 'LIKE', "%{$host}%")->latest()->first();
                 if(Company::where('subsource', $company->subsource)->count() == 1) {
                 SubSource::where('name',$company->subsource)->delete();
                 }
-                $query->where('url', 'LIKE', "%{$host}%")
+                Company::where('url', 'LIKE', "%{$host}%")
                     ->where('id', '!=', $company->id)
                     ->delete();
             }
