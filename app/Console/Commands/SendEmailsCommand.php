@@ -325,6 +325,16 @@ class SendEmailsCommand extends Command
                                         }
                                     }
 
+                                    $urlTexts = array('郵便番号', 'addressnum');
+                                    foreach($urlTexts as $text) {
+                                        if(strpos($key,$text)!==false){
+                                            if(isset($data[$key]) && !empty($data[$key])){
+                                                continue;
+                                            }
+                                            $data[$key] = $contact->postalCode1.$contact->postalCode2;break;
+                                        }
+                                    }
+
                                     $addressTexts = array('住所','addr','add_detail');
                                     foreach($addressTexts as $text) {
                                         if(strpos($key,$text)!==false){
@@ -374,16 +384,6 @@ class SendEmailsCommand extends Command
                                                 continue;
                                             }
                                             $data[$key] = '0';break;
-                                        }
-                                    }
-
-                                    $urlTexts = array('郵便番号');
-                                    foreach($urlTexts as $text) {
-                                        if(strpos($key,$text)!==false){
-                                            if(isset($data[$key]) && !empty($data[$key])){
-                                                continue;
-                                            }
-                                            $data[$key] = $contact->postalCode1.$contact->postalCode2;break;
                                         }
                                     }
 
@@ -774,7 +774,7 @@ class SendEmailsCommand extends Command
                                                     }
                                                     break;
                                                 }else {
-                                                    $data[$name] = $contact->fu_surname.' '.$contact->fu_lastname;
+                                                    $data[$name] = $contact->fu_surname.'　'.$contact->fu_lastname;
                                                     break;
                                                 }
                                             }
