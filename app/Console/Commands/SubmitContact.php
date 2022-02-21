@@ -81,6 +81,7 @@ class SubmitContact extends Command
         }
 
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
+        $companyContacts->toQuery()->update(['is_delivered'=> 3]);
 
         foreach ($companyContacts as $companyContact) {
             if (!$companyContact->contact) {
@@ -236,8 +237,7 @@ class SubmitContact extends Command
                     $this->data[$section['part'][0]] = implode('', $section['transform']);
                 }
             }
-
-            $javascriptCheck = strpos($this->html, 'recaptcha') === false;
+            $javascriptCheck = strpos($crawler->html(), 'recaptcha') === false;
             if ($javascriptCheck) {
                 try {
                     $this->submitByUsingBrower($company, $this->data);
@@ -529,9 +529,9 @@ class SubmitContact extends Command
                 'transform' => $contact->fu_lastname,
             ],
             [
-                'match' => ['郵便番号'],
+                'match' => ['郵便番号', 'addressnum'],
                 'pattern' => ['郵便番号', '〒'],
-                'transform' => $contact->postalCode1 . $contact->postalCode2,
+                'transform' => $contact->postalCode1 .'-'. $contact->postalCode2,
             ],
             [
                 'pattern' => ['都道府県'],
@@ -540,7 +540,7 @@ class SubmitContact extends Command
             [
                 'pattern' => ['FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone'],
                 'match' => ['fax', 'FAX'],
-                'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
+                'transform' => $contact->phoneNumber1 .'-'. $contact->phoneNumber2 .'-'. $contact->phoneNumber3,
             ],
             [
                 'match' => ['市区町村'],
