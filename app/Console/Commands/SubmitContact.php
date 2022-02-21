@@ -81,7 +81,7 @@ class SubmitContact extends Command
         }
 
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
-        $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+        $companyContacts->toQuery()->update(['is_delivered'=> self::STATUS_FAILURE]);
 
         foreach ($companyContacts as $companyContact) {
             if (!$companyContact->contact) {
