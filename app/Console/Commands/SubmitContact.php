@@ -69,8 +69,11 @@ class SubmitContact extends Command
         $this->isDebug = config('app.debug');
 
         if (
-            now()->lt(Carbon::createFromTimestamp(strtotime(now()->format('Y-m-d') . ' ' . $config->start)))
-            || now()->gt(Carbon::createFromTimestamp(strtotime(now()->format('Y-m-d') . ' ' . $config->end)))
+            ($config->start && $config->end)
+            && (
+                now()->lt(Carbon::createFromTimestamp(strtotime(now()->format('Y-m-d') . ' ' . $config->start)))
+                || now()->gt(Carbon::createFromTimestamp(strtotime(now()->format('Y-m-d') . ' ' . $config->end)))
+            )
         ) {
             $this->error('Out of time');
 
@@ -220,14 +223,14 @@ class SubmitContact extends Command
                     // get the last x items in part then transform them to the last x items in transform
                     $matches = array_values(array_slice($section['part'], -count($section['transform']), count($section['transform']), true));
                     foreach ($matches as $i => $match) {
-                        if (isset($data[$matches[$i]]) || (!empty($data[$matches[$i]]))) {
+                        if (isset($this->data[$matches[$i]]) || (!empty($this->data[$matches[$i]]))) {
                             continue;
                         }
                         $this->data[$matches[$i]] = $section['transform'][$i];
                     }
                 } elseif (count($section['part']) == 1) {
                     // merge all part to the first part if there is only one part
-                    if (isset($data[$section['part'][0]]) || (!empty($data[$section['part'][0]]))) {
+                    if (isset($this->data[$section['part'][0]]) || (!empty($this->data[$section['part'][0]]))) {
                         continue;
                     }
                     $this->data[$section['part'][0]] = implode('', $section['transform']);
