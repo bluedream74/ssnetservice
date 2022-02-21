@@ -478,19 +478,19 @@ class SubmitContact extends Command
                 'transform' => 'ナシ',
             ],
             [
-                'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名'],
+                'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル'],
                 'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名'],
                 'transform' => $contact->company,
-            ],
-            [
-                'match' => ['住所', 'addr', 'add_detail'],
-                'pattern' => ['住所', '所在地', '市区', '町名'],
-                'transform' => $contact->address,
             ],
             [
                 'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'confirm'],
                 'pattern' => ['メールアドレス', 'Mail アドレス'],
                 'transform' => $contact->email,
+            ],
+            [
+                'match' => ['住所', 'addr', 'add_detail'],
+                'pattern' => ['住所', '所在地', '市区', '町名'],
+                'transform' => $contact->address,
             ],
             [
                 'match' => ['title', 'subject', '件名'],
@@ -685,7 +685,7 @@ class SubmitContact extends Command
 
         $driver->get($company->contact_form_url);
 
-        $driver->manage()->window()->setSize(new WebDriverDimension(1225, 1996));
+        $driver->manage()->window()->setSize(new WebDriverDimension(800, 800));
 
         $formInputs = $this->form->all();
         foreach ($formInputs as $formKey => $formInput) {
@@ -796,8 +796,8 @@ class SubmitContact extends Command
      */
     public function containsAny(string $string, array $list)
     {
-        return collect($list)->contains(function ($list) use ($string) {
-            return strpos($string, $list) !== false;
+        return collect($list)->contains(function ($item) use ($string) {
+            return strpos($string, $item) !== false;
         });
     }
 }
