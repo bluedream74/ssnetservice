@@ -81,6 +81,7 @@ class SubmitContact extends Command
         }
 
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
+        $companyContacts->toQuery()->update(['is_delivered'=> self::STATUS_FAILURE]);
 
         foreach ($companyContacts as $companyContact) {
             if (!$companyContact->contact) {
@@ -99,8 +100,6 @@ class SubmitContact extends Command
 
                 return 0;
             }
-
-            $companyContact->update(['is_delivered' => self::STATUS_FAILURE]);
 
             $this->data = [];
             $this->html = null;
@@ -236,8 +235,7 @@ class SubmitContact extends Command
                     $this->data[$section['part'][0]] = implode('', $section['transform']);
                 }
             }
-
-            $javascriptCheck = strpos($this->html, 'recaptcha') === false;
+            $javascriptCheck = strpos($crawler->html(), 'recaptcha') === false;
             if ($javascriptCheck) {
                 try {
                     $this->submitByUsingBrower($company, $this->data);
@@ -529,9 +527,9 @@ class SubmitContact extends Command
                 'transform' => $contact->fu_lastname,
             ],
             [
-                'match' => ['郵便番号'],
+                'match' => ['郵便番号', 'addressnum'],
                 'pattern' => ['郵便番号', '〒'],
-                'transform' => $contact->postalCode1 . $contact->postalCode2,
+                'transform' => $contact->postalCode1 .'-'. $contact->postalCode2,
             ],
             [
                 'pattern' => ['都道府県'],
