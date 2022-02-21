@@ -101,8 +101,6 @@ class SubmitContact extends Command
                 return 0;
             }
 
-            $companyContact->update(['is_delivered' => self::STATUS_FAILURE]);
-
             $this->data = [];
             $this->html = null;
             $this->htmlText = null;
@@ -540,7 +538,7 @@ class SubmitContact extends Command
             [
                 'pattern' => ['FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone'],
                 'match' => ['fax', 'FAX'],
-                'transform' => $contact->phoneNumber1 .'-'. $contact->phoneNumber2 .'-'. $contact->phoneNumber3,
+                'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
             [
                 'match' => ['市区町村'],
