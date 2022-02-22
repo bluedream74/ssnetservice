@@ -81,7 +81,7 @@ class SubmitContact extends Command
         }
 
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
-        $companyContacts->toQuery()->update(['is_delivered'=> self::STATUS_FAILURE]);
+        $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_FAILURE]);
 
         foreach ($companyContacts as $companyContact) {
             if (!$companyContact->contact) {
@@ -92,9 +92,11 @@ class SubmitContact extends Command
 
             if (
                 !$company->contact_form_url
-                || !$contact->date
-                || !$contact->time
-                || now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))
+                || (
+                    $contact->date
+                    && $contact->time
+                    && now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))
+                )
             ) {
                 $this->info('Skip: ' . $companyContact->id);
 
@@ -500,11 +502,6 @@ class SubmitContact extends Command
                 'transform' => $contact->homepageUrl,
             ],
             [
-                'match' => ['ご担当者名'],
-                'pattern' => ['名前', '氏名', '担当者', '差出人', 'ネーム'],
-                'transform' => $contact->surname . $contact->lastname,
-            ],
-            [
                 'match' => ['姓'],
                 'transform' => $contact->surname,
             ],
@@ -513,8 +510,9 @@ class SubmitContact extends Command
                 'transform' => $contact->lastname,
             ],
             [
-                'pattern' => ['ふりがな', 'フリガナ', 'お名前（カナ）'],
-                'transform' => $contact->fu_surname . $contact->fu_lastname,
+                'match' => ['ご担当者名'],
+                'pattern' => ['名前', '氏名', '担当者', '差出人', 'ネーム'],
+                'transform' => $contact->surname . $contact->lastname,
             ],
             [
                 'match' => ['セイ', 'せい'],
@@ -527,9 +525,13 @@ class SubmitContact extends Command
                 'transform' => $contact->fu_lastname,
             ],
             [
+                'pattern' => ['ふりがな', 'フリガナ', 'お名前（カナ）'],
+                'transform' => $contact->fu_surname . $contact->fu_lastname,
+            ],
+            [
                 'match' => ['郵便番号', 'addressnum'],
                 'pattern' => ['郵便番号', '〒'],
-                'transform' => $contact->postalCode1 .'-'. $contact->postalCode2,
+                'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
             ],
             [
                 'pattern' => ['都道府県'],
@@ -756,6 +758,7 @@ class SubmitContact extends Command
             | //a[contains(text(),"確認")]
             | //button[contains(text(),"送信")]
             | //input[contains(@value,"送信") and @type!="hidden"]
+            | //input[contains(@value,"送　信") and @type!="hidden"]
             | //a[contains(text(),"送信")]
             | //button[contains(text(),"次へ")]
             | //input[contains(@value,"次へ") and @type!="hidden"]
