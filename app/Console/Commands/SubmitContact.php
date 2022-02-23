@@ -81,7 +81,9 @@ class SubmitContact extends Command
         }
 
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
-        $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_FAILURE]);
+        if (count($companyContacts)) {
+            $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_FAILURE]);
+        }
 
         foreach ($companyContacts as $companyContact) {
             if (!$companyContact->contact) {
@@ -511,7 +513,7 @@ class SubmitContact extends Command
             ],
             [
                 'match' => ['ご担当者名'],
-                'pattern' => ['名前', '氏名', '担当者', '差出人', 'ネーム'],
+                'pattern' => ['名前', '氏名', '担当者', '差出人', 'ネーム', 'お名前(漢字)'],
                 'transform' => $contact->surname . $contact->lastname,
             ],
             [
@@ -525,7 +527,7 @@ class SubmitContact extends Command
                 'transform' => $contact->fu_lastname,
             ],
             [
-                'pattern' => ['ふりがな', 'フリガナ', 'お名前（カナ）'],
+                'pattern' => ['ふりがな', 'フリガナ', 'お名前（カナ）', 'お名前(カナ)'],
                 'transform' => $contact->fu_surname . $contact->fu_lastname,
             ],
             [
@@ -755,6 +757,7 @@ class SubmitContact extends Command
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
             | //input[contains(@value,"確認") and @type!="hidden"]
+            | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
             | //a[contains(text(),"確認")]
             | //button[contains(text(),"送信")]
             | //input[contains(@value,"送信") and @type!="hidden"]
