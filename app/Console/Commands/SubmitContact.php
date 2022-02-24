@@ -708,7 +708,7 @@ class SubmitContact extends Command
                         break;
                     case 'radio':
                         $radio = new WebDriverRadios($this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$formKey}\"]")));
-                        $checkbox->selectByIndex(0);
+                        $radio->selectByIndex(0);
                         break;
                     case 'select':
                         $select = new WebDriverSelect($this->driver->findElement(WebDriverBy::cssSelector("select[name=\"{$formKey}\"]")));
