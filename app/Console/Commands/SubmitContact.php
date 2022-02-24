@@ -8,11 +8,14 @@ use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
-use Facebook\WebDriver\WebDriverDimension;
+use Facebook\WebDriver\WebDriverCheckboxes;
+use Facebook\WebDriver\WebDriverRadios;
+use Facebook\WebDriver\WebDriverSelect;
 use Goutte\Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\DomCrawler\Field\InputFormField;
 use Symfony\Component\HttpClient\HttpClient;
 
@@ -40,6 +43,7 @@ class SubmitContact extends Command
      */
     protected $description = 'Command description';
 
+    protected $driver;
     protected $form;
     protected $html;
     protected $htmlText;
@@ -106,6 +110,7 @@ class SubmitContact extends Command
             }
 
             $this->data = [];
+            $this->driver = null;
             $this->html = null;
             $this->htmlText = null;
             $crawler = null;
@@ -114,9 +119,18 @@ class SubmitContact extends Command
             $this->info("Company contact {$companyContact->id}: {$company->contact_form_url}");
 
             try {
-                $crawler = $this->client->request('GET', $company->contact_form_url);
+                $this->initBrowser();
             } catch (\Exception $e) {
                 $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
+                continue;
+            }
+
+            try {
+                // $crawler = $this->client->request('GET', $company->contact_form_url);
+                $crawler = $this->getPageHTMLUsingBrowser($company->contact_form_url);
+            } catch (\Exception $e) {
+                $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
+                continue;
             }
 
             if (!$crawler) {
@@ -131,9 +145,11 @@ class SubmitContact extends Command
             $hasContactForm = $this->findContactForm($crawler);
             if (!$hasContactForm) {
                 $iframes = $crawler->filter('iframe')->extract(['src']);
-                foreach ($iframes as $iframeURL) {
+                foreach ($iframes as $i => $iframeURL) {
                     try {
-                        $frameResponse = $this->client->request('GET', $iframeURL);
+                        // $frameResponse = $this->client->request('GET', $iframeURL);
+                        $frameResponse = $this->getPageHTMLUsingBrowser($iframeURL);
+                        file_put_contents(storage_path("html/{$companyContact->id}_frame{$i}.html"), $frameResponse->html());
                         $hasFrameContactForm = $this->findContactForm($frameResponse);
                         if ($hasFrameContactForm) {
                             $hasContactForm = true;
@@ -239,6 +255,9 @@ class SubmitContact extends Command
                     $this->data[$section['part'][0]] = implode('', $section['transform']);
                 }
             }
+
+            $this->info('Data: ' . var_export($this->data, true));
+
             $javascriptCheck = strpos($crawler->html(), 'recaptcha') === false;
             if ($javascriptCheck) {
                 try {
@@ -364,6 +383,8 @@ class SubmitContact extends Command
      */
     public function updateCompanyContact($companyContact, int $status, $message = null)
     {
+        $this->closeBrowser();
+
         $deliveryStatus = [
             self::STATUS_NOT_SUPPORTED => '送信失敗',
             self::STATUS_SENT => '送信済み',
@@ -672,23 +693,6 @@ class SubmitContact extends Command
      */
     public function submitByUsingBrower($company)
     {
-        $options = new ChromeOptions();
-        $arguments = ['--disable-gpu', '--no-sandbox'];
-        if (!$this->isDebug) {
-            $arguments[] = '--headless';
-        }
-        $options->addArguments($arguments);
-
-        $caps = DesiredCapabilities::chrome();
-        $caps->setCapability('acceptSslCerts', false);
-        $caps->setCapability(ChromeOptions::CAPABILITY, $options);
-
-        $driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000);
-
-        $driver->get($company->contact_form_url);
-
-        $driver->manage()->window()->setSize(new WebDriverDimension(800, 800));
-
         $formInputs = $this->form->all();
         foreach ($formInputs as $formKey => $formInput) {
             if ((strpos($formKey, 'wpcf7') !== false) || !isset($this->data[$formKey]) || empty($this->data[$formKey])) {
@@ -699,21 +703,24 @@ class SubmitContact extends Command
                 switch ($type) {
                     case 'checkbox':
                         $validKey = preg_replace('/\[\d+\]$/', '[]', $formKey);
-                        $driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$validKey}\"]"))->click();
+                        $checkbox = new WebDriverCheckboxes($this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$validKey}\"]")));
+                        $checkbox->selectByIndex(0);
                         break;
                     case 'radio':
-                        $driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$formKey}\"]"))->click();
+                        $radio = new WebDriverRadios($this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$formKey}\"]")));
+                        $checkbox->selectByIndex(0);
                         break;
                     case 'select':
-                        $driver->findElement(WebDriverBy::cssSelector("select[name=\"{$formKey}\"] option[value=\"{$this->data[$formKey]}\"]"))->click();
+                        $select = new WebDriverSelect($this->driver->findElement(WebDriverBy::cssSelector("select[name=\"{$formKey}\"]")));
+                        $select->selectByValue($this->data[$formKey]);
                         break;
                     case 'hidden':
                         break;
                     case 'textarea':
-                        $driver->findElement(WebDriverBy::cssSelector("textarea[name=\"{$formKey}\"]"))->sendKeys($this->data[$formKey]);
+                        $this->driver->findElement(WebDriverBy::cssSelector("textarea[name=\"{$formKey}\"]"))->sendKeys($this->data[$formKey]);
                         break;
                     default:
-                        $driver->findElement(WebDriverBy::cssSelector("input[name=\"{$formKey}\"]"))->sendKeys($this->data[$formKey]);
+                        $this->driver->findElement(WebDriverBy::cssSelector("input[name=\"{$formKey}\"]"))->sendKeys($this->data[$formKey]);
                         break;
                 }
             } catch (\Exception $e) {
@@ -721,18 +728,17 @@ class SubmitContact extends Command
             }
         }
 
-        $driver->takeScreenshot(storage_path("screenshots/{$company->id}_fill.jpg"));
+        $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_fill.jpg"));
 
         $confirmStep = 0;
         do {
             $confirmStep++;
             try {
-                $isSuccess = $this->confirmByUsingBrowser($driver);
-                $driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
+                $isSuccess = $this->confirmByUsingBrowser($this->driver);
+                $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
 
                 if ($isSuccess) {
-                    $driver->manage()->deleteAllCookies();
-                    $driver->quit();
+                    $this->closeBrowser();
 
                     return;
                 }
@@ -741,8 +747,7 @@ class SubmitContact extends Command
             }
         } while ($confirmStep < self::RETRY_COUNT);
 
-        $driver->manage()->deleteAllCookies();
-        $driver->quit();
+        $this->closeBrowser();
 
         throw new \Exception('Confirm step is not success');
     }
@@ -791,6 +796,50 @@ class SubmitContact extends Command
         '));
 
         return count($successTexts) > 0;
+    }
+
+    /**
+     * Get page using browser.
+     */
+    public function getPageHTMLUsingBrowser(string $url)
+    {
+        $baseURL = parse_url($url)['host'] ?? null;
+        if (!$baseURL) {
+            throw new \Exception('Invalid URL');
+        }
+        $response = $this->driver->get($url);
+
+        return new Crawler($response->getPageSource(), $url, $baseURL);
+    }
+
+    /**
+     * Init browser.
+     */
+    public function initBrowser()
+    {
+        $options = new ChromeOptions();
+        $arguments = ['--disable-gpu', '--no-sandbox'];
+        if (!$this->isDebug) {
+            $arguments[] = '--headless';
+        }
+        $options->addArguments($arguments);
+
+        $caps = DesiredCapabilities::chrome();
+        $caps->setCapability('acceptSslCerts', false);
+        $caps->setCapability(ChromeOptions::CAPABILITY, $options);
+
+        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000);
+    }
+
+    /**
+     * Close opening browser.
+     */
+    public function closeBrowser()
+    {
+        if ($this->driver) {
+            $this->driver->manage()->deleteAllCookies();
+            $this->driver->quit();
+        }
     }
 
     /**
