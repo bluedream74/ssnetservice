@@ -780,6 +780,8 @@ class SubmitContact extends Command
         foreach ($confirmElements as $element) {
             try {
                 $element->click();
+                // Accept alert confirm
+                $driver->switchTo()->alert()->accept();
             } catch (\Exception $exception) {
                 // Do nothing
             }
