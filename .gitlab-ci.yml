@@ -16,7 +16,7 @@ composer:
   image: digidinostrungdd/phpcomposer:php7.4_node14
   stage: build
   script:
-    - echo "${UR_ENV}" > .env
+    - echo "${UR_DEV_ENV}" > .env
     - /usr/local/bin/composer install
     - php artisan key:generate
     - yarn install
@@ -45,7 +45,7 @@ sync2uruemon:
   cache: {}
   script:
     - *setting-ssh
-    - echo "${UR_ENV}" > .env
+    - echo "${UR_DEV_ENV}" > .env
     - ssh -ttttttttttt $UR_DEPLOY_USER@$UR_BATCH_HOST 'sudo chown -R thangnv:thangnv /var/www/uruemon/'
     - rsync -azP --exclude='.git' --exclude=storage/logs/ --delete ./ $UR_DEPLOY_USER@$UR_BATCH_HOST:$UR_DEPLOY_DIR/
     - ssh -ttttttttttt $UR_DEPLOY_USER@$UR_BATCH_HOST 'cd /var/www/uruemon && sudo php artisan storage:link'
