@@ -13,7 +13,7 @@ stages:
 
   
 composer:
-  image: digidinostrungdd/phpnodejs:7.3_14.x.2
+  image: digidinostrungdd/phpcomposer:php7.4_node14
   stage: build
   script:
     - echo "${UR_ENV}" > .env
@@ -39,7 +39,7 @@ composer:
   when: on_success
 
 sync2hrm:
-  image: digidinostrungdd/phpnodejs:7.3_14.x.2
+  image: digidinostrungdd/phpcomposer:php7.4_node14
   stage: cron
   cache: {}
   script:
@@ -61,7 +61,7 @@ sync2hrm:
   when: on_success
 
 dbmigration_uruemon:
-  image: digidinostrungdd/phpnodejs:7.3_14.x.2
+  image: digidinostrungdd/phpcomposer:php7.4_node14
   stage: database
   cache: {}
   script:
