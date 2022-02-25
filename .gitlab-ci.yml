@@ -13,13 +13,18 @@ stages:
 
   
 composer:
-  image: digidinostrungdd/phpcomposer:7.4
+  image: digidinostrungdd/phpnodejs:7.3_14.x.2
   stage: build
   script:
     - echo "${UR_ENV}" > .env
     - /usr/local/bin/composer install
     - php artisan key:generate
-    - php artisan passport:install --force
+    - yarn production
+    - yarn production-styles
+    - yarn production-app
+    - yarn production-admin
+    - php artisan migrate --seed
+    #- php artisan passport:install --force
     #- php artisan l5-swagger:generate
     - php artisan optimize:clear
     - php artisan config:cache
@@ -34,7 +39,7 @@ composer:
   when: on_success
 
 sync2hrm:
-  image: digidinostrungdd/phpcomposer:7.4
+  image: digidinostrungdd/phpnodejs:7.3_14.x.2
   stage: cron
   cache: {}
   script:
@@ -55,8 +60,8 @@ sync2hrm:
     - develop
   when: on_success
 
-dbmigration_hrm:
-  image: digidinostrungdd/phpcomposer:7.4
+dbmigration_uruemon:
+  image: digidinostrungdd/phpnodejs:7.3_14.x.2
   stage: database
   cache: {}
   script:
