@@ -13,13 +13,19 @@ stages:
 
   
 composer:
-  image: digidinostrungdd/phpcomposer:7.4
+  image: digidinostrungdd/phpcomposer:php7.4_node14
   stage: build
   script:
-    - echo "${UR_ENV}" > .env
+    - echo "${UR_DEV_ENV}" > .env
     - /usr/local/bin/composer install
     - php artisan key:generate
-    - php artisan passport:install --force
+    - yarn install
+    - yarn production
+    - yarn production-styles
+    - yarn production-app
+    - yarn production-admin
+    #- php artisan migrate --seed
+    #- php artisan passport:install --force
     #- php artisan l5-swagger:generate
     - php artisan optimize:clear
     - php artisan config:cache
@@ -33,13 +39,13 @@ composer:
     - develop
   when: on_success
 
-sync2hrm:
-  image: digidinostrungdd/phpcomposer:7.4
+sync2uruemon:
+  image: digidinostrungdd/phpcomposer:php7.4_node14
   stage: cron
   cache: {}
   script:
     - *setting-ssh
-    - echo "${UR_ENV}" > .env
+    - echo "${UR_DEV_ENV}" > .env
     - ssh -ttttttttttt $UR_DEPLOY_USER@$UR_BATCH_HOST 'sudo chown -R thangnv:thangnv /var/www/uruemon/'
     - rsync -azP --exclude='.git' --exclude=storage/logs/ --delete ./ $UR_DEPLOY_USER@$UR_BATCH_HOST:$UR_DEPLOY_DIR/
     - ssh -ttttttttttt $UR_DEPLOY_USER@$UR_BATCH_HOST 'cd /var/www/uruemon && sudo php artisan storage:link'
@@ -55,8 +61,8 @@ sync2hrm:
     - develop
   when: on_success
 
-dbmigration_hrm:
-  image: digidinostrungdd/phpcomposer:7.4
+dbmigration_uruemon:
+  image: digidinostrungdd/phpcomposer:php7.4_node14
   stage: database
   cache: {}
   script:

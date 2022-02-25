@@ -757,6 +757,7 @@ class SubmitContact extends Command
     {
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
+            | //input[@type="submit"]
             | //input[contains(@value,"確認") and @type!="hidden"]
             | //input[contains(@value,"確 認") and @type!="hidden"]
             | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
@@ -775,6 +776,8 @@ class SubmitContact extends Command
         foreach ($confirmElements as $element) {
             try {
                 $element->click();
+                // Accept alert confirm
+                $driver->switchTo()->alert()->accept();
             } catch (\Exception $exception) {
                 // Do nothing
             }
