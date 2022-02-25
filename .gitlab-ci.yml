@@ -39,7 +39,7 @@ composer:
     - develop
   when: on_success
 
-sync2hrm:
+sync2uruemon:
   image: digidinostrungdd/phpcomposer:php7.4_node14
   stage: cron
   cache: {}
