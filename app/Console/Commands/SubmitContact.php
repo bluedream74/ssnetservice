@@ -506,8 +506,8 @@ class SubmitContact extends Command
                 'transform' => $contact->company,
             ],
             [
-                'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'confirm'],
-                'pattern' => ['メールアドレス', 'Mail アドレス'],
+                'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email'],
+                'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス'],
                 'transform' => $contact->email,
             ],
             [
@@ -762,6 +762,7 @@ class SubmitContact extends Command
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
             | //input[contains(@value,"確認") and @type!="hidden"]
+            | //input[contains(@value,"確 認") and @type!="hidden"]
             | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
             | //a[contains(text(),"確認")]
             | //button[contains(text(),"送信")]
