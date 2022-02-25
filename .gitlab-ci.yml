@@ -19,6 +19,7 @@ composer:
     - echo "${UR_ENV}" > .env
     - /usr/local/bin/composer install
     - php artisan key:generate
+    - yarn install
     - yarn production
     - yarn production-styles
     - yarn production-app
