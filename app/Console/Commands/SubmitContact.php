@@ -511,6 +511,11 @@ class SubmitContact extends Command
                 'transform' => $contact->email,
             ],
             [
+                'match' => ['郵便番号', 'addressnum'],
+                'pattern' => ['郵便番号', '〒'],
+                'transform' => $contact->postalCode1 .'-'. $contact->postalCode2,
+            ],
+            [
                 'match' => ['住所', 'addr', 'add_detail'],
                 'pattern' => ['住所', '所在地', '市区', '町名'],
                 'transform' => $contact->address,
@@ -525,11 +530,11 @@ class SubmitContact extends Command
                 'transform' => $contact->homepageUrl,
             ],
             [
-                'match' => ['姓'],
+                'match' => ['姓', 'lastname'],
                 'transform' => $contact->surname,
             ],
             [
-                'match' => ['名'],
+                'match' => ['名', 'firstname'],
                 'transform' => $contact->lastname,
             ],
             [
@@ -538,23 +543,14 @@ class SubmitContact extends Command
                 'transform' => $contact->surname . $contact->lastname,
             ],
             [
-                'match' => ['セイ', 'せい'],
+                'match' => ['セイ', 'せい', 'lastname_kana'],
                 'pattern' => ['名 フリガナ'],
                 'transform' => $contact->fu_surname,
             ],
             [
-                'match' => ['メイ', 'めい'],
+                'match' => ['メイ', 'めい', 'firstname_kana'],
                 'pattern' => ['姓 フリガナ'],
                 'transform' => $contact->fu_lastname,
-            ],
-            [
-                'pattern' => ['ふりがな', 'フリガナ', 'お名前（カナ）', 'お名前(カナ)'],
-                'transform' => $contact->fu_surname . $contact->fu_lastname,
-            ],
-            [
-                'match' => ['郵便番号', 'addressnum'],
-                'pattern' => ['郵便番号', '〒'],
-                'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
             ],
             [
                 'pattern' => ['都道府県'],
@@ -780,6 +776,8 @@ class SubmitContact extends Command
         foreach ($confirmElements as $element) {
             try {
                 $element->click();
+                // Accept alert confirm
+                $driver->switchTo()->alert()->accept();
             } catch (\Exception $exception) {
                 // Do nothing
             }
