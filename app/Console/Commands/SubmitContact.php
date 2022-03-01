@@ -502,12 +502,12 @@ class SubmitContact extends Command
             ],
             [
                 'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル'],
-                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名'],
+                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名','お名前 フリガナ (全角カナ)'],
                 'transform' => $contact->company,
             ],
             [
                 'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email'],
-                'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス'],
+                'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス','E-mail (半角)'],
                 'transform' => $contact->email,
             ],
             [
@@ -516,8 +516,8 @@ class SubmitContact extends Command
                 'transform' => $contact->postalCode1 .'-'. $contact->postalCode2,
             ],
             [
-                'match' => ['住所', 'addr', 'add_detail'],
-                'pattern' => ['住所', '所在地', '市区', '町名'],
+                'match' => ['住所', 'addr', 'add_detail','item117'],
+                'pattern' => ['住所', '所在地', '市区', '町名','item117'],
                 'transform' => $contact->address,
             ],
             [
@@ -763,6 +763,7 @@ class SubmitContact extends Command
             | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
             | //a[contains(text(),"確認")]
             | //button[contains(text(),"送信")]
+            | //button[contains(text(),"送　　信")]
             | //input[contains(@value,"送信") and @type!="hidden"]
             | //input[contains(@value,"送　信") and @type!="hidden"]
             | //a[contains(text(),"送信")]
