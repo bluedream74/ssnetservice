@@ -530,11 +530,11 @@ class SubmitContact extends Command
                 'transform' => $contact->homepageUrl,
             ],
             [
-                'match' => ['姓', 'lastname'],
+                'match' => ['姓', 'lastname', 'sei'],
                 'transform' => $contact->surname,
             ],
             [
-                'match' => ['名', 'firstname'],
+                'match' => ['名', 'firstname', 'mei'],
                 'transform' => $contact->lastname,
             ],
             [
@@ -543,12 +543,12 @@ class SubmitContact extends Command
                 'transform' => $contact->surname . $contact->lastname,
             ],
             [
-                'match' => ['セイ', 'せい', 'lastname_kana'],
+                'match' => ['セイ', 'せい', 'lastname_kana', 'sei_kana'],
                 'pattern' => ['名 フリガナ'],
                 'transform' => $contact->fu_surname,
             ],
             [
-                'match' => ['メイ', 'めい', 'firstname_kana'],
+                'match' => ['メイ', 'めい', 'firstname_kana', 'mei_kana'],
                 'pattern' => ['姓 フリガナ'],
                 'transform' => $contact->fu_lastname,
             ],
