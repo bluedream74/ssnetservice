@@ -383,7 +383,7 @@ class SubmitContact extends Command
      */
     public function updateCompanyContact($companyContact, int $status, $message = null)
     {
-        $this->closeBrowser();
+        // $this->closeBrowser();
 
         $deliveryStatus = [
             self::STATUS_NOT_SUPPORTED => '送信失敗',
@@ -496,46 +496,47 @@ class SubmitContact extends Command
         }
         $mapper = [
             [
-                'match' => ['company-kana', 'company_furi', 'フリガナ', 'kcn', 'ふりがな', 'singleAnswer(ANSWER3-1)', 'singleAnswer(ANSWER3-2)', 'furi_sei', 'furi_neme', 'txtNameSeiFuri', 'department', 'f000003200', 'f000003202', 'f000003194', 'i_kana_sei', 'i_kana_mei', 'name-furi-sei', 'name-furi-mei', 'ext_04'],
+                'match' => ['company-kana', 'company_furi', 'フリガナ', 'kcn', 'ふりがな', 'singleAnswer(ANSWER3-1)', 'singleAnswer(ANSWER3-2)', 'furi_sei', 'furi_neme', 'txtNameSeiFuri', 'department', 'f000003200', 'f000003202', 'f000003194', 'i_kana_sei', 'i_kana_mei', 'name-furi-sei', 'name-furi-mei', 'ext_04', 'c_q22_first', 'c_q22_second', 'kana', 'フリガナ(必須)', 'fLastNamey', 'fFirstNamey', 'c_q17_first', 'c_q17_second'],
                 'transform' => 'ナシ',
             ],
             [
                 'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', 'txtCompanyName', 'f000003193'],
-                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名', 'txtCompanyName', 'f000003193'],
+                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名', 'txtCompanyName', 'f000003193', '職種'],
                 'transform' => $contact->company,
             ],
             [
-                'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'f000003203', 'f000003203:cf'],
-                'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'mailaddress', 'メールアドレス', 'f000003203', 'f000003203:cf', 'i_email', 'i_email_check'],
+                'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'f000003203', 'f000003203:cf', 'c_q18_confirm'],
+                'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'mailaddress', 'メールアドレス', 'f000003203', 'f000003203:cf', 'i_email', 'i_email_check', 'email(必須)', 'confirm_email(必須)', 'c_q8', 'c_q8_confirm'],
                 'transform' => $contact->email,
             ],
             [
-                'match' => ['郵便番号', 'txtZipCode', 'f000003518:a'],
+                'match' => ['郵便番号', 'txtZipCode'],
                 'pattern' => ['郵便番号', '〒'],
                 'transform' => $contact->postalCode1 . $contact->postalCode2,
             ],
             [
-                'match' => ['郵便番号', 'addressnum', 'f000003518:a', 'zip', 'item_14_zip1'],
-                'pattern' => ['郵便番号', '〒', 'f000003518:a'],
+                'match' => ['郵便番号', 'j_zip_code_1', 'addressnum', 'f000003518:a', 'zip', 'item_14_zip1'],
                 'transform' => $contact->postalCode1,
             ],
             [
-                'match' => ['郵便番号', 'field_2437489_2', 'f000003518:t', 'zip1', 'zip[data][1]', 'item_14_zip2'],
-                'pattern' => ['郵便番号', '〒'],
+                'match' => ['郵便番号', 'field_2437489_2', 'f000003518:t', 'zip1', 'zip[data][1]', 'item_14_zip2', 'c_q10_right', 'zip2', 'j_zip_code_2', 'c_q3_right'],
                 'transform' => $contact->postalCode2,
             ],
             [
                 'match' => ['郵便番号', 'field_2437489_3'],
-                'pattern' => ['郵便番号', '〒'],
                 'transform' => $contact->postalCode2,
             ],
             [
-                'match' => ['住所', 'addr', 'add_detail', 'town', 'f000003520', 'f000003521', 'add2'],
+                'match' => ['fZipCode', 'efo-form01-apa-zip'],
+                'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
+            ],
+            [
+                'match' => ['住所', 'addr', 'add_detail', 'town', 'f000003520', 'f000003521', 'add2', 'c_q21', 'block', 'ext_08', 'fCity', 'fBuilding', 'fCompany', 'efo-form01-district'],
                 'pattern' => ['住所', '所在地', '市区', '町名'],
                 'transform' => $contact->address,
             ],
             [
-                'match' => ['title', 'subject', '件名', 'pref'],
+                'match' => ['title', 'subject', '件名', 'pref', 'job'],
                 'pattern' => ['件名', 'Title', 'Subject', '題名', '用件名', 'pref'],
                 'transform' => $contact->title,
             ],
@@ -544,16 +545,16 @@ class SubmitContact extends Command
                 'transform' => $contact->homepageUrl,
             ],
             [
-                'match' => ['姓', 'lastname', 'name1', 'singleAnswer(ANSWER2-1)', 'f000003197', 'i_name_sei'],
+                'match' => ['姓', 'lastname', 'name1', 'singleAnswer(ANSWER2-1)', 'f000003197', 'i_name_sei', 'fFirstName', 'お名前（漢字）[]', 'c_q16_first'],
                 'transform' => $contact->surname,
             ],
             [
-                'match' => ['名', 'firstname', 'name2', 'given_name', 'txtNameMei', 'singleAnswer(ANSWER2-2)', 'f000003198', 'i_name_mei', 'name-mei'],
+                'match' => ['名', 'firstname', 'name2', 'given_name', 'txtNameMei', 'singleAnswer(ANSWER2-2)', 'f000003198', 'i_name_mei', 'name-mei', 'c_q23_second', 'fLastName', 'お名前（漢字）[]', 'c_q16_second'],
                 'transform' => $contact->lastname,
             ],
             [
                 'match' => ['ご担当者名', 'お名前(必須)'],
-                'pattern' => ['名前', '氏名', '担当者', '差出人', 'ネーム', 'お名前(漢字)'],
+                'pattern' => ['名前', '氏名', '担当者', '差出人', 'ネーム', 'お名前(漢字)', 'お名前(必須)'],
                 'transform' => $contact->surname . $contact->lastname,
             ],
             [
@@ -568,18 +569,8 @@ class SubmitContact extends Command
             ],
             [
                 'pattern' => ['都道府県'],
-                'match' => ['info_perception_etc', 't_message'],
+                'match' => ['info_perception_etc', 't_message', 'お問い合わせ内容(必須)', 'fSection', 'fPosition', 'fOption1', 'fOption3', 'position', 'industry'],
                 'transform' => $contact->area,
-            ],
-            [
-                'pattern' => ['FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone', 'txtTEL', 'telnum'],
-                'match' => ['fax', 'FAX', 'txtTEL', 'singleAnswer(ANSWER5)', 'singleAnswer(ANSWER6)', 'input/zip_code', 'telnum'],
-                'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
-            ],
-            [
-                'pattern' => ['FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone', 'tel[data][0]'],
-                'match' => ['fax', 'PhoneL', 'f000003204:a', 'f000009697:a', 'i_tel1', 'tel[data][0]', 'item_16_phone1'],
-                'transform' => $contact->phoneNumber1,
             ],
             [
                 'pattern' => ['FAX番号', '電話', '携帯電話', '連絡先', 'Phone'],
@@ -587,17 +578,24 @@ class SubmitContact extends Command
                 'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
             [
-                'pattern' => ['FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone'],
-                'match' => ['fax',  'PhoneC', 'f000003204:e', 'f000009697:e', 'i_tel2', 'tel[data][1]', 'item_16_phone2'],
+                'match' => ['fax', 'FAX', 'txtTEL', 'singleAnswer(ANSWER5)', 'singleAnswer(ANSWER6)', 'input/zip_code', 'telnum', 'tel', 'fTel', 'fFax'],
+                'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
+            ],
+            [
+                'pattern' => ['tel[data][0]'],
+                'match' => ['fax', 'PhoneL', 'f000003204:a', 'f000009697:a', 'i_tel1', 'tel[data][0]', 'item_16_phone1', 'tel00_s', 'tel_:a', 'c_q9_areacode'],
+                'transform' => $contact->phoneNumber1,
+            ],
+            [
+                'match' => ['fax',  'PhoneC', 'f000003204:e', 'f000009697:e', 'i_tel2', 'tel[data][1]', 'item_16_phone2', 'tel01_s', 'tel_:e', 'c_q9_citycode'],
                 'transform' => $contact->phoneNumber2,
             ],
             [
-                'pattern' => ['FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone'],
-                'match' => ['fax', 'PhoneR', 'f000003204:n', 'f000009697:n', 'i_tel3', 'tel[data][2]', 'item_16_phone3'],
+                'match' => ['fax', 'PhoneR', 'f000003204:n', 'f000009697:n', 'i_tel3', 'tel[data][2]', 'item_16_phone3', 'tel02_s', 'tel_:n', 'c_q9_subscribercode'],
                 'transform' => $contact->phoneNumber2,
             ],
             [
-                'match' => ['市区町村'],
+                'match' => ['ext_07', '市区町村', 'fHouseNumber'],
                 'transform' => mb_substr($contact->address, 0, 3),
             ],
             [
@@ -619,6 +617,10 @@ class SubmitContact extends Command
             [
                 'pattern' => ['answer[category]'],
                 'transform' => 1,
+            ],
+            [
+                'pattern' => ['fUrl'],
+                'transform' => $contact->myurl,
             ],
         ];
         foreach ($mapper as $map) {
@@ -771,7 +773,7 @@ class SubmitContact extends Command
                 $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
 
                 if ($isSuccess) {
-                    $this->closeBrowser();
+                    // $this->closeBrowser();
 
                     return;
                 }
@@ -780,7 +782,7 @@ class SubmitContact extends Command
             }
         } while ($confirmStep < self::RETRY_COUNT);
 
-        $this->closeBrowser();
+        // $this->closeBrowser();
 
         throw new \Exception('Confirm step is not success');
     }
@@ -794,7 +796,10 @@ class SubmitContact extends Command
     {
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
+            | //button[@type="submit"]
+            | //input[@type="submit" and contains(@value,"送信") and @type!="hidden"]
             | //input[@type="submit"]
+            | //input[contains(@value,"送信") and @type!="hidden"]
             | //input[contains(@value,"確認") and @type!="hidden"]
             | //input[contains(@value,"確 認") and @type!="hidden"]
             | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
@@ -831,7 +836,7 @@ class SubmitContact extends Command
             | //*[contains(text(),"送信いたしました")]
             | //*[contains(text(),"内容を確認させていただき")]
             | //*[contains(text(),"自動返信メール")]
-            | //*[contains(text(),"送信が完了しました。")]
+            | //*[contains(text(),"完了しまし")]
         '));
 
         return count($successTexts) > 0;
