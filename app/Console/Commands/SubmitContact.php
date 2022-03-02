@@ -388,7 +388,7 @@ class SubmitContact extends Command
         $deliveryStatus = [
             self::STATUS_NOT_SUPPORTED => '送信失敗',
             self::STATUS_SENT => '送信済み',
-            self::STATUS_FAILURE => 'フォームなし',
+            self::STATUS_FAILURE => '送信失敗',
             self::STATUS_NO_FORM => 'フォームなし',
             self::STATUS_NG => 'NGワードあり',
         ];
@@ -500,13 +500,13 @@ class SubmitContact extends Command
                 'transform' => 'ナシ',
             ],
             [
-                'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', 'txtCompanyName', 'f000003193'],
-                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名', 'txtCompanyName', 'f000003193', '職種'],
+                'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', 'txtCompanyName', 'f000003193', 'mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'f000003203', 'f000003203:cf', 'c_q18_confirm'],
+                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名', 'txtCompanyName', 'f000003193', '職種', 'お名前 フリガナ (全角カナ)', 'メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'mailaddress', 'メールアドレス', 'f000003203', 'f000003203:cf', 'i_email', 'i_email_check', 'email(必須)', 'confirm_email(必須)', 'c_q8', 'c_q8_confirm'],
                 'transform' => $contact->company,
             ],
             [
-                'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'f000003203', 'f000003203:cf', 'c_q18_confirm'],
-                'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'mailaddress', 'メールアドレス', 'f000003203', 'f000003203:cf', 'i_email', 'i_email_check', 'email(必須)', 'confirm_email(必須)', 'c_q8', 'c_q8_confirm'],
+                'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email'],
+                'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'E-mail (半角)'],
                 'transform' => $contact->email,
             ],
             [
@@ -531,8 +531,8 @@ class SubmitContact extends Command
                 'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
             ],
             [
-                'match' => ['住所', 'addr', 'add_detail', 'town', 'f000003520', 'f000003521', 'add2', 'c_q21', 'block', 'ext_08', 'fCity', 'fBuilding', 'fCompany', 'efo-form01-district'],
-                'pattern' => ['住所', '所在地', '市区', '町名'],
+                'match' => ['住所', 'addr', 'add_detail', 'town', 'f000003520', 'f000003521', 'add2', 'c_q21', 'block', 'ext_08', 'fCity', 'fBuilding', 'fCompany', 'efo-form01-district', '住所', 'addr', 'add_detail', 'item117'],
+                'pattern' => ['住所', '所在地', '市区', '町名', '住所', '所在地', '市区', '町名', 'item117'],
                 'transform' => $contact->address,
             ],
             [
@@ -550,6 +550,11 @@ class SubmitContact extends Command
             ],
             [
                 'match' => ['名', 'firstname', 'name2', 'given_name', 'txtNameMei', 'singleAnswer(ANSWER2-2)', 'f000003198', 'i_name_mei', 'name-mei', 'c_q23_second', 'fLastName', 'お名前（漢字）[]', 'c_q16_second'],
+                'match' => ['姓', 'lastname', 'sei'],
+                'transform' => $contact->surname,
+            ],
+            [
+                'match' => ['名', 'firstname', 'mei'],
                 'transform' => $contact->lastname,
             ],
             [
@@ -558,12 +563,12 @@ class SubmitContact extends Command
                 'transform' => $contact->surname . $contact->lastname,
             ],
             [
-                'match' => ['セイ', 'せい', 'lastname_kana'],
+                'match' => ['セイ', 'せい', 'lastname_kana', 'sei_kana', 'kana_sei'],
                 'pattern' => ['名 フリガナ'],
                 'transform' => $contact->fu_surname,
             ],
             [
-                'match' => ['メイ', 'めい', 'firstname_kana'],
+                'match' => ['メイ', 'めい', 'firstname_kana', 'mei_kana', 'kana_mei'],
                 'pattern' => ['姓 フリガナ'],
                 'transform' => $contact->fu_lastname,
             ],
@@ -805,6 +810,7 @@ class SubmitContact extends Command
             | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
             | //a[contains(text(),"確認")]
             | //button[contains(text(),"送信")]
+            | //button[contains(text(),"送　　信")]
             | //input[contains(@value,"送信") and @type!="hidden"]
             | //input[contains(@value,"送　信") and @type!="hidden"]
             | //a[contains(text(),"送信")]
