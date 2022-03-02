@@ -388,7 +388,7 @@ class SubmitContact extends Command
         $deliveryStatus = [
             self::STATUS_NOT_SUPPORTED => '送信失敗',
             self::STATUS_SENT => '送信済み',
-            self::STATUS_FAILURE => 'フォームなし',
+            self::STATUS_FAILURE => '送信失敗',
             self::STATUS_NO_FORM => 'フォームなし',
             self::STATUS_NG => 'NGワードあり',
         ];
@@ -543,12 +543,12 @@ class SubmitContact extends Command
                 'transform' => $contact->surname . $contact->lastname,
             ],
             [
-                'match' => ['セイ', 'せい', 'lastname_kana', 'sei_kana'],
+                'match' => ['セイ', 'せい', 'lastname_kana', 'sei_kana', 'kana_sei'],
                 'pattern' => ['名 フリガナ'],
                 'transform' => $contact->fu_surname,
             ],
             [
-                'match' => ['メイ', 'めい', 'firstname_kana', 'mei_kana'],
+                'match' => ['メイ', 'めい', 'firstname_kana', 'mei_kana', 'kana_mei'],
                 'pattern' => ['姓 フリガナ'],
                 'transform' => $contact->fu_lastname,
             ],
