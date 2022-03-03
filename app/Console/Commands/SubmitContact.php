@@ -21,9 +21,9 @@ use Symfony\Component\HttpClient\HttpClient;
 
 class SubmitContact extends Command
 {
-    public const STATUS_NOT_SUPPORTED = 1;
+    public const STATUS_FAILURE = 1;
     public const STATUS_SENT = 2;
-    public const STATUS_FAILURE = 3;
+    public const STATUS_SENDING = 3;
     public const STATUS_NO_FORM = 4;
     public const STATUS_NG = 5;
 
@@ -86,7 +86,7 @@ class SubmitContact extends Command
 
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
         if (count($companyContacts)) {
-            $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_FAILURE]);
+            $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
         }
 
         foreach ($companyContacts as $companyContact) {
@@ -386,9 +386,9 @@ class SubmitContact extends Command
         $this->closeBrowser();
 
         $deliveryStatus = [
-            self::STATUS_NOT_SUPPORTED => '送信失敗',
-            self::STATUS_SENT => '送信済み',
             self::STATUS_FAILURE => '送信失敗',
+            self::STATUS_SENT => '送信済み',
+            self::STATUS_SENDING => '未対応',
             self::STATUS_NO_FORM => 'フォームなし',
             self::STATUS_NG => 'NGワードあり',
         ];
