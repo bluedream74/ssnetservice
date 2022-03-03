@@ -496,7 +496,8 @@ class SubmitContact extends Command
         }
         $mapper = [
             [
-                'match' => ['company-kana', 'company_furi', 'フリガナ', 'kcn', 'ふりがな', 'singleAnswer(ANSWER3-1)', 'singleAnswer(ANSWER3-2)', 'furi_sei', 'furi_neme', 'txtNameSeiFuri', 'department', 'f000003200', 'f000003202', 'f000003194', 'i_kana_sei', 'i_kana_mei', 'name-furi-sei', 'name-furi-mei', 'ext_04', 'c_q22_first', 'c_q22_second', 'kana', 'フリガナ(必須)', 'fLastNamey', 'fFirstNamey', 'c_q17_first', 'c_q17_second'],
+                'pattern' => ['氏名（カナ）'],
+                'match' => ['company-kana', 'company_furi', 'フリガナ', 'kcn', 'ふりがな', 'singleAnswer(ANSWER3-1)', 'singleAnswer(ANSWER3-2)', 'furi_sei', 'furi_neme', 'txtNameSeiFuri', 'department', 'f000003200', 'f000003202', 'f000003194', 'i_kana_sei', 'i_kana_mei', 'name-furi-sei', 'name-furi-mei', 'ext_04', 'c_q22_first', 'c_q22_second', 'kana', 'フリガナ(必須)', 'fLastNamey', 'fFirstNamey', 'c_q17_first', 'c_q17_second', 'Public::Application::Userenquete_D__P__D_name1_ka', 'Public::Application::Userenquete_D__P__D_name2_ka'],
                 'transform' => 'ナシ',
             ],
             [
@@ -523,7 +524,7 @@ class SubmitContact extends Command
                 'transform' => $contact->postalCode2,
             ],
             [
-                'match' => ['郵便番号', 'field_2437489_3'],
+                'match' => ['field_2437489_3'],
                 'transform' => $contact->postalCode2,
             ],
             [
@@ -545,17 +546,12 @@ class SubmitContact extends Command
                 'transform' => $contact->homepageUrl,
             ],
             [
-                'match' => ['姓', 'lastname', 'name1', 'singleAnswer(ANSWER2-1)', 'f000003197', 'i_name_sei', 'fFirstName', 'お名前（漢字）[]', 'c_q16_first'],
-                'transform' => $contact->surname,
+                'match' => ['姓', 'lastname', 'name1', 'singleAnswer(ANSWER2-1)', 'f000003197', 'i_name_sei', 'fFirstName', 'お名前（漢字）[]', 'c_q16_first', 'sei', 'Public::Application::Userenquete_D__P__D_name2'],
+                'transform' => $contact->lastname,
             ],
             [
                 'match' => ['名', 'firstname', 'name2', 'given_name', 'txtNameMei', 'singleAnswer(ANSWER2-2)', 'f000003198', 'i_name_mei', 'name-mei', 'c_q23_second', 'fLastName', 'お名前（漢字）[]', 'c_q16_second'],
-                'match' => ['姓', 'lastname', 'sei'],
                 'transform' => $contact->surname,
-            ],
-            [
-                'match' => ['名', 'firstname', 'mei'],
-                'transform' => $contact->lastname,
             ],
             [
                 'match' => ['ご担当者名', 'お名前(必須)'],
@@ -574,11 +570,11 @@ class SubmitContact extends Command
             ],
             [
                 'pattern' => ['都道府県'],
-                'match' => ['info_perception_etc', 't_message', 'お問い合わせ内容(必須)', 'fSection', 'fPosition', 'fOption1', 'fOption3', 'position', 'industry'],
+                'match' => ['info_perception_etc', 't_message', 'お問い合わせ内容(必須)', 'fSection', 'fPosition', 'fOption1', 'fOption3', 'position', 'industry', 'Public::Application::Userenquete_D__P__D_division'],
                 'transform' => $contact->area,
             ],
             [
-                'pattern' => ['FAX番号', '電話', '携帯電話', '連絡先', 'Phone'],
+                'pattern' => ['FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone'],
                 'match' => ['fax', 'FAX'],
                 'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
