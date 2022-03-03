@@ -500,8 +500,8 @@ class SubmitContact extends Command
                 'transform' => 'ナシ',
             ],
             [
-                'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', 'txtCompanyName', 'f000003193', 'mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'f000003203', 'f000003203:cf', 'c_q18_confirm'],
-                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名', 'txtCompanyName', 'f000003193', '職種', 'お名前 フリガナ (全角カナ)', 'メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'mailaddress', 'メールアドレス', 'f000003203', 'f000003203:cf', 'i_email', 'i_email_check', 'email(必須)', 'confirm_email(必須)', 'c_q8', 'c_q8_confirm'],
+                'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', 'txtCompanyName', 'f000003193', 'mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email', 'singleAnswer(ANSWER4)', 'singleAnswer(ANSWER4-R)', 'f000003203', 'f000003203:cf', 'c_q18_confirm', 'mailaddress', 'i_email', 'i_email_check', 'email(必須)', 'confirm_email(必須)', 'c_q8', 'c_q8_confirm'],
+                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名', '職種', 'お名前 フリガナ (全角カナ)', 'メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス'],
                 'transform' => $contact->company,
             ],
             [
@@ -532,12 +532,12 @@ class SubmitContact extends Command
             ],
             [
                 'match' => ['住所', 'addr', 'add_detail', 'town', 'f000003520', 'f000003521', 'add2', 'c_q21', 'block', 'ext_08', 'fCity', 'fBuilding', 'fCompany', 'efo-form01-district', '住所', 'addr', 'add_detail', 'item117'],
-                'pattern' => ['住所', '所在地', '市区', '町名', '住所', '所在地', '市区', '町名', 'item117'],
+                'pattern' => ['住所', '所在地', '市区', '町名', '住所', '所在地', '市区', '町名'],
                 'transform' => $contact->address,
             ],
             [
                 'match' => ['title', 'subject', '件名', 'pref', 'job'],
-                'pattern' => ['件名', 'Title', 'Subject', '題名', '用件名', 'pref'],
+                'pattern' => ['件名', 'Title', 'Subject', '題名', '用件名'],
                 'transform' => $contact->title,
             ],
             [
