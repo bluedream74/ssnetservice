@@ -497,27 +497,36 @@ class SubmitContact extends Command
 
         $mapper = [
             [
-                'match' => ['company-kana', 'company_furi', 'フリガナ', 'kcn', 'ふりがな'],
+                'match' => ['company-kana', 'company_furi', 'フリガナ', 'kcn', 'ふりがな', 'NAME_F'],
                 'transform' => 'ナシ',
             ],
             [
                 'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル'],
-                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名','お名前 フリガナ (全角カナ)'],
+                'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名', '屋号', '組織名', '屋号', 'お店の名前', '社名', '店舗名', 'お名前 フリガナ (全角カナ)'],
                 'transform' => $contact->company,
             ],
             [
-                'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email'],
-                'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス','E-mail (半角)'],
+                'match' => ['mail_add', 'mail', 'Mail', 'mail_confirm', 'ールアドレス', 'M_ADR', '部署', 'E-Mail', 'メールアドレス', 'Email', 'email', 'RE_MAILADDRESS'],
+                'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'E-mail (半角)', 'email'],
                 'transform' => $contact->email,
+            ],
+            [
+                'match' => ['zip-code', 'ZIP1'],
+                'transform' => $contact->postalCode1,
             ],
             [
                 'match' => ['郵便番号', 'addressnum'],
                 'pattern' => ['郵便番号', '〒'],
-                'transform' => $contact->postalCode1 .'-'. $contact->postalCode2,
+                'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
+            ],
+
+            [
+                'match' => ['zip-code-4', 'ZIP2'],
+                'transform' => $contact->postalCode2,
             ],
             [
-                'match' => ['住所', 'addr', 'add_detail','item117'],
-                'pattern' => ['住所', '所在地', '市区', '町名','item117'],
+                'match' => ['住所', 'addr', 'add_detail', 'item117'],
+                'pattern' => ['住所', '所在地', '市区', '町名', 'item117', 'ご住所'],
                 'transform' => $contact->address,
             ],
             [
@@ -538,7 +547,7 @@ class SubmitContact extends Command
                 'transform' => $contact->lastname,
             ],
             [
-                'match' => ['ご担当者名'],
+                'match' => ['ご担当者名', 'NAME'],
                 'pattern' => ['名前', '氏名', '担当者', '差出人', 'ネーム', 'お名前(漢字)'],
                 'transform' => $contact->surname . $contact->lastname,
             ],
@@ -761,8 +770,10 @@ class SubmitContact extends Command
             | //input[contains(@value,"確認") and @type!="hidden"]
             | //input[contains(@value,"確 認") and @type!="hidden"]
             | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
+            | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
             | //a[contains(text(),"確認")]
             | //button[contains(text(),"送信")]
+            | //button[contains(text(),"上記の内容で登録する")]
             | //button[contains(text(),"送　　信")]
             | //input[contains(@value,"送信") and @type!="hidden"]
             | //input[contains(@value,"送　信") and @type!="hidden"]
@@ -772,8 +783,9 @@ class SubmitContact extends Command
             | //input[contains(@alt,"次へ") and @type!="hidden"]
             | //a[contains(text(),"次へ")]
             | //*[contains(text(),"に同意する")]
+            | //*[contains(text(),"確認する")]
+            | //*[contains(text(), "この内容で送信する")]
         '));
-
         foreach ($confirmElements as $element) {
             try {
                 $element->click();
@@ -794,6 +806,7 @@ class SubmitContact extends Command
             | //*[contains(text(),"送信いたしました")]
             | //*[contains(text(),"内容を確認させていただき")]
             | //*[contains(text(),"自動返信メール")]
+            | //*[contains(text(),"受け付けました。")]
         '));
 
         return count($successTexts) > 0;
