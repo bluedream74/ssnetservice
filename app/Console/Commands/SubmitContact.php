@@ -370,7 +370,7 @@ class SubmitContact extends Command
      */
     public function hasSuccessMessage(string $htmlContent)
     {
-        $successMessages = ['ありがとうございま', '有難うございま', '送信されました', '送信しました', '送信いたしました', '自動返信メール', '内容を確認させていただき', '成功しました', '完了いたしま'];
+        $successMessages = ['ありがとうございま', '有難うございま', '送信されま', '送信しました', '送信いたしま', '自動返信メール', '内容を確認させていただき', '成功しました', '完了いたしま', '受け付けま'];
 
         return $this->containsAny($htmlContent, $successMessages);
     }
@@ -800,13 +800,13 @@ class SubmitContact extends Command
             //*[contains(text(),"ありがとうございま")]
             | //*[contains(text(),"有難うございま")]
             | //*[contains(text(),"送信しました")]
-            | //*[contains(text(),"送信されました")]
+            | //*[contains(text(),"送信されま")]
             | //*[contains(text(),"成功しました")]
             | //*[contains(text(),"完了いたしま")]
-            | //*[contains(text(),"送信いたしました")]
+            | //*[contains(text(),"送信いたしま")]
             | //*[contains(text(),"内容を確認させていただき")]
             | //*[contains(text(),"自動返信メール")]
-            | //*[contains(text(),"受け付けました。")]
+            | //*[contains(text(),"受け付けま")]
         '));
 
         return count($successTexts) > 0;
