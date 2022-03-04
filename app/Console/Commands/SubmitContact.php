@@ -535,7 +535,7 @@ class SubmitContact extends Command
             ],
             [
                 'match' => ['j_zip_code_1', 'addressnum', 'zip', 'zipcode1',
-                    'f000026563:a', 'txt_zipcode[]', 'zip-code', 'ZIP1', ],
+                    'f000026563:a', 'txt_zipcode[]', 'zip-code', 'ZIP1', 'zipcode[data][0]', ],
                 'key' => ['ZipcodeL', 'j_zip_code_1', 'f000003518:a', 'item_14_zip1'],
                 'transform' => $contact->postalCode1,
             ],
@@ -543,11 +543,17 @@ class SubmitContact extends Command
                 'match' => ['郵便番号', 'zipcode'],
                 'transform' => $contact->postalCode1 . $contact->postalCode2,
             ],
+
+            [
+                'match' => ['郵便番号', 'addressnum'],
+                'pattern' => ['郵便番号', '〒'],
+                'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
+            ],
             [
                 'match' => ['field_2437489_2', 'f000003518:t',
                     'zip[data][1]', 'item_14_zip2', 'c_q10_right',
                     'zip2', 'j_zip_code_2', 'c_q3_right', 'f000026563:t', 'txt_zipcode[]',
-                    'zip-code-4', 'ZIP2', 'field_2437489_3',
+                    'zip-code-4', 'ZIP2', 'field_2437489_3', 'zipcode[data][1]',
                 ],
                 'key' => ['zip1'],
                 'transform' => $contact->postalCode2,
@@ -836,25 +842,26 @@ class SubmitContact extends Command
     {
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
-            | //input[@type="submit" and not(contains(@value,"戻る"))]
-            | //input[contains(@value,"確認") and @type!="hidden"]
-            | //input[contains(@value,"確 認") and @type!="hidden"]
-            | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
-            | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
-            | //a[contains(text(),"確認")]
-            | //button[contains(text(),"送信")]
-            | //button[contains(text(),"上記の内容で登録する")]
-            | //button[contains(text(),"送　　信")]
-            | //input[contains(@value,"送信") and @type!="hidden"]
-            | //input[contains(@value,"送　信") and @type!="hidden"]
-            | //a[contains(text(),"送信")]
-            | //button[contains(text(),"次へ")]
-            | //input[contains(@value,"次へ") and @type!="hidden"]
-            | //input[contains(@alt,"次へ") and @type!="hidden"]
-            | //a[contains(text(),"次へ")]
+            | //*[contains(text(), "この内容で送信する")]
             | //*[contains(text(),"に同意する")]
             | //*[contains(text(),"確認する")]
-            | //*[contains(text(), "この内容で送信する")]
+            | //a[contains(text(),"次へ")]
+            | //a[contains(text(),"確認")]
+            | //a[contains(text(),"送信")]
+            | //button[contains(text(),"上記の内容で登録する")]
+            | //button[contains(text(),"次へ")]
+            | //button[contains(text(),"送　　信")]
+            | //button[contains(text(),"送信")]
+            | //button[span[contains(text(),"送信")]]
+            | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
+            | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
+            | //input[@type="submit" and not(contains(@value,"戻る"))]
+            | //input[contains(@alt,"次へ") and @type!="hidden"]
+            | //input[contains(@value,"次へ") and @type!="hidden"]
+            | //input[contains(@value,"確 認") and @type!="hidden"]
+            | //input[contains(@value,"確認") and @type!="hidden"]
+            | //input[contains(@value,"送　信") and @type!="hidden"]
+            | //input[contains(@value,"送信") and @type!="hidden"]
         '));
 
         foreach ($confirmElements as $element) {
