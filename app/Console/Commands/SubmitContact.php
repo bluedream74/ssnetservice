@@ -85,7 +85,6 @@ class SubmitContact extends Command
         }
 
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
-
         if (count($companyContacts)) {
             $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_FAILURE]);
         }
@@ -212,6 +211,7 @@ class SubmitContact extends Command
                     'transform' => [$contact->phoneNumber1, $contact->phoneNumber2, $contact->phoneNumber3],
                 ],
             ];
+
             foreach ($this->form->all() as $key => $input) {
                 if ((!isset($this->data[$key]) || empty($this->data[$key])) && $input->isHidden() != 'hidden' && strpos($key, 'wpcf7') !== false) {
                     $this->data[$key] = $input->getValue();
@@ -370,7 +370,7 @@ class SubmitContact extends Command
      */
     public function hasSuccessMessage(string $htmlContent)
     {
-        $successMessages = ['ありがとうございま', '有難うございま', '送信されま', '送信しました', '送信いたしま', '自動返信メール', '内容を確認させていただき', '成功しました', '完了いたしま', '受け付けま'];
+        $successMessages = ['ありがとうございま', '有難うございま', '送信されました', '送信しました', '送信いたしました', '自動返信メール', '内容を確認させていただき', '成功しました', '完了いたしま'];
 
         return $this->containsAny($htmlContent, $successMessages);
     }
@@ -388,7 +388,7 @@ class SubmitContact extends Command
         $deliveryStatus = [
             self::STATUS_NOT_SUPPORTED => '送信失敗',
             self::STATUS_SENT => '送信済み',
-            self::STATUS_FAILURE => '送信失敗',
+            self::STATUS_FAILURE => 'フォームなし',
             self::STATUS_NO_FORM => 'フォームなし',
             self::STATUS_NG => 'NGワードあり',
         ];
@@ -457,7 +457,7 @@ class SubmitContact extends Command
                 break;
             case 'radio':
                 $options = $input->getOptions();
-                $choosenKey = in_array($key, ['性別', 'sex', 'contact_select']) ? 0 : count($options) - 1;
+                $choosenKey = in_array($key, ['性別', 'sex']) ? 0 : count($options) - 1;
                 $this->data[$key] = $options[$choosenKey]['value'];
                 foreach ($options as $option) {
                     if ($option['value'] == 'その他') {
@@ -494,6 +494,7 @@ class SubmitContact extends Command
         if (isset($this->data[$key]) && !empty($this->data[$key])) {
             return;
         }
+
         $mapper = [
             [
                 'pattern' => ['氏名（カナ）', 'フリガナ'],
@@ -513,7 +514,7 @@ class SubmitContact extends Command
             [
                 'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル',
                     'txtCompanyName', 'f000003193', 'singleAnswer(ANSWER3405)', 'singleAnswer(ANSWER3406)',
-                    'company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', ],
+                    'company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', 'fCompany', ],
                 'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名',
                     '屋号', '組織名', 'お店の名前', '社名', '店舗名', '職種',
                     'メールアドレス(確認用)',
@@ -561,7 +562,7 @@ class SubmitContact extends Command
             ],
             [
                 'match' => ['住所', 'addr', 'add_detail', 'town', 'f000003520', 'f000003521', 'add2',
-                    'c_q21', 'block', 'ext_08', 'fCity', 'fBuilding', 'fCompany', 'efo-form01-district',
+                    'c_q21', 'block', 'ext_08', 'fCity', 'fBuilding', 'efo-form01-district',
                     '住所', 'addr', 'item117', 'UserAddress', '番地', '建物名・施設名',
                     'f000027223', 'f000027225', ],
                 'pattern' => ['住所', '所在地', '市区',
@@ -657,11 +658,13 @@ class SubmitContact extends Command
                 'transform' => $contact->myurl,
             ],
         ];
+
         foreach ($mapper as $map) {
             // Check if form key contains any string on 'match' array, then use that value
             if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
                 $this->data[$key] = $map['transform'];
             }
+
             // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
             if (isset($map['pattern'])) {
                 foreach ($map['pattern'] as $pattern) {
@@ -672,14 +675,12 @@ class SubmitContact extends Command
                             $this->data[$match['name']] = $map['transform'];
                         }
                     }
-                }
-            }
 
-            if (isset($map['key'])) {
-                foreach ($map['key'] as $value) {
-                    $stringToSearch = substr($this->html, strpos($this->html, $value) - 6);
-                    preg_match('/name="(?<name>[A-z0-9-]+)"/m', $stringToSearch, $match);
-                    $this->data[$value] = $map['transform'];
+                    if (isset($map['key'])) {
+                        foreach ($map['key'] as $value) {
+                            $this->data[$value] = $map['transform'];
+                        }
+                    }
                 }
             }
         }
@@ -806,6 +807,7 @@ class SubmitContact extends Command
         }
 
         $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_fill.jpg"));
+
         $confirmStep = 0;
         do {
             $confirmStep++;
@@ -837,36 +839,25 @@ class SubmitContact extends Command
     {
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
-            | //button[@type="submit" and @name="ACMS_POST_Form_Submit"]
-            | //input[@type="image" and @id="imageField"]
-            | //input[@type="submit" and contains(@value,"送信する") and @type!="hidden"]
-            | //input[@type="submit" and contains(@value,"送信") and @type!="hidden"]
             | //input[@type="submit"]
-            | //input[contains(@value,"送信") and @type!="hidden"]
             | //input[contains(@value,"確認") and @type!="hidden"]
             | //input[contains(@value,"確 認") and @type!="hidden"]
             | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
-            | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
             | //a[contains(text(),"確認")]
             | //button[contains(text(),"送信")]
-            | //button[contains(text(),"上記の内容で登録する")]
-            | //button[contains(text(),"送　　信")]
             | //input[contains(@value,"送信") and @type!="hidden"]
             | //input[contains(@value,"送　信") and @type!="hidden"]
             | //a[contains(text(),"送信")]
-            | //a[@class="btn-ahead"]
             | //button[contains(text(),"次へ")]
             | //input[contains(@value,"次へ") and @type!="hidden"]
             | //input[contains(@alt,"次へ") and @type!="hidden"]
             | //a[contains(text(),"次へ")]
             | //*[contains(text(),"に同意する")]
-            | //*[contains(text(),"確認する")]
-            | //*[contains(text(), "この内容で送信する")]
         '));
+
         foreach ($confirmElements as $element) {
             try {
                 $element->click();
-
                 // Accept alert confirm
                 $driver->switchTo()->alert()->accept();
             } catch (\Exception $exception) {
@@ -878,14 +869,12 @@ class SubmitContact extends Command
             //*[contains(text(),"ありがとうございま")]
             | //*[contains(text(),"有難うございま")]
             | //*[contains(text(),"送信しました")]
-            | //*[contains(text(),"送信されま")]
+            | //*[contains(text(),"送信されました")]
             | //*[contains(text(),"成功しました")]
             | //*[contains(text(),"完了いたしま")]
-            | //*[contains(text(),"送信いたしま")]
+            | //*[contains(text(),"送信いたしました")]
             | //*[contains(text(),"内容を確認させていただき")]
             | //*[contains(text(),"自動返信メール")]
-            | //*[contains(text(),"完了しまし")]
-            | //*[contains(text(),"受け付けま")]
         '));
 
         return count($successTexts) > 0;
