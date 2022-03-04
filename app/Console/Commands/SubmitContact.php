@@ -854,6 +854,7 @@ class SubmitContact extends Command
             | //input[contains(@value,"送信") and @type!="hidden"]
             | //input[contains(@value,"送　信") and @type!="hidden"]
             | //a[contains(text(),"送信")]
+            | //a[@class="btn-ahead"]
             | //button[contains(text(),"次へ")]
             | //input[contains(@value,"次へ") and @type!="hidden"]
             | //input[contains(@alt,"次へ") and @type!="hidden"]
