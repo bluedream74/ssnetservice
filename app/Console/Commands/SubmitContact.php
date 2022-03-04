@@ -836,12 +836,15 @@ class SubmitContact extends Command
     {
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
-            | //input[@type="submit"]
+            | //input[@type="submit" and not(contains(@value,"戻る"))]
             | //input[contains(@value,"確認") and @type!="hidden"]
             | //input[contains(@value,"確 認") and @type!="hidden"]
             | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
+            | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
             | //a[contains(text(),"確認")]
             | //button[contains(text(),"送信")]
+            | //button[contains(text(),"上記の内容で登録する")]
+            | //button[contains(text(),"送　　信")]
             | //input[contains(@value,"送信") and @type!="hidden"]
             | //input[contains(@value,"送　信") and @type!="hidden"]
             | //a[contains(text(),"送信")]
@@ -850,11 +853,14 @@ class SubmitContact extends Command
             | //input[contains(@alt,"次へ") and @type!="hidden"]
             | //a[contains(text(),"次へ")]
             | //*[contains(text(),"に同意する")]
+            | //*[contains(text(),"確認する")]
+            | //*[contains(text(), "この内容で送信する")]
         '));
 
         foreach ($confirmElements as $element) {
             try {
                 $element->click();
+
                 // Accept alert confirm
                 $driver->switchTo()->alert()->accept();
             } catch (\Exception $exception) {
@@ -866,12 +872,14 @@ class SubmitContact extends Command
             //*[contains(text(),"ありがとうございま")]
             | //*[contains(text(),"有難うございま")]
             | //*[contains(text(),"送信しました")]
-            | //*[contains(text(),"送信されました")]
+            | //*[contains(text(),"送信されま")]
             | //*[contains(text(),"成功しました")]
             | //*[contains(text(),"完了いたしま")]
-            | //*[contains(text(),"送信いたしました")]
+            | //*[contains(text(),"送信いたしま")]
             | //*[contains(text(),"内容を確認させていただき")]
             | //*[contains(text(),"自動返信メール")]
+            | //*[contains(text(),"完了しまし")]
+            | //*[contains(text(),"受け付けま")]
         '));
 
         return count($successTexts) > 0;
