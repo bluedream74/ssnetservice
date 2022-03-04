@@ -541,7 +541,6 @@ class SubmitContact extends Command
             ],
             [
                 'match' => ['郵便番号', 'zipcode'],
-                'pattern' => ['ハイフンなし'],
                 'transform' => $contact->postalCode1 . $contact->postalCode2,
             ],
 
