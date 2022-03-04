@@ -678,7 +678,6 @@ class SubmitContact extends Command
                     $this->data[$value] = $map['transform'];
                 }
             }
-            // dump($this->data);
         }
     }
 
