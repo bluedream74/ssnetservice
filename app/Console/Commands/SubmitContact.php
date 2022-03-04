@@ -383,7 +383,7 @@ class SubmitContact extends Command
      */
     public function updateCompanyContact($companyContact, int $status, $message = null)
     {
-        $this->closeBrowser();
+        // $this->closeBrowser();
 
         $deliveryStatus = [
             self::STATUS_FAILURE => '送信失敗',
@@ -505,13 +505,14 @@ class SubmitContact extends Command
                     'ReqKind',  'cde_Gst_Furigana',
                     'f000027212', 'f000027213', 'singleAnswer(ANSWER3402)', 'qEnq5464', 'qEnq5465',
                     'company-kana', 'company_furi', 'フリガナ', 'kcn', 'ふりがな', 'NAME_F', 'kana_name_sei',
+                    'e_26',
                 ],
                 'transform' => 'ナシ',
             ],
             [
                 'match' => ['company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル',
                     'txtCompanyName', 'f000003193', 'singleAnswer(ANSWER3405)', 'singleAnswer(ANSWER3406)',
-                    'company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', 'fCompany', 'UserCompanyName', ],
+                    'company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', 'fCompany', 'UserCompanyName', 'en1244884030', ],
                 'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名',
                     '屋号', '組織名', 'お店の名前', '社名', '店舗名', '職種',
                     'メールアドレス(確認用)',
@@ -526,7 +527,7 @@ class SubmitContact extends Command
                     'ールアドレス', 'M_ADR', '部署',
                     'singleAnswer(ANSWER4-R)', 'c_q18_confirm',
                     'mailaddress', 'i_email', 'i_email_check', 'email(必須)', 'confirm_email(必須)',
-                    'c_q8', 'c_q8_confirm', 'f000027220', 'f000027221',
+                    'c_q8', 'c_q8_confirm', 'f000027220', 'f000027221', 'en1262055277_match',
                 ],
                 'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'E-mail (半角)', 'ペライチに登録しているメールアドレス', 'メールアドレス［確認］
                 （E-mail）'],
@@ -553,7 +554,7 @@ class SubmitContact extends Command
                 'transform' => $contact->postalCode2,
             ],
             [
-                'match' => ['fZipCode', 'efo-form01-apa-zip', '郵便番号', 'addressnum', 'postal-code'],
+                'match' => ['fZipCode', 'efo-form01-apa-zip', '郵便番号', 'addressnum', 'postal-code', 'en1240790938'],
                 'pattern' => ['郵便番号', '〒', '郵便番号 (半角数字のみ)'],
                 'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
             ],
@@ -589,12 +590,12 @@ class SubmitContact extends Command
                 'transform' => $contact->surname . $contact->lastname,
             ],
             [
-                'match' => ['セイ', 'せい', 'lastname_kana', 'sei_kana', 'kana_sei', 'furi_sei', 'txtNameSeiFuri', 'i_kana_sei', 'name-furi-sei', 'c_q22_first', 'fFirstNamey', 'c_q17_first', 'Public::Application::Userenquete_D__P__D_name1_ka'],
+                'match' => ['セイ', 'せい', 'lastname_kana', 'sei_kana', 'kana_sei', 'furi_sei', 'txtNameSeiFuri', 'i_kana_sei', 'name-furi-sei', 'c_q22_first', 'fFirstNamey', 'c_q17_first', 'Public::Application::Userenquete_D__P__D_name1_ka', 'first_kana'],
                 'pattern' => ['名 フリガナ'],
                 'transform' => $contact->fu_surname,
             ],
             [
-                'match' => ['メイ', 'めい', 'firstname_kana', 'mei_kana', 'kana_mei', 'e_8276', 'furi_neme', 'i_kana_mei', 'name-furi-mei', 'c_q22_second', 'fLastNamey', 'c_q17_second', 'Public::Application::Userenquete_D__P__D_name2_ka'],
+                'match' => ['メイ', 'めい', 'firstname_kana', 'mei_kana', 'kana_mei', 'e_8276', 'furi_neme', 'i_kana_mei', 'name-furi-mei', 'c_q22_second', 'fLastNamey', 'c_q17_second', 'Public::Application::Userenquete_D__P__D_name2_ka', 'last_kana'],
                 'pattern' => ['姓 フリガナ'],
                 'transform' => $contact->fu_lastname,
             ],
@@ -615,7 +616,7 @@ class SubmitContact extends Command
             ],
             [
                 'match' => ['f000003204:a', 'f000009697:a', 'i_tel1', 'tel[data][0]', 'tel00_s', 'tel_:a', 'c_q9_areacode', 'TelNumber1', 'f000026565:a', 'txt_tel[]', 'form-tel[data][0]', 'inputs[fax1]', 'tel1', 'tel_no_1'],
-                'key' => ['PhoneL', 'tel[data][0]', 'item_16_phone1', 'item_17_phone1'],
+                'key' => ['PhoneL', 'tel[data][0]', 'item_16_phone1', 'item_17_phone1', 'e_28[tel1]'],
                 'transform' => $contact->phoneNumber1,
             ],
             [
@@ -652,6 +653,7 @@ class SubmitContact extends Command
             ],
             [
                 'pattern' => ['fUrl', '作成中ページの公開用URL'],
+                'key' => ['e_29'],
                 'transform' => $contact->myurl,
             ],
         ];
@@ -813,7 +815,7 @@ class SubmitContact extends Command
                 $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
 
                 if ($isSuccess) {
-                    $this->closeBrowser();
+                    // $this->closeBrowser();
 
                     return;
                 }
@@ -822,7 +824,7 @@ class SubmitContact extends Command
             }
         } while ($confirmStep < self::RETRY_COUNT);
 
-        $this->closeBrowser();
+        // $this->closeBrowser();
 
         throw new \Exception('Confirm step is not success');
     }
@@ -850,6 +852,7 @@ class SubmitContact extends Command
             | //input[contains(@alt,"次へ") and @type!="hidden"]
             | //a[contains(text(),"次へ")]
             | //*[contains(text(),"に同意する")]
+            | //input[@type="button" and @id="submit_confirm"]
         '));
 
         foreach ($confirmElements as $element) {
