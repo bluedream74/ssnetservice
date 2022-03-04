@@ -86,7 +86,7 @@ class SubmitContact extends Command
 
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
         if (count($companyContacts)) {
-            $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_FAILURE]);
+            $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
         }
 
         foreach ($companyContacts as $companyContact) {
@@ -370,7 +370,7 @@ class SubmitContact extends Command
      */
     public function hasSuccessMessage(string $htmlContent)
     {
-        $successMessages = ['ありがとうございま', '有難うございま', '送信されました', '送信しました', '送信いたしました', '自動返信メール', '内容を確認させていただき', '成功しました', '完了いたしま'];
+        $successMessages = ['ありがとうございま', '有難うございま', '送信されま', '送信しました', '送信いたしま', '自動返信メール', '内容を確認させていただき', '成功しました', '完了いたしま', '受け付けま'];
 
         return $this->containsAny($htmlContent, $successMessages);
     }
