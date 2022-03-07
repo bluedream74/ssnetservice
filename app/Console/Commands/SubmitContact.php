@@ -543,12 +543,6 @@ class SubmitContact extends Command
                 'key' => ['ZipcodeL', 'j_zip_code_1', 'f000003518:a', 'item_14_zip1'],
                 'transform' => $contact->postalCode1,
             ],
-
-            [
-                'match' => ['郵便番号', 'addressnum', 'input34'],
-                'pattern' => ['郵便番号', '〒'],
-                'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
-            ],
             [
                 'match' => ['郵便番号', 'zipcode'],
                 'key' => ['zipcode'],
@@ -564,7 +558,7 @@ class SubmitContact extends Command
                 'transform' => $contact->postalCode2,
             ],
             [
-                'match' => ['fZipCode', 'efo-form01-apa-zip', '郵便番号', 'addressnum', 'postal-code', 'en1240790938'],
+                'match' => ['fZipCode', 'efo-form01-apa-zip', '郵便番号', 'addressnum', 'postal-code', 'en1240790938', 'input34'],
                 'pattern' => ['郵便番号', '〒', '郵便番号 (半角数字のみ)'],
                 'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
             ],
