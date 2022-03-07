@@ -383,7 +383,7 @@ class SubmitContact extends Command
      */
     public function updateCompanyContact($companyContact, int $status, $message = null)
     {
-        // $this->closeBrowser();
+        $this->closeBrowser();
 
         $deliveryStatus = [
             self::STATUS_FAILURE => '送信失敗',
@@ -839,7 +839,7 @@ class SubmitContact extends Command
                 $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
 
                 if ($isSuccess) {
-                    // $this->closeBrowser();
+                    $this->closeBrowser();
 
                     return;
                 }
@@ -848,7 +848,7 @@ class SubmitContact extends Command
             }
         } while ($confirmStep < self::RETRY_COUNT);
 
-        // $this->closeBrowser();
+        $this->closeBrowser();
 
         throw new \Exception('Confirm step is not success');
     }
