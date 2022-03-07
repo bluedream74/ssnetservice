@@ -84,7 +84,7 @@ class SubmitContact extends Command
             return 0;
         }
 
-        $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
+        $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
         if (count($companyContacts)) {
             $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
         }
@@ -491,6 +491,25 @@ class SubmitContact extends Command
                 break;
         }
 
+        $prioritizedMappers = [
+            [
+                'match' => ['tel_no_1'],
+                'transform' => $contact->phoneNumber1,
+            ],
+            [
+                'match' => ['j_zip_code_1'],
+                'transform' => $contact->postalCode1,
+            ],
+        ];
+
+        // Use list prioritize mappers
+        foreach ($prioritizedMappers as $map) {
+            // Check if form key contains any string on 'match' array, then use that value
+            if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
+                $this->data[$key] = $map['transform'];
+            }
+        }
+
         if (isset($this->data[$key]) && !empty($this->data[$key])) {
             return;
         }
@@ -532,7 +551,7 @@ class SubmitContact extends Command
                     'singleAnswer(ANSWER4-R)', 'c_q18_confirm',
                     'mailaddress', 'i_email', 'i_email_check', 'email(必須)', 'confirm_email(必須)',
                     'c_q8', 'c_q8_confirm', 'f000027220', 'f000027221', 'en1262055277_match', 'f012956240',
-                    'input30', 'your-email', 're_mail', 'e_2274_re',
+                    'input30', 'your-email', 're_mail', 'e_2274_re', 'mailaddress_confirm',
                 ],
                 'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'E-mail (半角)', 'ペライチに登録しているメールアドレス', 'メールアドレス［確認］
                 （E-mail）'],
@@ -579,7 +598,7 @@ class SubmitContact extends Command
                 'transform' => $contact->address,
             ],
             [
-                'match' => ['title', 'subject', '件名', 'pref', 'job', 'form_fields[field_42961a5]', 'executive'],
+                'match' => ['title', 'subject', '件名', 'pref', 'job', 'form_fields[field_42961a5]', 'executive', 'text'],
                 'pattern' => ['件名', 'Title', 'Subject', '題名', '用件名'],
                 'transform' => $contact->title,
             ],
@@ -802,7 +821,7 @@ class SubmitContact extends Command
     {
         $formInputs = $this->form->all();
         foreach ($formInputs as $formKey => $formInput) {
-            if ((strpos($formKey, 'wpcf7') !== false) || !isset($this->data[$formKey]) || empty($this->data[$formKey])) {
+            if (((strpos($formKey, 'wpcf7') !== false) || !isset($this->data[$formKey]) || empty($this->data[$formKey])) && !in_array($formInput->getType(), ['select'])) {
                 continue;
             }
             try {
@@ -819,7 +838,7 @@ class SubmitContact extends Command
                         break;
                     case 'select':
                         $select = new WebDriverSelect($this->driver->findElement(WebDriverBy::cssSelector("select[name=\"{$formKey}\"]")));
-                        $select->selectByValue($this->data[$formKey]);
+                        $select->selectByIndex(1);
                         break;
                     case 'hidden':
                         break;
@@ -868,10 +887,10 @@ class SubmitContact extends Command
     {
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
-            | //a[@id="js__submit"]
             | //*[contains(text(), "この内容で送信する")]
             | //*[contains(text(),"に同意する")]
             | //*[contains(text(),"確認する")]
+            | //a[@id="js__submit"]
             | //a[contains(text(),"次へ")]
             | //a[contains(text(),"確認")]
             | //a[contains(text(),"送信")]
@@ -879,23 +898,25 @@ class SubmitContact extends Command
             | //button[@type="submit"][contains(@value,"この内容で無料相談する")]
             | //button[@type="submit"][contains(@name,"__送信ボタン")]
             | //button[@class="nttdatajpn-submit-button"]
+            | //button[@type="submit" and (contains(@class,"mfp_element_submit"))]
             | //button[contains(text(),"上記の内容で登録する")]
             | //button[contains(text(),"次へ")]
             | //button[contains(text(),"送　　信")]
             | //button[contains(text(),"送信")]
             | //button[span[contains(text(),"送信")]]
+            | //input[@type="button" and @id="submit_confirm"]
             | //input[@type="image"][contains(@alt,"確認") and @type!="hidden"]
             | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
             | //input[@type="image"][contains(@alt,"この内容で送信する") and @type!="hidden"]
             | //input[@type="submit" and not(contains(@value,"戻る"))]
+            | //input[@type="submit" and contains(@value,"送信する")]
+            | //input[@type="submit" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
             | //input[contains(@alt,"次へ") and @type!="hidden"]
             | //input[contains(@value,"次へ") and @type!="hidden"]
             | //input[contains(@value,"確 認") and @type!="hidden"]
             | //input[contains(@value,"確認") and @type!="hidden"]
             | //input[contains(@value,"送　信") and @type!="hidden"]
             | //input[contains(@value,"送信") and @type!="hidden"]
-            | //input[@type="button" and @id="submit_confirm"]
-            | //input[@type="submit" and contains(@value,"送信する")]
         '));
 
         foreach ($confirmElements as $element) {
@@ -911,16 +932,18 @@ class SubmitContact extends Command
 
         $successTexts = $driver->findElements(WebDriverBy::xpath('
             //*[contains(text(),"ありがとうございま")]
-            | //*[contains(text(),"有難うございま")]
-            | //*[contains(text(),"送信しました")]
-            | //*[contains(text(),"送信されま")]
-            | //*[contains(text(),"成功しました")]
-            | //*[contains(text(),"完了いたしま")]
-            | //*[contains(text(),"送信いたしま")]
             | //*[contains(text(),"内容を確認させていただき")]
-            | //*[contains(text(),"自動返信メール")]
-            | //*[contains(text(),"完了しまし")]
             | //*[contains(text(),"受け付けま")]
+            | //*[contains(text(),"問い合わせを受付")]
+            | //*[contains(text(),"完了いたしま")]
+            | //*[contains(text(),"完了しまし")]
+            | //*[contains(text(),"成功しました")]
+            | //*[contains(text(),"有難うございま")]
+            | //*[contains(text(),"自動返信メール")]
+            | //*[contains(text(),"送信いたしま")]
+            | //*[contains(text(),"送信されま")]
+            | //*[contains(text(),"送信しました")]
+            | //*[contains(text(),"送信完了")]
         '));
 
         return count($successTexts) > 0;
