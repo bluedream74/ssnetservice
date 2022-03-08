@@ -500,6 +500,14 @@ class SubmitContact extends Command
                 'match' => ['j_zip_code_1'],
                 'transform' => $contact->postalCode1,
             ],
+            [
+                'match' => ['txtTEL'],
+                'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
+            ],
+            [
+                'match' => ['txtZipCode'],
+                'transform' => $contact->postalCode1 . $contact->postalCode2,
+            ],
         ];
 
         // Use list prioritize mappers
@@ -901,6 +909,7 @@ class SubmitContact extends Command
             | //button[@type="submit" and (contains(@class,"mfp_element_submit"))]
             | //button[@type="submit"][contains(@name,"__送信ボタン")]
             | //button[@type="submit"][contains(@value,"この内容で無料相談する")]
+            | //button[@type="submit"]//span[contains(text(),"同意して進む")]
             | //button[contains(@value,"送信")]
             | //button[contains(text(),"上記の内容で登録する")]
             | //button[contains(text(),"次へ")]
@@ -937,6 +946,7 @@ class SubmitContact extends Command
 
         $successTexts = $driver->findElements(WebDriverBy::xpath('
             //*[contains(text(),"ありがとうございま")]
+            | //*[contains(text(),"メール送信が正常終了")]
             | //*[contains(text(),"内容を確認させていただき")]
             | //*[contains(text(),"受け付けま")]
             | //*[contains(text(),"問い合わせを受付")]
