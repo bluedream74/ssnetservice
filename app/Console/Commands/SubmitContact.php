@@ -497,7 +497,7 @@ class SubmitContact extends Command
                 'transform' => $contact->phoneNumber1,
             ],
             [
-                'match' => ['tel_no_1', 'tel-num[data][1]', 'fax-num[data][1]', 'fax[data][1]', 'tel2', 'tel3', 'TEL2' . 'TEL3'],
+                'match' => ['tel_no_1', 'tel-num[data][1]', 'fax-num[data][1]', 'fax[data][1]', 'tel2', 'tel3', 'TEL2', 'TEL3'],
                 'transform' => $contact->phoneNumber2,
             ],
             [
@@ -650,7 +650,7 @@ class SubmitContact extends Command
             [
                 'match' => [
                     'ご担当者名', 'お名前(必須)', 'UserName', 'singleAnswer(ANSWER3400)', 'qEnq5461', 'qEnq5462', 'ご担当者名', 'NAME', 'f013008540', 'f013017369',
-                    'input8', 'your-name', 'dnn$ctr434$ViewMailForm$grdMain$PageID3$repCategory$ctl01$repField$ItemID9$fldValue$txtSingleTextBox', 'free_text[]',
+                    'input8', 'your-name', 'dnn$ctr434$ViewMailForm$grdMain$PageID3$repCategory$ctl01$repField$ItemID9$fldValue$txtSingleTextBox',
                     'f000104020', 'C016', 'G012',
                 ],
                 'pattern' => ['名前', '氏名', '担当者', '差出人', 'ネーム', 'お名前(漢字)', 'お名前(必須)', 'お名前', 'おなまえ'],
@@ -680,7 +680,7 @@ class SubmitContact extends Command
                 'transform' => $contact->area,
             ],
             [
-                'pattern' => ['fax', 'FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone', '電話番号2', '電話番号', '確認のため再度ご入力下さい。', 'free_text[]', 'C021'],
+                'pattern' => ['fax', 'FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone', '電話番号2', '電話番号', '確認のため再度ご入力下さい。', 'C021'],
                 'match' => ['FAX', 'singleAnswer(ANSWER3408)', '電話番号'],
                 'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
