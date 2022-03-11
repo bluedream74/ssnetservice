@@ -1046,7 +1046,7 @@ class SubmitContact extends Command
             | //*[contains(text(),"お申し込みを承りました")]
             | //*[contains(text(),"ご連絡させて頂")]
             | //*[contains(text(),"ご連絡させていただき")]
-            | //*[contains(text(),"お受けしました")]
+            | //*[contains(text(),"受けしました")]
         '));
 
         return count($successTexts) > 0;
