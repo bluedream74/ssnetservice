@@ -1039,14 +1039,14 @@ class SubmitContact extends Command
             | //*[contains(text(),"送信しました")]
             | //*[contains(text(),"送信完了")]
             | //*[text()[contains(.,"受け付けました")]]
-            | //*[text()[contains(.,"ございました。")]]
-            | //*[contains(text(),"ありがとうございます。")]
-            | //*[text()[contains(.,"お問い合わせを承りました。")]]
-            | //*[text()[contains(.,"折り返しご返事させていただきます。")]]
-            | //*[contains(text(),"下記内容でお申し込みを承りました。")]
-            | //*[contains(text(),"1営業日以内にご連絡させて頂きますので、")]
-            | //*[contains(text(),"担当より追ってご連絡させていただきますので、")]
-            | //*[contains(text(),"お問合せをお受けしました。")]
+            | //*[text()[contains(.,"ございました")]]
+            | //*[contains(text(),"ありがとうございます")]
+            | //*[text()[contains(.,"お問い合わせを承りました")]]
+            | //*[text()[contains(.,"ご返事させていただきます")]]
+            | //*[contains(text(),"お申し込みを承りました")]
+            | //*[contains(text(),"ご連絡させて頂")]
+            | //*[contains(text(),"ご連絡させていただき")]
+            | //*[contains(text(),"お受けしました")]
         '));
 
         return count($successTexts) > 0;
