@@ -511,7 +511,7 @@ class SubmitContact extends Command
                 'transform' => $contact->postalCode2,
             ],
             [
-                'match' => ['txtTEL', 'TEL', 'tel'],
+                'match' => ['txtTEL', 'TEL', 'tel', '電話番号(必須)'],
                 'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
             ],
             [
@@ -964,7 +964,10 @@ class SubmitContact extends Command
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
             | //button[@type="submit"][contains(@data-disable-with-permanent, "true")]
+            | //input[@type="submit" and contains(@value,"入力内容を確認する")]
+            | //input[@type="submit" and contains(@value,"送信")]
             | //button[@type="submit" and contains(@value,"送信")]
+            | //input[@type="submit" and contains(@value,"内容確認へ")]
             | //input[@type="submit" and contains(@value,"入力内容確認")]
             | //input[@type="submit" and contains(@value,"送信する")]
             | //*[contains(text(), "この内容で送信する")]
@@ -1035,6 +1038,15 @@ class SubmitContact extends Command
             | //*[contains(text(),"送信されま")]
             | //*[contains(text(),"送信しました")]
             | //*[contains(text(),"送信完了")]
+            | //*[text()[contains(.,"受け付けました")]]
+            | //*[text()[contains(.,"ございました")]]
+            | //*[contains(text(),"ありがとうございます")]
+            | //*[text()[contains(.,"お問い合わせを承りました")]]
+            | //*[text()[contains(.,"ご返事させていただきます")]]
+            | //*[contains(text(),"お申し込みを承りました")]
+            | //*[contains(text(),"ご連絡させて頂")]
+            | //*[contains(text(),"ご連絡させていただき")]
+            | //*[contains(text(),"受けしました")]
         '));
 
         return count($successTexts) > 0;
