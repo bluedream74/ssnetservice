@@ -681,7 +681,7 @@ class SubmitContact extends Command
                     'Public::Application::Userenquete_D__P__D_name2', 'f000027211', 'LastName',
                     'query[1][1]', '162441_68591pi_162441_68591', 'txtName2', 'customer[last_name]',
                     'singleAnswer(ANSWER158)', 'c_q4_second', 'c_q10_second',
-                    '553162_110236pi_553162_110236', , 'お名前(姓)',
+                    '553162_110236pi_553162_110236', 'お名前(姓)',
                 ],
                 'key' => ['f013008539', 'seiName'],
                 'transform' => $contact->lastname,
