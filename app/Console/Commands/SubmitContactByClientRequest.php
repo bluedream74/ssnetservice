@@ -501,6 +501,67 @@ class SubmitContactByClientRequest extends Command
                 break;
         }
 
+        $prioritizedMappers = [
+            [
+                'match' => ['tel_no_1', 'tel-num[data][0]', 'fax-num[data][0]', 'tkph971-1', 'tel[data][0]', 'fax[data][0]', '電話番号[data][0]', 'tel1', 'TEL1', 'tel1', 'PHONE1', 'field_93664_1', 'item_13_phone1', 'e_29[tel1]', 'e_30[tel1]'],
+                'transform' => $contact->phoneNumber1,
+            ],
+            [
+                'match' => ['tel_no_1', 'tel-num[data][1]', 'fax-num[data][1]', 'fax[data][1]', 'tel2', 'tel3', 'TEL2',
+                    'TEL3', 'tel2', 'tel3', 'PHONE2', 'PHONE3', 'field_93664_2', 'field_93664_3', 'item_13_phone2',
+                    'item_13_phone3', 'c_q28_subscribercode', 'e_29[tel2]', 'e_29[tel3]', 'e_30[tel2]', 'e_30[tel3]', ],
+                'transform' => $contact->phoneNumber2,
+            ],
+            [
+                'match' => ['j_zip_code_1', 'formElementVal124Zip1', 'address-1257114-zip1', '郵便番号1', 'zip1', 'zip-code'],
+                'transform' => $contact->postalCode1,
+            ],
+            [
+                'match' => ['formElementVal124Zip2', 'address-1257114-zip2', '郵便番号2', 'zip-code-4'],
+                'transform' => $contact->postalCode2,
+            ],
+            [
+                'match' => ['txtTEL', 'TEL', 'tel', '電話番号(必須)'],
+                'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
+            ],
+            [
+                'match' => ['your-tel', 'efo-form01-tel', 'data[NomuraInquiry][tel]', 'dataTelephone'],
+                'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
+            ],
+            [
+                'match' => ['txtZipCode', 'postalCode', 'efo-form01-apa-zip', 'efo-form01-zip', 'data[NomuraInquiry][zip]'],
+                'transform' => $contact->postalCode1 . $contact->postalCode2,
+            ],
+            [
+                'match' => ['mailConfirm', 'mail_address_conf', 'e_854_re'],
+                'transform' => $contact->email,
+            ],
+            [
+                'match' => ['丁目番地'],
+                'transform' => $contact->address,
+            ],
+            [
+                'match' => ['item_11_name1'],
+                'transform' => $contact->fu_surname,
+            ],
+            [
+                'match' => ['item_11_name2'],
+                'transform' => $contact->fu_lastname,
+            ],
+            [
+                'match' => ['c_q29'],
+                'transform' => 1,
+            ],
+        ];
+
+        // Use list prioritize mappers
+        foreach ($prioritizedMappers as $map) {
+            // Check if form key contains any string on 'match' array, then use that value
+            if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
+                $this->data[$key] = $map['transform'];
+            }
+        }
+
         if (isset($this->data[$key]) && !empty($this->data[$key])) {
             return;
         }
@@ -846,7 +907,7 @@ class SubmitContactByClientRequest extends Command
     {
         $formInputs = $this->form->all();
         foreach ($formInputs as $formKey => $formInput) {
-            if ((strpos($formKey, 'wpcf7') !== false) || !isset($this->data[$formKey]) || empty($this->data[$formKey])) {
+            if (((strpos($formKey, 'wpcf7') !== false) || !isset($this->data[$formKey]) || empty($this->data[$formKey])) && !in_array($formInput->getType(), ['select'])) {
                 continue;
             }
             try {
@@ -863,7 +924,7 @@ class SubmitContactByClientRequest extends Command
                         break;
                     case 'select':
                         $select = new WebDriverSelect($this->driver->findElement(WebDriverBy::cssSelector("select[name=\"{$formKey}\"]")));
-                        $select->selectByValue($this->data[$formKey]);
+                        $select->selectByIndex(1);
                         break;
                     case 'hidden':
                         break;
