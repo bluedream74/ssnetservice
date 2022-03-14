@@ -119,12 +119,12 @@ class SubmitContactByClientRequest extends Command
             $this->info('==============================================');
             $this->info("Company contact {$companyContact->id}: {$company->contact_form_url}");
 
-            // try {
-            //     $this->initBrowser();
-            // } catch (\Exception $e) {
-            //     $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
-            //     continue;
-            // }
+            try {
+                $this->initBrowser();
+            } catch (\Exception $e) {
+                $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
+                continue;
+            }
 
             try {
                 $crawler = $this->client->request('GET', $company->contact_form_url);
@@ -271,6 +271,7 @@ class SubmitContactByClientRequest extends Command
             $javascriptCheck = strpos($crawler->html(), 'recaptcha') === false;
             if ($javascriptCheck) {
                 try {
+                    $crawler = $this->client->request('GET', $company->contact_form_url);
                     $this->submitByUsingBrower($company, $this->data);
                     $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                 } catch (\Exception $e) {
@@ -380,7 +381,31 @@ class SubmitContactByClientRequest extends Command
      */
     public function hasSuccessMessage(string $htmlContent)
     {
-        $successMessages = ['ありがとうございま', '有難うございま', '送信されま', '送信しました', '送信いたしま', '自動返信メール', '内容を確認させていただき', '成功しました', '完了いたしま', '受け付けま'];
+        $successMessages = [
+            "ありがとうございま",
+            "メール送信が正常終了",
+            "内容を確認させていただき",
+            "受け付けま",
+            "問い合わせを受付",
+            "完了いたしま",
+            "完了しまし",
+            "成功しました",
+            "有難うございま",
+            "自動返信メール",
+            "送信いたしま",
+            "送信されま",
+            "送信しました",
+            "送信完了",
+            "受け付けました",
+            "ございました",
+            "ありがとうございます",
+            "お問い合わせを承りました",
+            "ご返事させていただきます",
+            "お申し込みを承りました",
+            "ご連絡させて頂",
+            "ご連絡させていただき",
+            "受けしました"
+        ];
 
         return $this->containsAny($htmlContent, $successMessages);
     }
