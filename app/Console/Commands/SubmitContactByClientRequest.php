@@ -119,12 +119,12 @@ class SubmitContactByClientRequest extends Command
             $this->info('==============================================');
             $this->info("Company contact {$companyContact->id}: {$company->contact_form_url}");
 
-            try {
-                $this->initBrowser();
-            } catch (\Exception $e) {
-                $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
-                continue;
-            }
+            // try {
+            //     $this->initBrowser();
+            // } catch (\Exception $e) {
+            //     $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
+            //     continue;
+            // }
 
             try {
                 $crawler = $this->client->request('GET', $company->contact_form_url);
@@ -271,8 +271,7 @@ class SubmitContactByClientRequest extends Command
             $javascriptCheck = strpos($crawler->html(), 'recaptcha') === false;
             if ($javascriptCheck) {
                 try {
-                    $crawler = $this->client->request('GET', $company->contact_form_url);
-                    $this->submitByUsingBrower($company, $this->data);
+                    $this->submitByUsingCrawler($company, $this->data);
                     $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                 } catch (\Exception $e) {
                     $this->updateCompanyContact($companyContact, self::STATUS_RETRY, $e->getMessage());
