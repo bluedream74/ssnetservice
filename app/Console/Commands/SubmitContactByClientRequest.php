@@ -425,6 +425,7 @@ class SubmitContactByClientRequest extends Command
             self::STATUS_SENDING => '未対応',
             self::STATUS_NO_FORM => 'フォームなし',
             self::STATUS_NG => 'NGワードあり',
+            self::STATUS_RETRY => '未対応'
         ];
 
         if (!array_key_exists($status, $deliveryStatus)) {
