@@ -81,13 +81,16 @@ class SubmitContactByClientRequest extends Command
             )
         ) {
             $this->error('Out of time');
-
+            sleep(60);
             return 0;
         }
 
         $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
         if (count($companyContacts)) {
             $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
+        } else {
+            sleep(60);
+            return 0;
         }
 
         foreach ($companyContacts as $companyContact) {
