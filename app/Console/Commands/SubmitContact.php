@@ -523,7 +523,7 @@ class SubmitContact extends Command
                 'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
             ],
             [
-                'match' => ['your-tel', 'efo-form01-tel', 'data[NomuraInquiry][tel]', 'dataTelephone', 'input[tel]', 'tel'],
+                'match' => ['your-tel', 'efo-form01-tel', 'data[NomuraInquiry][tel]', 'dataTelephone', 'input[tel]', 'tel', 'fFax'],
                 'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
             [
@@ -533,7 +533,7 @@ class SubmitContact extends Command
             [
                 'match' => [
                     'mailConfirm', 'mail_address_conf', 'e_854_re', 'InquiryFront[email]', 'email_confirm',
-                    'data[FormItem][65][3][34][val][confirm]',
+                    'data[FormItem][65][3][34][val][confirm]', 'confirm_email(必須)', 'email_conf2',
                 ],
                 'transform' => $contact->email,
             ],
@@ -571,6 +571,8 @@ class SubmitContact extends Command
             return;
         }
 
+        $dataMail = explode('@', $contact->email);
+
         $mapper = [
             [
                 'pattern' => ['氏名（カナ）', 'フリガナ'],
@@ -584,7 +586,7 @@ class SubmitContact extends Command
                     'e_26', 'input9', 'busyo',
                     'dnn$ctr434$ViewMailForm$grdMain$PageID3$repCategory$ctl01$repField$ItemID10$fldValue$txtSingleTextBox',
                     'aform-field-187', 'furi1', 'furi2', 'f000224117', 'f000224108', 'RequestForm$Attr-2-2', 'RequestForm$Attr-2-4',
-                    'txtName', 'フリガナ', 'senddata2',
+                    'txtName', 'フリガナ', 'senddata2', 'fName', 'data2', 'name_kana', 'vl022', 'f000667749',
                 ],
                 'transform' => 'ナシ',
             ],
@@ -594,7 +596,7 @@ class SubmitContact extends Command
                     'company', 'cn', 'kaisha', 'cop', 'corp', '会社', '社名', 'タイトル', 'fCompany', 'UserCompanyName', 'en1244884030',
                     'item_maker', 'organization', 'f000104023', 'txtCompany', 'txtDepart', 'section', 'product', 'dataCompany',
                     'e2', 'RequestForm$Attr-2-1', 'RequestForm$Attr-2-3', 'singleAnswer(ANSWER162)', 'singleAnswer(ANSWER262)',
-                    'txtCompName', 'txtPostName', 'ご担当者様', '所属部署',
+                    'txtCompName', 'txtPostName', 'ご担当者様', '所属部署', 'company_name', 'department_name', 'position',
                 ],
                 'pattern' => ['会社名', '企業名', '貴社名', '御社名', '法人名', '団体名', '機関名',
                     '屋号', '組織名', 'お店の名前', '社名', '店舗名', '職種',
@@ -614,6 +616,7 @@ class SubmitContact extends Command
                     'EMAIL', 'EMAIL2', 'email_confirm', 'INQ_MAIL_ADDR_CONF', 'mail_address2', 'mailConfirm',
                     'f000104021', 'f000104021:cf', 'MAIL_CONF', 'RE_MAILADDRESS', 'RequestForm$Attr-5-2',
                     'singleAnswer(ANSWER163)', 'item_12', 'c_q37_confirm', 'c_q25_confirm', 'e_28', 'senddata16',
+                    'f000667756:cf',
                 ],
                 'pattern' => ['メールアドレス', 'メールアドレス(確認用)', 'Mail アドレス', 'E-mail (半角)', 'ペライチに登録しているメールアドレス', 'メールアドレス［確認］
                 （E-mail）', 'メールアドレス（確認用）', 'メールアドレス（確認）'],
@@ -647,7 +650,7 @@ class SubmitContact extends Command
             ],
             [
                 'match' => ['fZipCode', 'efo-form01-apa-zip', '郵便番号', 'addressnum', 'postal-code',
-                    'en1240790938', 'input34', 'RequestForm$Attr-4-1',
+                    'en1240790938', 'input34', 'RequestForm$Attr-4-1', 'data3',
                 ],
                 'pattern' => ['郵便番号', '〒', '郵便番号 (半角数字のみ)'],
                 'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
@@ -659,10 +662,12 @@ class SubmitContact extends Command
                     'f000027223', 'f000027225', 'dnn$ctr434$ViewMailForm$grdMain$PageID3$repCategory$ctl01$repField$ItemID17$fldValue$txtSingleTextBox',
                     'dnn$ctr434$ViewMailForm$grdMain$PageID3$repCategory$ctl01$repField$ItemID18$fldValue$txtSingleTextBox', 'query[10]',
                     'ADDR_2', 'ADDR_3', 'building', 'f000224118', 'add_01', 'add_02', 'RequestForm$Attr-4-4', 'txtAddress', 'e_25', 'e_27',
-                    'txtToAddress', 'ご住所',
+                    'txtToAddress', 'ご住所', 'fAddress',
                 ],
                 'pattern' => ['住所', '所在地', '市区',
-                    '町名', '建物名・施設名', 'item117', 'ご住所', '市区町村郡/町名/丁目', 'C020', ],
+                    '町名', '建物名・施設名', 'item117', 'ご住所', '市区町村郡/町名/丁目', 'C020', 'data4',
+                    'data5',
+                ],
                 'transform' => $contact->address,
             ],
             [
@@ -681,7 +686,7 @@ class SubmitContact extends Command
                     'Public::Application::Userenquete_D__P__D_name2', 'f000027211', 'LastName',
                     'query[1][1]', '162441_68591pi_162441_68591', 'txtName2', 'customer[last_name]',
                     'singleAnswer(ANSWER158)', 'c_q4_second', 'c_q10_second',
-                    '553162_110236pi_553162_110236', 'お名前(姓)',
+                    '553162_110236pi_553162_110236', 'お名前(姓)', 'vl002', 'nereline', 'f000667747',
                 ],
                 'key' => ['f013008539', 'seiName'],
                 'transform' => $contact->lastname,
@@ -692,7 +697,7 @@ class SubmitContact extends Command
                     'singleAnswer(ANSWER2-2)', 'f000003198', 'i_name_mei', 'name-mei',
                     'c_q23_second', 'fLastName', 'お名前（漢字）[]', 'c_q16_second', 'f000027210',
                     'fname',  'f013017368', 'mei', 'FirstName', 'txtName1', 'customer[first_name]',
-                    'RequestForm$Attr-3-1', 'singleAnswer(ANSWER159)', 'firstName', 'お名前(名)',
+                    'RequestForm$Attr-3-1', 'singleAnswer(ANSWER159)', 'firstName', 'お名前(名)', 'nerestation',
                 ],
                 'key' => ['f013008540'],
                 'transform' => $contact->surname,
@@ -701,7 +706,7 @@ class SubmitContact extends Command
                 'match' => [
                     'ご担当者名', 'お名前(必須)', 'UserName', 'singleAnswer(ANSWER3400)', 'qEnq5461', 'qEnq5462', 'ご担当者名', 'NAME', 'f013008540', 'f013017369',
                     'input8', 'your-name', 'dnn$ctr434$ViewMailForm$grdMain$PageID3$repCategory$ctl01$repField$ItemID9$fldValue$txtSingleTextBox',
-                    'f000104020', 'C016', 'G012', 'RequestForm$Attr-3-2', 'c_q24_second', '法人名',
+                    'f000104020', 'C016', 'G012', 'RequestForm$Attr-3-2', 'c_q24_second', '法人名', 'mansionName', 'fNamey', 'name',
                 ],
                 'pattern' => ['名前', '氏名', '担当者', '差出人', 'ネーム', 'お名前(漢字)', 'お名前(必須)', 'お名前', 'おなまえ'],
                 'transform' => $contact->surname . $contact->lastname,
@@ -745,6 +750,7 @@ class SubmitContact extends Command
             [
                 'match' => ['FAX', 'txtTEL', 'singleAnswer(ANSWER5)', 'singleAnswer(ANSWER6)', 'input/zip_code', 'telnum',
                     'fTel', 'fFax', '市区町村', 'input35', 'cp_tels', 'RequestForm$Attr-5-1', 'singleAnswer(ANSWER164)',
+                    'data6',
                 ],
                 'key' => ['txtTEL', 'tel'],
                 'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
@@ -810,7 +816,7 @@ class SubmitContact extends Command
                 'transform' => '2022',
             ],
             [
-                'match' => ['f012956299:m'],
+                'match' => ['f012956299:m', 'roomNumber'],
                 'transform' => '03',
             ],
             [
@@ -824,6 +830,14 @@ class SubmitContact extends Command
             [
                 'match' => ['資料'],
                 'transform' => '管理運営受託業務',
+            ],
+            [
+                'match' => ['email_conf1'],
+                'transform' => isset($dataMail[0]) ? $dataMail[0] : null,
+            ],
+            [
+                'match' => ['email_conf2'],
+                'transform' => isset($dataMail[1]) ? $dataMail[1] : null,
             ],
         ];
 
@@ -1007,7 +1021,12 @@ class SubmitContact extends Command
     {
         $confirmElements = $driver->findElements(WebDriverBy::xpath('
             //button[contains(text(),"確認")]
+            | //input[@type="button" and contains(@id,"button_mfp_goconfirm")]
+            | //input[@type="button" and contains(@name,"_check_x")]
+            | //input[@type="button" and contains(@name,"_submit_x")]
+            | //input[@type="button" and contains(@name,"conf")]
             | //input[@type="submit" and contains(@name,"sendmail")]
+            | //input[@type="submit" and contains(@value,"　送　信　")]
             | //button[@type="submit"][contains(@data-disable-with-permanent, "true")]
             | //input[@type="submit" and contains(@value,"入力内容を確認する")]
             | //input[@type="submit" and contains(@value,"送信")]
@@ -1042,9 +1061,11 @@ class SubmitContact extends Command
             | //button[contains(text(),"送信")]
             | //button[span[contains(text(),"送信")]]
             | //input[@type="button" and @id="submit_confirm"]
+            | //input[@type="button"][contains(@value,"確認画面へ")]
             | //input[@type="image"][contains(@value,"この内容で登録する") and @type!="hidden"]
             | //input[@type="image"][contains(@alt,"この内容で送信する") and @type!="hidden"]
             | //input[@type="image"][contains(@alt,"この内容で送信する") and @type!="hidden"]
+            | //input[@type="image" and contains(@value,"SEND")]
             | //input[contains(@alt,"確認") and @type!="hidden"]
             | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
             | //input[@type="submit" and contains(@value,"送信する")]
@@ -1058,7 +1079,10 @@ class SubmitContact extends Command
             | //input[@type="checkbox"]
             | //label[@for="sf_KojinJouhou__c" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
             | //img[contains(@alt,"内容を確認する")]
-        '));
+            | //img[contains(@alt,"確認画面に進む")]
+            | //img[contains(@alt,"この内容で送信する")]
+            | //input[@type="image"][contains(@name,"check_entry_button") and @type!="hidden"]
+            '));
 
         foreach ($confirmElements as $element) {
             try {
