@@ -739,7 +739,7 @@ class SubmitContact extends Command
             ],
             [
                 'pattern' => ['fax', 'FAX番号', '電話', '携帯電話', '連絡先', 'TEL', 'Phone', '電話番号2', '電話番号', '確認のため再度ご入力下さい。', 'C021', 'c_q30'],
-                'match' => ['FAX', 'singleAnswer(ANSWER3408)', '電話番号', '電話番号', 'FAX番号', '電話番号'],
+                'match' => ['FAX', 'singleAnswer(ANSWER3408)', '電話番号', 'FAX番号'],
                 'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
             [
