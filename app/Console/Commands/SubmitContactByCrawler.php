@@ -89,7 +89,7 @@ class SubmitContactByCrawler extends Command
         DB::beginTransaction();
         try
         {
-            $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
+            $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', self::STATUS_RETRY)->limit(env('MAIL_LIMIT'))->get();
             if (count($companyContacts)) {
                 $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
             }
