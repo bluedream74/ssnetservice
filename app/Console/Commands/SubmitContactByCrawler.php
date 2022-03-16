@@ -86,10 +86,20 @@ class SubmitContactByCrawler extends Command
             return 0;
         }
 
-        $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
-        if (count($companyContacts)) {
-            $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
+        DB::beginTransaction();
+        try
+        {
+            $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
+            if (count($companyContacts)) {
+                $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
+            }
+            DB::commit();
         }
+        catch (\Exception $e) {
+            DB::rollback();
+            return 0;
+        }
+
         if (!count($companyContacts)) {
             sleep(60);
             return 0;
