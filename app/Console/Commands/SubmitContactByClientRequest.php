@@ -272,7 +272,9 @@ class SubmitContactByClientRequest extends Command
                 }
             }
 
-            $this->info('Data: ' . var_export($this->data, true));
+            if (!$this->isDebug) {
+                $this->info('Data: ' . var_export($this->data, true));
+            }
 
             $javascriptCheck = strpos($crawler->html(), 'recaptcha') === false;
             if ($javascriptCheck) {
