@@ -837,11 +837,13 @@ class SubmitContactByClientRequest extends Command
                             $this->data[$match['name']] = $map['transform'];
                         }
                     }
+                }
+            }
 
-                    if (isset($map['key'])) {
-                        foreach ($map['key'] as $value) {
-                            $this->data[$value] = $map['transform'];
-                        }
+            if (isset($map['key'])) {
+                foreach ($map['key'] as $value) {
+                    if (strpos($this->htmlText, $value) !== false) {
+                        $this->data[$value] = $map['transform'];
                     }
                 }
             }
