@@ -832,7 +832,7 @@ class SubmitContactByCrawler extends Command
 
             if (isset($map['key'])) {
                 foreach ($map['key'] as $value) {
-                    if (strpos($this->htmlText, $value) !== false) {
+                    if (strpos($this->html, $value) !== false && (!isset($this->data[$value]) || empty($this->data[$value]))) {
                         $this->data[$value] = $map['transform'];
                     }
                 }
