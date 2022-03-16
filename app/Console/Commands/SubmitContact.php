@@ -85,13 +85,14 @@ class SubmitContact extends Command
             return 0;
         }
 
+        $companyContacts = null;
         DB::transaction(function() {
             $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
             if (count($companyContacts)) {
                 $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
             }
         });
-        if (!count($companyContacts)) {
+        if (!$companyContacts || !count($companyContacts)) {
             sleep(60);
             return 0;
         }
