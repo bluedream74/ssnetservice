@@ -1108,6 +1108,7 @@ class SubmitContactByCrawler extends Command
         $arguments = ['--disable-gpu', '--no-sandbox'];
         if (!$this->isDebug) {
             $arguments[] = '--headless';
+            $arguments[] = '--disable-dev-shm-usage';
         }
         $options->addArguments($arguments);
 
