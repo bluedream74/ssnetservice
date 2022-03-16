@@ -272,7 +272,7 @@ class SubmitContactByCrawler extends Command
                 }
             }
 
-            if (!$this->isDebug) {
+            if ($this->isDebug) {
                 $this->info('Data: ' . var_export($this->data, true));
             }
 
