@@ -86,14 +86,12 @@ class SubmitContactByClientRequest extends Command
             return 0;
         }
 
-        $companyContacts = null;
-        DB::transaction(function() {
-            $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
-            if (count($companyContacts)) {
-                $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
-            }
-        });
-        if (!$companyContacts || !count($companyContacts)) {
+        $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
+        if (count($companyContacts)) {
+            $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
+        }
+
+        if (!count($companyContacts)) {
             sleep(60);
             return 0;
         }
@@ -143,7 +141,7 @@ class SubmitContactByClientRequest extends Command
                     $companyContact->update([
                         'is_delivered' => self::STATUS_RETRY
                     ]);
-                    $output->writeln("フォームなし");
+                    $this->info->writeln("フォームなし");
                     continue;
                 }
             } catch (\Exception $e) {
@@ -274,7 +272,9 @@ class SubmitContactByClientRequest extends Command
                 }
             }
 
-            $this->info('Data: ' . var_export($this->data, true));
+            if (!$this->isDebug) {
+                $this->info('Data: ' . var_export($this->data, true));
+            }
 
             $javascriptCheck = strpos($crawler->html(), 'recaptcha') === false;
             if ($javascriptCheck) {
@@ -1121,6 +1121,7 @@ class SubmitContactByClientRequest extends Command
         $arguments = ['--disable-gpu', '--no-sandbox'];
         if (!$this->isDebug) {
             $arguments[] = '--headless';
+            $arguments[] = '--disable-dev-shm-usage';
         }
         $options->addArguments($arguments);
 
