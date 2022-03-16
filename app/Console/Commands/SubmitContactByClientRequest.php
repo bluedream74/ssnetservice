@@ -141,7 +141,7 @@ class SubmitContactByClientRequest extends Command
                     $companyContact->update([
                         'is_delivered' => self::STATUS_RETRY
                     ]);
-                    $output->writeln("フォームなし");
+                    $this->info->writeln("フォームなし");
                     continue;
                 }
             } catch (\Exception $e) {
