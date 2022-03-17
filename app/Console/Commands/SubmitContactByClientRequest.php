@@ -82,7 +82,10 @@ class SubmitContactByClientRequest extends Command
                 || now()->gt(Carbon::createFromTimestamp(strtotime(now()->format('Y-m-d') . ' ' . $config->end)))
             )
         ) {
-            $this->error('Out of time');
+            if ($this->isDebug) {
+                $this->error('Out of time');
+            }
+
             sleep(60);
             return 0;
         }
@@ -135,7 +138,9 @@ class SubmitContactByClientRequest extends Command
                     && now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))
                 )
             ) {
-                $this->info('Skip: ' . $companyContact->id);
+                if ($this->isDebug) {
+                    $this->info('Skip: ' . $companyContact->id);
+                }
 
                 return 0;
             }
@@ -146,8 +151,10 @@ class SubmitContactByClientRequest extends Command
             $this->htmlText = null;
             $crawler = null;
 
-            $this->info('==============================================');
-            $this->info("Company contact {$companyContact->id}: {$company->contact_form_url}");
+            if ($this->isDebug) {
+                $this->info('==============================================');
+                $this->info("Company contact {$companyContact->id}: {$company->contact_form_url}");
+            }
 
             // try {
             //     $this->initBrowser();
@@ -165,7 +172,6 @@ class SubmitContactByClientRequest extends Command
                     $companyContact->update([
                         'is_delivered' => self::STATUS_RETRY
                     ]);
-                    $this->info->writeln("フォームなし");
                     continue;
                 }
             } catch (\Exception $e) {
@@ -462,13 +468,15 @@ class SubmitContactByClientRequest extends Command
             throw new \Exception('Status is not found');
         }
 
-        $companyContact->company->update(['status' => $deliveryStatus[$status]]);
-        $companyContact->update(['is_delivered' => $status]);
-
-        $reportAction = $status == self::STATUS_SENT ? 'info' : 'error';
-        $this->{$reportAction}($message ?? $deliveryStatus[$status]);
-
         try {
+            $companyContact->company->update(['status' => $deliveryStatus[$status]]);
+            $companyContact->update(['is_delivered' => $status]);
+
+            if ($this->isDebug) {
+                $reportAction = $status == self::STATUS_SENT ? 'info' : 'error';
+                $this->{$reportAction}($message ?? $deliveryStatus[$status]);
+            }
+
             $this->closeBrowser();
         } catch (\Exception $e) {
             return 0;
