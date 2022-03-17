@@ -187,7 +187,9 @@ class SubmitContactByClientRequest extends Command
 
             $this->html = $crawler->html();
             $this->htmlText = $crawler->text();
-            file_put_contents(storage_path("html/{$companyContact->id}_response.html"), $this->html);
+            if ($this->isDebug) {
+                file_put_contents(storage_path("html/{$companyContact->id}_response.html"), $this->html);
+            }
 
             $hasContactForm = $this->findContactForm($crawler);
             if (!$hasContactForm) {
@@ -196,7 +198,9 @@ class SubmitContactByClientRequest extends Command
                     try {
                         $frameResponse = $this->client->request('GET', $iframeURL);
                         // $frameResponse = $this->getPageHTMLUsingBrowser($iframeURL);
-                        file_put_contents(storage_path("html/{$companyContact->id}_frame{$i}.html"), $frameResponse->html());
+                        if ($this->isDebug) {
+                            file_put_contents(storage_path("html/{$companyContact->id}_frame{$i}.html"), $frameResponse->html());
+                        }
                         $hasFrameContactForm = $this->findContactForm($frameResponse);
                         if ($hasFrameContactForm) {
                             $hasContactForm = true;
@@ -938,7 +942,9 @@ class SubmitContactByClientRequest extends Command
 
         $response = $this->client->submit($confirmForm, $this->data);
         $confirmHTML = $response->html();
-        file_put_contents(storage_path("html/{$company->id}_confirm{$confirmStep}.html"), $confirmHTML);
+        if ($this->isDebug) {
+            file_put_contents(storage_path("html/{$company->id}_confirm{$confirmStep}.html"), $confirmHTML);
+        }
 
         return $this->hasSuccessMessage($confirmHTML);
     }
@@ -953,7 +959,9 @@ class SubmitContactByClientRequest extends Command
         $response = $this->client->submit($this->form, $this->data);
 
         $responseHTML = $response->html();
-        file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
+        if ($this->isDebug) {
+            file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
+        }
         $isSuccess = $this->hasSuccessMessage($responseHTML);
 
         if ($isSuccess) {
