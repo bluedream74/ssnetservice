@@ -1010,14 +1010,18 @@ class SubmitContactByClientRequest extends Command
             }
         }
 
-        $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_fill.jpg"));
+        if ($this->isDebug) {
+            $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_fill.jpg"));
+        }
 
         $confirmStep = 0;
         do {
             $confirmStep++;
             try {
                 $isSuccess = $this->confirmByUsingBrowser($this->driver);
-                $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
+                if ($this->isDebug) {
+                    $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
+                }
 
                 if ($isSuccess) {
                     $this->closeBrowser();
