@@ -95,6 +95,7 @@ class SubmitContactByClientRequest extends Command
             } else {
                 $selectedTime = new DateTime(date('Y-m-d H:i:s'));
                 $companyContacts = CompanyContact::with(['contact'])
+                    ->lockForUpdate()
                     ->where('is_delivered', self::STATUS_SENDING)
                     ->where('updated_at', '<=', $selectedTime->modify('-' . strval(env('MAIL_LIMIT') * 2) . ' minutes'))
                     ->get();
