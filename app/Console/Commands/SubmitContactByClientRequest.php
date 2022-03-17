@@ -449,8 +449,6 @@ class SubmitContactByClientRequest extends Command
      */
     public function updateCompanyContact($companyContact, int $status, $message = null)
     {
-        $this->closeBrowser();
-
         $deliveryStatus = [
             self::STATUS_FAILURE => '送信失敗',
             self::STATUS_SENT => '送信済み',
@@ -469,6 +467,13 @@ class SubmitContactByClientRequest extends Command
 
         $reportAction = $status == self::STATUS_SENT ? 'info' : 'error';
         $this->{$reportAction}($message ?? $deliveryStatus[$status]);
+
+        try {
+            $this->closeBrowser();
+        } catch (\Exception $e) {
+            $this->error($e->getMessage());
+            return 0;
+        }
     }
 
     /**
