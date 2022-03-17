@@ -102,6 +102,7 @@ class SubmitContactByClientRequest extends Command
                     ->lockForUpdate()
                     ->where('is_delivered', self::STATUS_SENDING)
                     ->where('updated_at', '<=', $selectedTime->modify('-' . strval(env('MAIL_LIMIT') * 2) . ' minutes'))
+                    ->where('updated_at', '>=', $selectedTime->modify('-1 day'))
                     ->get();
                 if (count($companyContacts)) {
                     $companyContacts->toQuery()->update(['is_delivered' => 0]);
