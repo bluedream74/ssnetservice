@@ -471,7 +471,6 @@ class SubmitContactByClientRequest extends Command
         try {
             $this->closeBrowser();
         } catch (\Exception $e) {
-            $this->error($e->getMessage());
             return 0;
         }
     }
@@ -486,18 +485,22 @@ class SubmitContactByClientRequest extends Command
     public function findContactForm($response)
     {
         $hasTextarea = false;
-        $response->filter('form')->each(function ($form) use (&$hasTextarea) {
-            $inputs = $form->form()->all();
-            foreach ($inputs as $input) {
-                $isTextarea = $input->getType() == 'textarea' && !$input->isReadOnly();
-                if ($isTextarea) {
-                    $this->form = $form->form();
-                    $this->html = $form->outerhtml();
-                    $this->htmlText = $form->text();
-                    $hasTextarea = true;
+        try {
+            $response->filter('form')->each(function ($form) use (&$hasTextarea) {
+                $inputs = $form->form()->all();
+                foreach ($inputs as $input) {
+                    $isTextarea = $input->getType() == 'textarea' && !$input->isReadOnly();
+                    if ($isTextarea) {
+                        $this->form = $form->form();
+                        $this->html = $form->outerhtml();
+                        $this->htmlText = $form->text();
+                        $hasTextarea = true;
+                    }
                 }
-            }
-        });
+            });
+        } catch (\Exception $e) {
+            return $hasTextarea;
+        }
 
         return $hasTextarea;
     }
