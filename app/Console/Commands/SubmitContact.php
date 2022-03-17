@@ -94,8 +94,9 @@ class SubmitContact extends Command
                 ->where('is_delivered', self::STATUS_SENDING)
                 ->where('updated_at', '<=', $selectedTime->modify('-10 minutes'))
                 ->get();
-
-            $companyContacts->toQuery()->update(['is_delivered' => 0]);
+            if (count($companyContacts)) {
+                $companyContacts->toQuery()->update(['is_delivered' => 0]);
+            }
 
             return 0;
         }
