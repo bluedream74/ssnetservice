@@ -30,7 +30,7 @@ class SubmitContactByCrawler extends Command
     public const STATUS_NG = 5;
     public const STATUS_RETRY = 10;
 
-    public const RETRY_COUNT = 4;
+    public const RETRY_COUNT = 1;
 
     /**
      * The name and signature of the console command.
