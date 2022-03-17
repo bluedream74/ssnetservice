@@ -92,6 +92,19 @@ class SubmitContactByClientRequest extends Command
             $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
             if (count($companyContacts)) {
                 $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
+            } else {
+                $selectedTime = new DateTime(date('Y-m-d H:i:s'));
+                $companyContacts = CompanyContact::with(['contact'])
+                    ->where('is_delivered', self::STATUS_SENDING)
+                    ->where('updated_at', '<=', $selectedTime->modify('-' . strval(env('MAIL_LIMIT') * 2) . ' minutes'))
+                    ->get();
+                if (count($companyContacts)) {
+                    $companyContacts->toQuery()->update(['is_delivered' => 0]);
+                }
+
+                DB::commit();
+
+                return 0;
             }
             DB::commit();
         }
