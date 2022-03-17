@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\CompanyContact;
 use App\Models\Config;
+use DateTime;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -12,7 +13,6 @@ use Facebook\WebDriver\WebDriverCheckboxes;
 use Facebook\WebDriver\WebDriverRadios;
 use Facebook\WebDriver\WebDriverSelect;
 use Goutte\Client;
-use DB;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
@@ -88,15 +88,28 @@ class SubmitContact extends Command
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
         if (count($companyContacts)) {
             $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
-        }
+        } else {
+            $selectedTime = new DateTime(date('Y-m-d H:i:s'));
+            $companyContacts = CompanyContact::with(['contact'])
+                ->where('is_delivered', self::STATUS_SENDING)
+                ->where('updated_at', '<=', $selectedTime->modify('-10 minutes'))
+                ->get();
+            if (count($companyContacts)) {
+                $companyContacts->toQuery()->update(['is_delivered' => 0]);
+            }
 
-        if (!count($companyContacts)) {
-            sleep(60);
             return 0;
         }
 
         if (!count($companyContacts)) {
             sleep(60);
+
+            return 0;
+        }
+
+        if (!count($companyContacts)) {
+            sleep(60);
+
             return 0;
         }
 
@@ -382,29 +395,29 @@ class SubmitContact extends Command
     public function hasSuccessMessage(string $htmlContent)
     {
         $successMessages = [
-            "ありがとうございま",
-            "メール送信が正常終了",
-            "内容を確認させていただき",
-            "受け付けま",
-            "問い合わせを受付",
-            "完了いたしま",
-            "完了しまし",
-            "成功しました",
-            "有難うございま",
-            "自動返信メール",
-            "送信いたしま",
-            "送信されま",
-            "送信しました",
-            "送信完了",
-            "受け付けました",
-            "ございました",
-            "ありがとうございます",
-            "お問い合わせを承りました",
-            "ご返事させていただきます",
-            "お申し込みを承りました",
-            "ご連絡させて頂",
-            "ご連絡させていただき",
-            "受けしました"
+            'ありがとうございま',
+            'メール送信が正常終了',
+            '内容を確認させていただき',
+            '受け付けま',
+            '問い合わせを受付',
+            '完了いたしま',
+            '完了しまし',
+            '成功しました',
+            '有難うございま',
+            '自動返信メール',
+            '送信いたしま',
+            '送信されま',
+            '送信しました',
+            '送信完了',
+            '受け付けました',
+            'ございました',
+            'ありがとうございます',
+            'お問い合わせを承りました',
+            'ご返事させていただきます',
+            'お申し込みを承りました',
+            'ご連絡させて頂',
+            'ご連絡させていただき',
+            '受けしました',
         ];
 
         return $this->containsAny($htmlContent, $successMessages);
