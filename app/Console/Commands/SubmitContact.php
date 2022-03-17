@@ -383,31 +383,7 @@ class SubmitContact extends Command
      */
     public function hasSuccessMessage(string $htmlContent)
     {
-        $successMessages = [
-            'ありがとうございま',
-            'メール送信が正常終了',
-            '内容を確認させていただき',
-            '受け付けま',
-            '問い合わせを受付',
-            '完了いたしま',
-            '完了しまし',
-            '成功しました',
-            '有難うございま',
-            '自動返信メール',
-            '送信いたしま',
-            '送信されま',
-            '送信しました',
-            '送信完了',
-            '受け付けました',
-            'ございました',
-            'ありがとうございます',
-            'お問い合わせを承りました',
-            'ご返事させていただきます',
-            'お申し込みを承りました',
-            'ご連絡させて頂',
-            'ご連絡させていただき',
-            '受けしました',
-        ];
+        $successMessages = config('constant.successMessages');
 
         return $this->containsAny($htmlContent, $successMessages);
     }
@@ -420,7 +396,7 @@ class SubmitContact extends Command
      */
     public function updateCompanyContact($companyContact, int $status, $message = null)
     {
-        // $this->closeBrowser();
+        $this->closeBrowser();
 
         $deliveryStatus = [
             self::STATUS_FAILURE => '送信失敗',
@@ -930,7 +906,7 @@ class SubmitContact extends Command
                 $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
 
                 if ($isSuccess) {
-                    // $this->closeBrowser();
+                    $this->closeBrowser();
 
                     return;
                 }
@@ -939,7 +915,7 @@ class SubmitContact extends Command
             }
         } while ($confirmStep < self::RETRY_COUNT);
 
-        // $this->closeBrowser();
+        $this->closeBrowser();
 
         throw new \Exception('Confirm step is not success');
     }
@@ -951,84 +927,7 @@ class SubmitContact extends Command
      */
     public function confirmByUsingBrowser($driver)
     {
-        $confirmElements = $driver->findElements(WebDriverBy::xpath('
-            //button[contains(text(),"確認")]
-            | //input[@type="submit" and contains(@value,"送信する") and contains(@name,"submitSubmit")]
-            | //input[@type="submit" and contains(@value,"送信する") and contains(@name,"ACMS_POST_Form_Submit")]
-            | //input[@type="submit" and contains(@value,"送信する")]
-            | //input[@type="submit" and contains(@value,"確認画面へ")]
-            | //input[@type="button" and contains(@id,"button_mfp_goconfirm")]
-            | //input[@type="button" and contains(@name,"_check_x")]
-            | //input[@type="button" and contains(@name,"_submit_x")]
-            | //input[@type="button" and contains(@name,"conf")]
-            | //input[@type="submit" and contains(@name,"sendmail")]
-            | //input[@type="submit" and contains(@value,"　送　信　")]
-            | //input[@type="submit" and contains(@name,"submitConfirm")]
-            | //button[@type="submit"][contains(@data-disable-with-permanent, "true")]
-            | //button[@type="submit"][contains(@class, "btn-cmn--red")]
-            | //input[@type="submit" and contains(@value,"入力内容を確認する")]
-            | //input[@type="submit" and contains(@value,"送信")]
-            | //button[@type="submit" and contains(@value,"送信")]
-            | //input[@type="submit" and contains(@value,"内容確認へ")]
-            | //input[@type="submit" and contains(@value,"入力内容確認")]
-            | //input[@type="submit" and contains(@value,"送信する")]
-            | //*[contains(text(), "この内容で送信する")]
-            | //*[contains(text(),"に同意する")]
-            | //*[contains(text(),"確認する")]
-            | //a[@class="js-formSend btnsubmit"]
-            | //a[@id="js__submit"]
-            | //a[@href="kagawa-casting-08.php"]
-            | //a[contains(text(),"次へ")]
-            | //a[contains(text(),"確認")]
-            | //a[contains(text(),"送信")]
-            | //button[contains(@class,"mfp_element_button")]
-            | //button[@type="submit"][contains(@value,"send")]
-            | //button[@type="submit"][contains(@name,"_exec")]
-            | //button[@type="submit"][contains(@name,"Action")]
-            | //button[@type="submit" and (contains(@class,"　上記の内容で送信する　"))]
-            | //button[@class="nttdatajpn-submit-button"]
-            | //button[@type="button" and (contains(@class,"ahover"))]
-            | //button[@type="submit" and (contains(@class,"mfp_element_submit"))]
-            | //button[@type="submit"][contains(@name,"__送信ボタン")]
-            | //button[@type="submit" ][contains(@class, "btn")]
-            | //button[@type="submit"][contains(@value,"この内容で無料相談する")]
-            | //button[@type="submit"]//span[contains(text(),"同意して進む")]
-            | //button[@type="submit" and @class="btn"]
-            | //button[@type="submit"][contains(@value,"送信する")]
-            | //button[contains(@value,"送信")]
-            | //button[contains(text(),"上記の内容で登録する")]
-            | //button[contains(text(),"次へ")]
-            | //button[contains(text(),"送　　信")]
-            | //button[contains(text(),"送信")]
-            | //button[span[contains(text(),"送信")]]
-            | //input[@type="button" and @id="submit_confirm"]
-            | //input[@type="button"][contains(@value,"確認画面へ")]
-            | //input[@type="button"][contains(@value,"入力画面に戻る")]
-            | //input[@type="image"][contains(@value,"この内容で登録する") and @type!="hidden"]
-            | //input[@type="image"][contains(@alt,"この内容で送信する") and @type!="hidden"]
-            | //input[@type="image"][contains(@alt,"この内容で送信する") and @type!="hidden"]
-            | //input[@type="image"][contains(@alt,"送信") and @type!="hidden"]
-            | //input[@type="image" and contains(@value,"SEND")]
-            | //input[@type="image" and contains(@name,"_send2_")]
-            | //input[@type="image" and contains(@name,"send")]
-            | //input[@type="image" and contains(@src,"../images/entry/btn_send.png")]
-            | //input[contains(@alt,"確認") and @type!="hidden"]
-            | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
-            | //input[@type="submit" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
-            | //input[contains(@alt,"次へ") and @type!="hidden"]
-            | //input[contains(@value,"次へ") and @type!="hidden"]
-            | //input[contains(@value,"確 認") and @type!="hidden"]
-            | //input[contains(@value,"確認") and @type!="hidden"]
-            | //input[contains(@value,"送　信") and @type!="hidden"]
-            | //input[contains(@value,"送信") and @type!="hidden"]
-            | //input[@type="checkbox"]
-            | //label[@for="sf_KojinJouhou__c" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
-            | //img[contains(@alt,"内容を確認する")]
-            | //img[contains(@alt,"確認画面に進む")]
-            | //img[contains(@alt,"この内容で送信する")]
-            | //img[contains(@alt,"完了画面へ")]
-            | //input[@type="image"][contains(@name,"check_entry_button") and @type!="hidden"]
-            '));
+        $confirmElements = $driver->findElements(WebDriverBy::xpath(config('constant.xpathButton')));
 
         foreach ($confirmElements as $element) {
             try {
@@ -1041,31 +940,7 @@ class SubmitContact extends Command
             }
         }
 
-        $successTexts = $driver->findElements(WebDriverBy::xpath('
-            //*[contains(text(),"ありがとうございま")]
-            | //*[contains(text(),"メール送信が正常終了")]
-            | //*[contains(text(),"内容を確認させていただき")]
-            | //*[contains(text(),"受け付けま")]
-            | //*[contains(text(),"問い合わせを受付")]
-            | //*[contains(text(),"完了いたしま")]
-            | //*[contains(text(),"完了しまし")]
-            | //*[contains(text(),"成功しました")]
-            | //*[contains(text(),"有難うございま")]
-            | //*[contains(text(),"自動返信メール")]
-            | //*[contains(text(),"送信いたしま")]
-            | //*[contains(text(),"送信されま")]
-            | //*[contains(text(),"送信しました")]
-            | //*[contains(text(),"送信完了")]
-            | //*[text()[contains(.,"受け付けました")]]
-            | //*[text()[contains(.,"ございました")]]
-            | //*[contains(text(),"ありがとうございます")]
-            | //*[text()[contains(.,"お問い合わせを承りました")]]
-            | //*[text()[contains(.,"ご返事させていただきます")]]
-            | //*[contains(text(),"お申し込みを承りました")]
-            | //*[contains(text(),"ご連絡させて頂")]
-            | //*[contains(text(),"ご連絡させていただき")]
-            | //*[contains(text(),"受けしました")]
-        '));
+        $successTexts = $driver->findElements(WebDriverBy::xpath(config('constant.xpathMessage')));
 
         return count($successTexts) > 0;
     }
