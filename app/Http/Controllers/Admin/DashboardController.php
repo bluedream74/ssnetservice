@@ -313,12 +313,15 @@ class DashboardController extends BaseController
 
     public function batchCheck(){
         $CHECK_CONTACT_FORM = Config::get()->first()->checkContactForm;
-        if($CHECK_CONTACT_FORM === 0){
+        if($CHECK_CONTACT_FORM === 0) {
             Config::where('id',1)->update(array('registerUrl'=>'1'));
             // Artisan::queue('batch:check1', []);
             Config::where('id',1)->update(array('checkContactForm'=>'1'));
-            Company::whereNotNull('contact_form_url')->update(['check_contact_form'=>1]);
-            Company::whereNull('contact_form_url')->update(['check_contact_form'=>0]);
+
+            Company::update(['check_contact_form'=>1]);
+            $targetCompanies = $this->makeQuery(request()->all());
+            $targetCompanies->update(['check_contact_form'=>0]);
+
             return back()->with(['system.message.info' => "一括チェックしています。"]);
         }else {
             Config::where('id',1)->update(array('checkContactForm'=>'0'));
