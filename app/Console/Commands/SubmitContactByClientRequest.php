@@ -930,10 +930,18 @@ class SubmitContactByClientRequest extends Command
                 switch ($type) {
                     case 'checkbox':
                         $validKey = preg_replace('/\[\d+\]$/', '[]', $formKey);
-                        $checkbox = new WebDriverCheckboxes($this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$validKey}\"]")));
+                        $elementChecbox = $this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$validKey}\"]"));
+                        if ($elementChecbox->getAttribute('id')) {
+                            $elementLabel = $this->driver->findElement(WebDriverBy::cssSelector("label[for=\"{$elementChecbox->getAttribute('id')}\"]"));
+                            if ($elementLabel) {
+                                $elementLabel->click();
+                            }
+                        }
+                        $checkbox = new WebDriverCheckboxes($elementChecbox);
                         $checkbox->selectByIndex(0);
                         break;
                     case 'radio':
+                        $this->driver->executeScript('return document.querySelector(`input[type="' . $type . '"][name="' . $formKey . '"]`).parentNode.click()');
                         $radio = new WebDriverRadios($this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$formKey}\"]")));
                         $radio->selectByIndex(0);
                         break;
