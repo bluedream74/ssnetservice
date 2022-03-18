@@ -318,7 +318,7 @@ class DashboardController extends BaseController
             // Artisan::queue('batch:check1', []);
             Config::where('id',1)->update(array('checkContactForm'=>'1'));
 
-            Company::update(['check_contact_form'=>1]);
+            Company::whereNotNull('id')->update(['check_contact_form'=>1]);
             $targetCompanies = $this->makeQuery(request()->all());
             $targetCompanies->update(['check_contact_form'=>0]);
 
