@@ -38,12 +38,12 @@ class Kernel extends ConsoleKernel
         // $schedule->command("send:emails9")->everyFourMinutes()->runInBackground()->withoutOverlapping();
         // $schedule->command("send:emails10")->everyFiveMinutes()->runInBackground()->withoutOverlapping();
 
-        $schedule->command("batch:check1")->everyFourMinutes()->runInBackground()->withoutOverlapping()->when(function (){
-            return Config::get()->first()->checkContactForm;
-          });
-        $schedule->command("batch:check2")->everyFourMinutes()->runInBackground()->withoutOverlapping()->when(function (){
-            return Config::get()->first()->checkContactForm;
-          });
+        // $schedule->command("batch:check1")->everyFourMinutes()->runInBackground()->withoutOverlapping()->when(function (){
+        //     return Config::get()->first()->checkContactForm;
+        //   });
+        // $schedule->command("batch:check2")->everyFourMinutes()->runInBackground()->withoutOverlapping()->when(function (){
+        //     return Config::get()->first()->checkContactForm;
+        //   });
         // $schedule->command("batch:check3")->everyFourMinutes()->runInBackground()->withoutOverlapping()->when(function (){
         //     return Config::get()->first()->checkContactForm;
         //   });
