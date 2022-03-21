@@ -883,19 +883,15 @@ class SubmitContact extends Command
                 switch ($type) {
                     case 'checkbox':
                         $validKey = preg_replace('/\[\d+\]$/', '[]', $formKey);
-                        $elementChecbox = $this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$validKey}\"]"));
-                        if ($elementChecbox->getAttribute('id')) {
-                            $elementLabel = $this->driver->findElement(WebDriverBy::cssSelector("label[for=\"{$elementChecbox->getAttribute('id')}\"]"));
-                            if ($elementLabel) {
-                                $elementLabel->click();
-                            }
-                        }
-                        $checkbox = new WebDriverCheckboxes($elementChecbox);
+                        $elementInput = $this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$validKey}\"]"));
+                        $checkbox = new WebDriverCheckboxes($elementInput);
                         $checkbox->selectByIndex(0);
+
                         break;
                     case 'radio':
-                        $this->driver->executeScript('return document.querySelector(`input[type="' . $type . '"][name="' . $formKey . '"]`).parentNode.click()');
-                        $radio = new WebDriverRadios($this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$formKey}\"]")));
+                        $validKey = $formKey;
+                        $elementInput = $this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$formKey}\"]"));
+                        $radio = new WebDriverRadios($elementInput);
                         $radio->selectByIndex(0);
                         break;
                     case 'select':
@@ -911,6 +907,19 @@ class SubmitContact extends Command
                         $this->driver->findElement(WebDriverBy::cssSelector("input[name=\"{$formKey}\"]"))->sendKeys($this->data[$formKey]);
                         break;
                 }
+            } catch (\Facebook\WebDriver\Exception\ElementNotInteractableException $e) {
+                if ($elementInput) {
+                    if ($elementInput->getAttribute('id')) {
+                        $elementLabel = $this->driver->findElement(WebDriverBy::cssSelector("label[for=\"{$elementInput->getAttribute('id')}\"]"));
+                        if ($elementLabel) {
+                            $elementLabel->click();
+                        }
+                    } else {
+                        $this->driver->executeScript('return document.querySelector(`input[type="' . $type . '"][name="' . $validKey . '"]`).parentNode.click()');
+                    }
+                }
+
+                continue;
             } catch (\Exception $e) {
                 continue;
             }
