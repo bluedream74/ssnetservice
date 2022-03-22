@@ -30,11 +30,9 @@ return [
             'contact_tel_tel02',
             'e_29[tel2]',
             'e_30[tel2]',
-            'e_30[tel3]',
             'fax-num[data][1]',
             'fax[data][1]',
             'field_93664_2',
-            'field_93664_3',
             'InquiryFront[phone2]',
             'item_13_phone2',
             'items[tel02]',
@@ -68,6 +66,8 @@ return [
             'TEL3_need',
             'tel3',
             'TEL3',
+            'e_30[tel3]',
+            'field_93664_3',
         ],
 
         'postalCode1' => [
