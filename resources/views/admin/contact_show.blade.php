@@ -131,15 +131,14 @@
                     <button type="button" class="btn btn-sm btn-primary ml-3" data-toggle="modal" data-target="#email-modal">フォーム作成</button>
                 </div>
             </div>
-            <label class="col-sm-4">合計クリック回数: {{ $totalCounts }}</label>
             <table class="table table-striped">
                 <thead>
                     <tr>
                         <th style="max-width: 400px;">会社名</th>
                         <th style="max-width: 400px;">お問い合わせフォームのURL</th>
-                        <th style="max-width: 500px;">@sortablelink('counts', 'MYURLクリック')</th>
-                        <th style="max-width: 90px;">電話番号</th>
-                        <th style="max-width: 150px;">ステータス</th>
+                        <th style="max-width: 200px;">MYURL<br>クリック</th>
+                        <th style="max-width: 400px;">電話番号</th>
+                        <th style="max-width: 400px;">ステータス</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -150,13 +149,13 @@
                     <tr>
                         <td style="max-width: 400px;">{{ $company->name }}</td>
                         <td style="max-width: 400px;"><a href="{{ $company->contact_form_url }}" target="_blank">{{ $company->contact_form_url }}</a></td>
-                        <td style="max-width: 500px;padding-left:20px;">{{ $companyContact->counts }}</td>
-                        <td style="max-width: 150px; width: 90px;">
+                        <td style="max-width: 200px;padding-left:20px;">{{ $companyContact->counts }}</td>
+                        <td style="max-width: 400px; width: 200px;">
                             @foreach ($company->phones as $phone)
                                 <div>{{ $phone->phone }}</div>
                             @endforeach
                         </td>
-                        <td style="max-width: 105px; width: 105px;">
+                        <td style="max-width: 400px; width: 200px;">
                             @switch($companyContact->is_delivered)
                                 @case(1)
                                     <span class="badge badge-danger">送信失敗</span>
