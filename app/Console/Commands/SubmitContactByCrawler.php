@@ -604,12 +604,20 @@ class SubmitContactByCrawler extends Command
                 'transform' => $contact->fu_lastname,
             ],
             [
+                'match' => $configPrioritized['full_name'],
+                'transform' => $contact->fu_lastname . $contact->fu_surname,
+            ],
+            [
                 'match' => $configPrioritized['randomNumber'],
                 'transform' => 1,
             ],
             [
                 'match' => $configPrioritized['furigana'],
                 'transform' => 'ナシ',
+            ],
+            [
+                'match' => $configPrioritized['company'],
+                'transform' => $contact->company,
             ],
         ];
 
@@ -730,7 +738,7 @@ class SubmitContactByCrawler extends Command
             ],
             [
                 'match' => $configMapper['phoneNumber2Match'],
-                'key' => $configMapper['phoneNumber2Match'],
+                'key' => $configMapper['phoneNumber2Key'],
                 'transform' => $contact->phoneNumber2,
             ],
             [

@@ -21,45 +21,53 @@ return [
             'telphone:a',
             'tkph971-1',
             '電話番号[data][0]',
+            'FAX番号[data][0]',
+            'cTel[data][0]',
         ],
 
         'phoneNumber2' => [
             'c_q28_subscribercode',
             'contact_tel_tel02',
-            'contact_tel_tel03',
             'e_29[tel2]',
-            'e_29[tel3]',
             'e_30[tel2]',
-            'e_30[tel3]',
             'fax-num[data][1]',
             'fax[data][1]',
             'field_93664_2',
-            'field_93664_3',
             'InquiryFront[phone2]',
-            'InquiryFront[phone3]',
             'item_13_phone2',
-            'item_13_phone3',
             'items[tel02]',
             'PHONE2',
-            'PHONE3',
             'tel_2',
-            'tel_3',
             'tel_no_1',
             'tel-num[data][1]',
             'TEL2_need',
             'tel2',
             'TEL2',
-            'TEL3_need',
-            'tel3',
-            'TEL3',
             'telphone:e',
             'telphone:n',
             'お電話番号[data][1]',
+            '電話番号[data][1]',
+            'FAX番号[data][1]',
+            'tel[data][1]',
         ],
 
         'phoneNumber3' => [
             'items[tel02]',
-            'お電話番号[data][2]'
+            'お電話番号[data][2]',
+            '電話番号[data][2]',
+            'FAX番号[data][2]',
+            'tel[data][2]',
+            'contact_tel_tel03',
+            'InquiryFront[phone3]',
+            'item_13_phone3',
+            'e_29[tel3]',
+            'tel_3',
+            'PHONE3',
+            'TEL3_need',
+            'tel3',
+            'TEL3',
+            'e_30[tel3]',
+            'field_93664_3',
         ],
 
         'postalCode1' => [
@@ -74,6 +82,7 @@ return [
             'zip1',
             '郵便番号01',
             '郵便番号1',
+            'yuubin1',
         ],
 
         'postalCode2' => [
@@ -85,15 +94,19 @@ return [
             '郵便番号[data][1]',
             '郵便番号02',
             '郵便番号2',
+            'yuubin2',
         ],
 
         'fullPhoneNumber1' => [
             'tel',
             'TEL',
             'txtTEL',
-            '電話番号(必須)'
+            '電話番号(必須)',
+            'f',
+            'telephone',
+            'Tel',
         ],
-        
+
         'fullPhoneNumber2' => [
             'data[NomuraInquiry][tel]',
             'dataTelephone',
@@ -102,6 +115,7 @@ return [
             'input[tel]',
             'tel',
             'your-tel',
+            'ask_input_value_5',
         ],
 
         'fullPostCode1' => [
@@ -130,6 +144,7 @@ return [
             'mailConfirm',
             'メールアドレス',
             'メールアドレス（確認）',
+            'email',
         ],
 
         'address' => [
@@ -154,6 +169,14 @@ return [
             'companyname-furigana',
             'お名前フリガナ',
             '会社名フリガナ',
+            'fname',
+            'form[furigana]',
+        ],
+        'company' => [
+            'form[company]',
+        ],
+        'full_name' => [
+            'form[name]',
         ],
     ],
 
@@ -245,6 +268,7 @@ return [
             '所属部署',
             '物件番号',
             '社名',
+            'item01',
         ],
 
         'companyPattern' => [
@@ -330,6 +354,8 @@ return [
             'your-email',
             'メールアドレス',
             '部署',
+            'ask_input_value_4_4',
+            'item05',
         ],
 
         'emailPattern' => [
@@ -409,6 +435,7 @@ return [
             'ZIP2',
             'zipcode[data][1]',
             'ZIPCODE2_HOME',
+            'ask_input_value_4_2',
         ],
 
         'postCode2Key' => [
@@ -471,6 +498,7 @@ return [
             '住所',
             '建物名・施設名',
             '番地',
+            'item03',
         ],
 
         'addressPattern' => [
@@ -602,6 +630,8 @@ return [
             'お名前(必須)',
             'ご担当者名',
             '法人名',
+            'name',
+            'item02',
         ],
 
         'fullnamePattern' => [
@@ -776,7 +806,7 @@ return [
         ],
 
         'phoneNumber1match' => [
-             'tel_no_1',
+            'tel_no_1',
             'c_q28_areacode',
             'c_q9_areacode',
             'f000003204:a',
@@ -848,6 +878,7 @@ return [
             'txtPhonec',
             'ファックス番号[data][1]',
             'ファックス番号[data][2]',
+            'cTel[data][1]',
         ],
 
         'phoneNumber2Key' => [
@@ -882,6 +913,7 @@ return [
             'TelNumber3',
             'tkph971-3',
             'txt_tel_2',
+            'cTel[data][2]',
         ],
 
         'phoneNumber3Key' => [
@@ -1015,6 +1047,9 @@ return [
         | //button[@type="submit"][contains(@value,"この内容で無料相談する")]
         | //button[@type="submit"][contains(@value,"送信する")]
         | //button[@type="submit"]//span[contains(text(),"同意して進む")]
+        | //button[@type="button"][contains(@role,"button")]
+        | //button[@type="button"][contains(@value,"確認")]
+        | //button[@type="button"][contains(@value,"送信")]
         | //button[contains(@class,"mfp_element_button")]
         | //button[contains(@value,"送信")]
         | //button[contains(text(),"上記の内容で登録する")]

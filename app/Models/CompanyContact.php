@@ -13,6 +13,9 @@ class CompanyContact extends Model
         'contact_id',
         'is_delivered'
     ];
+    public $sortable = [
+        'counts'
+    ];
 
     public function company()
     {
