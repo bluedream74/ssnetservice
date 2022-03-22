@@ -28,9 +28,7 @@ return [
         'phoneNumber2' => [
             'c_q28_subscribercode',
             'contact_tel_tel02',
-            'contact_tel_tel03',
             'e_29[tel2]',
-            'e_29[tel3]',
             'e_30[tel2]',
             'e_30[tel3]',
             'fax-num[data][1]',
@@ -38,22 +36,15 @@ return [
             'field_93664_2',
             'field_93664_3',
             'InquiryFront[phone2]',
-            'InquiryFront[phone3]',
             'item_13_phone2',
-            'item_13_phone3',
             'items[tel02]',
             'PHONE2',
-            'PHONE3',
             'tel_2',
-            'tel_3',
             'tel_no_1',
             'tel-num[data][1]',
             'TEL2_need',
             'tel2',
             'TEL2',
-            'TEL3_need',
-            'tel3',
-            'TEL3',
             'telphone:e',
             'telphone:n',
             'お電話番号[data][1]',
@@ -68,6 +59,15 @@ return [
             '電話番号[data][2]',
             'FAX番号[data][2]',
             'tel[data][2]',
+            'contact_tel_tel03',
+            'InquiryFront[phone3]',
+            'item_13_phone3',
+            'e_29[tel3]',
+            'tel_3',
+            'PHONE3',
+            'TEL3_need',
+            'tel3',
+            'TEL3',
         ],
 
         'postalCode1' => [
@@ -153,7 +153,7 @@ return [
             '丁目番地',
         ],
 
-        'fur_surname' => [
+        'fu_surname' => [
             'item_11_name1',
         ],
 

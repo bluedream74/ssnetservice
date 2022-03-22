@@ -557,7 +557,7 @@ class SubmitContact extends Command
                 'transform' => $contact->address,
             ],
             [
-                'match' => $configPrioritized['fur_surname'],
+                'match' => $configPrioritized['fu_surname'],
                 'transform' => $contact->fu_surname,
             ],
             [
@@ -705,7 +705,7 @@ class SubmitContact extends Command
             [
                 'match' => $configMapper['phoneNumber3Match'],
                 'key' => $configMapper['phoneNumber3Key'],
-                'transform' => $contact->phoneNumber2,
+                'transform' => $contact->phoneNumber3,
             ],
             [
                 'match' => $configMapper['address2Match'],
