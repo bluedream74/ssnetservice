@@ -248,7 +248,6 @@ class SubmitContact extends Command
                 try {
                     $this->mapForm($key, $input, $companyContact);
                 } catch (\Exception $e) {
-                    dump($e);
                     continue;
                 }
 
@@ -566,12 +565,20 @@ class SubmitContact extends Command
                 'transform' => $contact->fu_lastname,
             ],
             [
+                'match' => $configPrioritized['full_name'],
+                'transform' => $contact->fu_lastname . $contact->fu_surname,
+            ],
+            [
                 'match' => $configPrioritized['randomNumber'],
                 'transform' => 1,
             ],
             [
                 'match' => $configPrioritized['furigana'],
                 'transform' => 'ナシ',
+            ],
+            [
+                'match' => $configPrioritized['company'],
+                'transform' => $contact->company,
             ],
         ];
 
@@ -692,7 +699,7 @@ class SubmitContact extends Command
             ],
             [
                 'match' => $configMapper['phoneNumber2Match'],
-                'key' => $configMapper['phoneNumber2Match'],
+                'key' => $configMapper['phoneNumber2Key'],
                 'transform' => $contact->phoneNumber2,
             ],
             [
@@ -886,7 +893,6 @@ class SubmitContact extends Command
                         $elementInput = $this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$validKey}\"]"));
                         $checkbox = new WebDriverCheckboxes($elementInput);
                         $checkbox->selectByIndex(0);
-
                         break;
                     case 'radio':
                         $validKey = $formKey;
