@@ -25,7 +25,7 @@
                     @foreach($contacts as $contact)
                         <tr>
                             <td>
-                                <a href="{{ route('admin.contact.show', $contact) }}">{{ $contact->title }}</a>
+                                <a href="{{ route('admin.contact.show', [$contact, 'sort' => 'counts', 'direction' => 'desc']) }}">{{ $contact->title }}</a>
                             </td>
                             <td>{{ number_format($contact->stand_by_count) }}</td>
                             <td>{{ number_format($contact->sent_count) }}</td>
