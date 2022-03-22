@@ -16,8 +16,9 @@ class BaseController extends Controller
         Dispatcher $events
     )
     {
-
         $this->renderSidemenus($events);
+
+        
     }
 
     public function renderSidemenus($events)
@@ -30,7 +31,7 @@ class BaseController extends Controller
                 $menus = [
                     [
                         'text' => '会社一覧',
-                        'url'  => '/admin/dashboard',
+                        'url'  => '/admin',
                         'icon' => 'fas fa-tachometer-alt',
                         'role' => 'admin',
                     ],
@@ -64,7 +65,7 @@ class BaseController extends Controller
                     $menus = [
                         [
                             'text' => '会社一覧',
-                            'url'  => '/admin/dashboard',
+                            'url'  => '/admin',
                             'icon' => 'fas fa-tachometer-alt',
                             'role' => 'admin',
                         ],

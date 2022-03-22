@@ -311,7 +311,7 @@ class DashboardController extends BaseController
         return back()->with(['system.message.success' => "{$totalCount}の会社の検索が完了しました。"]);
     }
 
-    public function batchCheck() {
+    public function batchCheck(){
         $CHECK_CONTACT_FORM = Config::get()->first()->checkContactForm;
         if($CHECK_CONTACT_FORM === 0) {
             Config::where('id',1)->update(array('registerUrl'=>'1'));
@@ -324,22 +324,12 @@ class DashboardController extends BaseController
 
             return back()->with(['system.message.info' => "一括チェックしています。"]);
         }else {
-            Config::where('id', 1)->update(['checkContactForm' => '0']);
-            Config::where('id', 1)->update(['registerUrl' => '0']);
-
-            return back()->with(['system.message.info' => '一括チェックが停止されました。']);
+            Config::where('id',1)->update(array('checkContactForm'=>'0'));
+            Config::where('id',1)->update(array('registerUrl'=>'0'));
+            return back()->with(['system.message.info' => "一括チェックが停止されました。"]);
         }
     }
-
-    public function deleteCompanies() {
-        $targetCompanies = $this->makeQuery(request()->all());
-
-        $count = $targetCompanies->count();
-        $targetCompanies->delete();
-
-        return back()->with(['system.message.info' => $count . '件のリストが正常に削除されました。']);
-
-    }
+    
     
     private function getHTMLContent($url)
     {
@@ -559,21 +549,13 @@ class DashboardController extends BaseController
             $prefectures[$value] = $value;
         }
         $query = $contact->companies();
-
         if (!empty($value = Arr::get(request()->all(), 'status'))) {
             $query->where('is_delivered',$value);
         }
         
-        if (!empty($sort = Arr::get(request()->all(), 'sort'))) {
-            $direction = Arr::get(request()->all(), 'direction') ? Arr::get(request()->all(), 'direction') : 'desc';        
-            $query->orderby($sort, $direction);
-        }
-
-        $totalCounts = $query->sum('counts');
-
         $companies = $query->paginate(20);
 
-        return view('admin.contact_show', compact('contact', 'companies','prefectures', 'totalCounts'));
+        return view('admin.contact_show', compact('contact', 'companies','prefectures'));
     }
 
     public function sendShowContact(Contact $contact)

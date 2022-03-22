@@ -83,7 +83,6 @@
                         <label class="col-sm-2">Total: {{ $companies->total() }}</label>
                         <div class="col-sm-10 text-right">
                             <!-- <button type="button" class="btn btn-sm btn-default mr-3 btn-delete-email">無効なメールアドレスを一括削除</button> -->
-                            <button type="button" class="btn btn-sm btn-danger mr-3" id="deleteCompanies">リストを一括削除</button>
                             @if ($config == 1)
                                 <button type="button" class="btn btn-sm btn-danger mr-3" id="batchCheck">問い合わせフォームを一括チェック中を中断</button>
                             @else
@@ -257,11 +256,6 @@
             @endforeach
             {{ Form::close() }}
         </div>
-    {{ Form::open(['route' => 'admin.deleteCompanies', 'method' => 'POST', 'id' => 'deleteCompanies_Form', 'files' => true]) }}
-        @foreach (Request::all() as $key => $value)
-            {{ Form::hidden($key, $value) }}
-        @endforeach
-    {{ Form::close() }}
 
     {{ Form::open(['route' => 'admin.delete.duplicate', 'method' => 'POST', 'id' => 'duplicateForm']) }}
         @foreach (Request::all() as $key => $value)
@@ -304,25 +298,6 @@
 
         $('#batchCheck').click(function() {
             $('#batchCheck_Form').submit();
-        })
-        $('#deleteCompanies').click(function() {
-            toastr.fire({
-                html: "一度削除したデータは復元できません。" + {{ $companies->total() }} + "件のリストを削除しますか？",
-                showDenyButton: false,
-                showCancelButton: true,
-                showConfirmButton: true,
-                confirmButtonText: "削除",
-                cancelButtonText: "キャンセル",
-                confirmButtonColor: "#dc3545",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                timer: undefined
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $('#deleteCompanies_Form').submit();
-                    $('#showLoading').click();
-                }
-            })
         })
 
         $('.email-delete').click(function() {
