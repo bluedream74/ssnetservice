@@ -950,7 +950,7 @@ class SubmitContactByCrawler extends Command
                         break;
                 }
             } catch (\Facebook\WebDriver\Exception\ElementNotInteractableException $e) {
-                if ($elementInput) {
+                if (isset($elementInput)) {
                     if ($elementInput->getAttribute('id')) {
                         $elementLabel = $this->driver->findElement(WebDriverBy::cssSelector("label[for=\"{$elementInput->getAttribute('id')}\"]"));
                         if ($elementLabel) {
