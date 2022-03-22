@@ -37,6 +37,8 @@ Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
   Route::post('fetch', 'DashboardController@doFetch')->name('do.fetch');
 
   Route::post('batchCheck', 'DashboardController@batchCheck')->name('batchCheck');
+  Route::post('deleteCompanies', 'DashboardController@deleteCompanies')->name('deleteCompanies');
+
   // Route::post('sendContact', 'DashboardController@sendContact')->name('sendContact');
   
 
