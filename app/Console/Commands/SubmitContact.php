@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\CompanyContact;
 use App\Models\Config;
+use DateTime;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -87,6 +88,17 @@ class SubmitContact extends Command
         $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
         if (count($companyContacts)) {
             $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
+        } else {
+            $selectedTime = new DateTime(date('Y-m-d H:i:s'));
+            $companyContacts = CompanyContact::with(['contact'])
+                ->where('is_delivered', self::STATUS_SENDING)
+                ->where('updated_at', '<=', $selectedTime->modify('-10 minutes'))
+                ->get();
+            if (count($companyContacts)) {
+                $companyContacts->toQuery()->update(['is_delivered' => 0]);
+            }
+
+            return 0;
         }
 
         if (!count($companyContacts)) {
@@ -878,11 +890,14 @@ class SubmitContact extends Command
                 switch ($type) {
                     case 'checkbox':
                         $validKey = preg_replace('/\[\d+\]$/', '[]', $formKey);
-                        $checkbox = new WebDriverCheckboxes($this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$validKey}\"]")));
+                        $elementInput = $this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$validKey}\"]"));
+                        $checkbox = new WebDriverCheckboxes($elementInput);
                         $checkbox->selectByIndex(0);
                         break;
                     case 'radio':
-                        $radio = new WebDriverRadios($this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$formKey}\"]")));
+                        $validKey = $formKey;
+                        $elementInput = $this->driver->findElement(WebDriverBy::cssSelector("input[type=\"{$type}\"][name=\"{$formKey}\"]"));
+                        $radio = new WebDriverRadios($elementInput);
                         $radio->selectByIndex(0);
                         break;
                     case 'select':
@@ -898,6 +913,19 @@ class SubmitContact extends Command
                         $this->driver->findElement(WebDriverBy::cssSelector("input[name=\"{$formKey}\"]"))->sendKeys($this->data[$formKey]);
                         break;
                 }
+            } catch (\Facebook\WebDriver\Exception\ElementNotInteractableException $e) {
+                if (isset($elementInput)) {
+                    if ($elementInput->getAttribute('id')) {
+                        $elementLabel = $this->driver->findElement(WebDriverBy::cssSelector("label[for=\"{$elementInput->getAttribute('id')}\"]"));
+                        if ($elementLabel) {
+                            $elementLabel->click();
+                        }
+                    } else {
+                        $this->driver->executeScript('return document.querySelector(`input[type="' . $type . '"][name="' . $validKey . '"]`).parentNode.click()');
+                    }
+                }
+
+                continue;
             } catch (\Exception $e) {
                 continue;
             }
