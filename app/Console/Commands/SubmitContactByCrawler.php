@@ -131,14 +131,18 @@ class SubmitContactByCrawler extends Command
             $contact = $companyContact->contact;
             $company = $companyContact->company;
 
-            if (
-                !$company->contact_form_url
-                || (
-                    $contact->date
+
+            if ($contact->date
                     && $contact->time
-                    && now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))
-                )
-            ) {
+                    && now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))) {
+                $companyContact->update([
+                    'is_delivered' => 0,
+                ]);
+
+                return 0;
+            }
+
+            if (!$company->contact_form_url) {
                 if ($this->isDebug) {
                     $this->info('Skip: ' . $companyContact->id);
                 }
