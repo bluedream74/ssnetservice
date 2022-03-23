@@ -135,9 +135,7 @@ class SubmitContactByClientRequest extends Command
             if ($contact->date
                     && $contact->time
                     && now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))) {
-                $companyContact->update([
-                    'is_delivered' => 0,
-                ]);
+                $companyContacts->toQuery()->update(['is_delivered' => 0]);
 
                 return 0;
             }
