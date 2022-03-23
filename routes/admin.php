@@ -22,84 +22,83 @@ Route::post('/payment/stop', 'UserController@checkStop')->name('check.stop');
 Route::post('/payment/start', 'UserController@checkStart')->name('check.start');
 Route::post('logout', 'AuthController@logout')->name('logout');
 
+Route::group(['middleware' => 'auth.admin'], function () { //middleware?auth?????
+    // Route::get('/', function () {
+    //     return redirect(route('admin.dashboard'));
+    // });
 
-Route::group(['middleware' => 'auth.admin'], function() { //middleware?auth?????
-  
-  // Route::get('/', function () {
-  //     return redirect(route('admin.dashboard'));
-  // });
+    Route::get('/', 'DashboardController@redirect')->name('redirect');
 
-  Route::get('/', 'DashboardController@redirect')->name('redirect');
+    Route::get('dashboard', 'DashboardController@index')->name('dashboard');
 
-  Route::get('dashboard', 'DashboardController@index')->name('dashboard');
+    Route::get('fetch', 'DashboardController@fetch')->name('fetch');
+    Route::post('fetch', 'DashboardController@doFetch')->name('do.fetch');
 
-  Route::get('fetch', 'DashboardController@fetch')->name('fetch');
-  Route::post('fetch', 'DashboardController@doFetch')->name('do.fetch');
+    Route::post('batchCheck', 'DashboardController@batchCheck')->name('batchCheck');
+    Route::post('deleteCompanies', 'DashboardController@deleteCompanies')->name('deleteCompanies');
 
-  Route::post('batchCheck', 'DashboardController@batchCheck')->name('batchCheck');
-  Route::post('deleteCompanies', 'DashboardController@deleteCompanies')->name('deleteCompanies');
+    // Route::post('sendContact', 'DashboardController@sendContact')->name('sendContact');
 
-  // Route::post('sendContact', 'DashboardController@sendContact')->name('sendContact');
-  
+    Route::get('contact', 'DashboardController@contact')->name('contact');
+    Route::get('contact/{contact}/show', 'DashboardController@contactShow')->name('contact.show');
+    Route::post('contact/delete', 'DashboardController@deleteContact')->name('contact.delete');
+    Route::get('contact/{contact}/export/csv', 'DashboardController@exportContactCSV')->name('contact.export');
+    Route::post('contact/{contact}/send', 'DashboardController@sendShowContact')->name('contact.show.send');
 
-  Route::get('contact', 'DashboardController@contact')->name('contact');
-  Route::get('contact/{contact}/show', 'DashboardController@contactShow')->name('contact.show');
-  Route::post('contact/delete', 'DashboardController@deleteContact')->name('contact.delete');
-  Route::get('contact/{contact}/export/csv', 'DashboardController@exportContactCSV')->name('contact.export');
-  Route::post('contact/{contact}/send', 'DashboardController@sendShowContact')->name('contact.show.send');
+    Route::get('export/csv', 'DashboardController@exportCSV')->name('companies.export');
+    Route::post('contact/send', 'DashboardController@sendContact')->name('contact.send');
+    Route::post('import/csv', 'DashboardController@importCSV')->name('companies.import');
 
-  Route::get('export/csv', 'DashboardController@exportCSV')->name('companies.export');
-  Route::post('contact/send', 'DashboardController@sendContact')->name('contact.send');
-  Route::post('import/csv', 'DashboardController@importCSV')->name('companies.import');
+    Route::post('email/delete', 'DashboardController@deleteEmail')->name('email.delete');
+    Route::post('company/update/status', 'DashboardController@updateCompanyStatus')->name('update.company.status');
 
-  Route::post('email/delete', 'DashboardController@deleteEmail')->name('email.delete');
-  Route::post('company/update/status', 'DashboardController@updateCompanyStatus')->name('update.company.status');
+    Route::get('/{company}/show', 'CompanyController@show')->name('companies.show');
+    Route::post('/{company}/add/email', 'CompanyController@addEmail')->name('company.add.email');
+    Route::post('/{company}/remove/email', 'CompanyController@removeEmail')->name('company.remove.email');
+    Route::post('/{company}/add/phone', 'CompanyController@addPhone')->name('company.add.phone');
+    Route::post('/{company}/remove/phone', 'CompanyController@removePhone')->name('company.remove.phone');
+    Route::post('/reset/company', 'DashboardController@reset')->name('reset.company');
+    Route::post('/delete/duplicate', 'CompanyController@deleteDuplicate')->name('delete.duplicate');
+    Route::post('/delete/email/bulk', 'CompanyController@deleteEmail')->name('delete.email');
+    Route::post('/company/delete', 'CompanyController@deleteCompany')->name('company.delete');
 
-  Route::get('/{company}/show', 'CompanyController@show')->name('companies.show');
-  Route::post('/{company}/add/email', 'CompanyController@addEmail')->name('company.add.email');
-  Route::post('/{company}/remove/email', 'CompanyController@removeEmail')->name('company.remove.email');
-  Route::post('/{company}/add/phone', 'CompanyController@addPhone')->name('company.add.phone');
-  Route::post('/{company}/remove/phone', 'CompanyController@removePhone')->name('company.remove.phone');
-  Route::post('/reset/company', 'DashboardController@reset')->name('reset.company');
-  Route::post('/delete/duplicate', 'CompanyController@deleteDuplicate')->name('delete.duplicate');
-  Route::post('/delete/email/bulk', 'CompanyController@deleteEmail')->name('delete.email');
-  Route::post('/company/delete', 'CompanyController@deleteCompany')->name('company.delete');
+    Route::post('/{company}/edit/url', 'CompanyController@editURL')->name('company.edit.url');
+    Route::post('/{company}/add/url', 'CompanyController@addURL')->name('company.add.url');
 
-  Route::post('/{company}/edit/url', 'CompanyController@editURL')->name('company.edit.url');
-  Route::post('/{company}/add/url', 'CompanyController@addURL')->name('company.add.url');
+    Route::post('/{company}/edit/name', 'CompanyController@editName')->name('company.edit.name');
 
-  Route::post('/{company}/edit/name', 'CompanyController@editName')->name('company.edit.name');
+    Route::post('/{company}/edit/contacturl', 'CompanyController@editContacturl')->name('company.edit.contacturl');
+    Route::post('/{company}/add/contacturl', 'CompanyController@addContacturl')->name('company.add.contacturl');
 
-  Route::post('/{company}/edit/contacturl', 'CompanyController@editContacturl')->name('company.edit.contacturl');
-  Route::post('/{company}/add/contacturl', 'CompanyController@addContacturl')->name('company.add.contacturl');
+    Route::post('/{company}/edit/category', 'CompanyController@editcategory')->name('company.edit.category');
+    Route::post('/{company}/add/category', 'CompanyController@addcategory')->name('company.add.category');
 
-  Route::post('/{company}/edit/category', 'CompanyController@editcategory')->name('company.edit.category');
-  Route::post('/{company}/add/category', 'CompanyController@addcategory')->name('company.add.category');
+    Route::post('/{company}/edit/subcategory', 'CompanyController@editsubcategory')->name('company.edit.subcategory');
+    Route::post('/{company}/add/subcategory', 'CompanyController@addsubcategory')->name('company.add.subcategory');
 
-  Route::post('/{company}/edit/subcategory', 'CompanyController@editsubcategory')->name('company.edit.subcategory');
-  Route::post('/{company}/add/subcategory', 'CompanyController@addsubcategory')->name('company.add.subcategory');
+    Route::post('/{company}/add/updatearea', 'CompanyController@updatearea')->name('company.update.area');
 
-  Route::post('/{company}/add/updatearea', 'CompanyController@updatearea')->name('company.update.area');
+    Route::get('/config', 'DashboardController@configIndex')->name('config.index');
+    Route::post('/config', 'DashboardController@updateConfig')->name('config.update');
 
-  Route::get('/config', 'DashboardController@configIndex')->name('config.index');
-  Route::post('/config', 'DashboardController@updateConfig')->name('config.update');
+    Route::get('/users', 'UserController@index')->name('user.index');
+    Route::get('/user/edit/{id}', 'UserController@edit')->name('user.edit');
+    Route::post('/user/add', 'UserController@addUser')->name('user.add');
+    Route::post('/user/delete', 'UserController@deleteUser')->name('user.delete');
 
-  Route::get('/users', 'UserController@index')->name('user.index');
-  Route::get('/user/edit/{id}', 'UserController@edit')->name('user.edit');
-  Route::post('/user/add', 'UserController@addUser')->name('user.add');
-  Route::post('/user/delete', 'UserController@deleteUser')->name('user.delete');
+    Route::post('/{user}/edit/username', 'UserController@editName')->name('user.edit.name');
+    Route::post('/{user}/edit/email', 'UserController@editEmail')->name('user.edit.email');
+    Route::post('/{user}/edit/password', 'UserController@editPassword')->name('user.edit.password');
 
-  Route::post('/{user}/edit/username','UserController@editName')->name('user.edit.name');
-  Route::post('/{user}/edit/email','UserController@editEmail')->name('user.edit.email');
-  Route::post('/{user}/edit/password','UserController@editPassword')->name('user.edit.password');
+    Route::post('/user/stop', 'UserController@stopUser')->name('user.stop');
+    Route::post('/user/start', 'UserController@startUser')->name('user.start');
 
-  Route::post('/user/stop','UserController@stopUser')->name('user.stop');
-  Route::post('/user/start','UserController@startUser')->name('user.start');
+    Route::get('/master/config', 'UserController@config')->name('config');
 
-  Route::get('/master/config', 'UserController@config')->name('config');
+    Route::post('/plan/update', 'UserController@planUpdate')->name('plan.update');
 
-  Route::post('/plan/update', 'UserController@planUpdate')->name('plan.update');
-  
+    Route::get('/contact/templates', 'ContactTemplateController@index')->name('contactTemplates');
+    Route::get('/contact/templates/{contactTemplate}', 'ContactTemplateController@show')->name('contactTemplates.show');
+    Route::post('/contact/templates', 'ContactTemplateController@store')->name('contactTemplates.add');
+    Route::post('/contact/templates/delete', 'ContactTemplateController@destroy')->name('contactTemplates.delete');
 });
-
-
