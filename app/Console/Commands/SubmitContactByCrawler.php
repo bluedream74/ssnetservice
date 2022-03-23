@@ -137,6 +137,7 @@ class SubmitContactByCrawler extends Command
                     && now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))) {
 
                 $companyContacts->toQuery()->update(['is_delivered' => 0]);
+                sleep(60);
 
                 return 0;
             }
