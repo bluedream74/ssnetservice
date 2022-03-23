@@ -582,7 +582,7 @@ class SubmitContact extends Command
             ],
             [
                 'match' => $configPrioritized['randomString'],
-                'transform' => 'お問い合わせ内容の文字数は',
+                'transform' => $contact->content,
             ],
         ];
 
