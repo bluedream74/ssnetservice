@@ -511,6 +511,14 @@ class SubmitContactByClientRequest extends Command
         $contact = $companyContact->contact;
         $company = $companyContact->company;
         $type = $input->getType();
+
+        $content = str_replace('%company_name%', $company->name, $contact->content);
+        $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
+
+        if (!$this->isDebug) {
+            $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+        }
+
         switch ($type) {
             case 'select':
                 $hasArea = false;
@@ -540,12 +548,8 @@ class SubmitContactByClientRequest extends Command
                 break;
             case 'textarea':
                 if (!preg_match('/(captcha|address)/i', $key)) {
-                    $content = str_replace('%company_name%', $company->name, $contact->content);
-                    $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
                     $this->data[$key] = $content;
-                    if (!$this->isDebug) {
-                        $this->data[$key] .= PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';
-                    }
+
                 }
                 break;
             case 'email':
@@ -629,6 +633,10 @@ class SubmitContactByClientRequest extends Command
             [
                 'match' => $configPrioritized['company'],
                 'transform' => $contact->company,
+            ],
+            [
+                'match' => $configPrioritized['randomString'],
+                'transform' => $content,
             ],
         ];
 
