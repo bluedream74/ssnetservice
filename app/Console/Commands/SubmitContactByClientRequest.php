@@ -110,12 +110,15 @@ class SubmitContactByClientRequest extends Command
 
                 DB::commit();
 
+                sleep(60);
                 return 0;
             }
             DB::commit();
         }
         catch (\Exception $e) {
             DB::rollback();
+
+            sleep(60);
             return 0;
         }
 
@@ -135,9 +138,8 @@ class SubmitContactByClientRequest extends Command
             if ($contact->date
                     && $contact->time
                     && now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))) {
-                $companyContact->update([
-                    'is_delivered' => 0,
-                ]);
+                $companyContacts->toQuery()->update(['is_delivered' => 0]);
+                sleep(60);
 
                 return 0;
             }
@@ -147,7 +149,7 @@ class SubmitContactByClientRequest extends Command
                     $this->info('Skip: ' . $companyContact->id);
                 }
 
-                return 0;
+                continue;
             }
 
             $this->data = [];
@@ -613,12 +615,20 @@ class SubmitContactByClientRequest extends Command
                 'transform' => $contact->fu_lastname,
             ],
             [
+                'match' => $configPrioritized['full_name'],
+                'transform' => $contact->fu_lastname . $contact->fu_surname,
+            ],
+            [
                 'match' => $configPrioritized['randomNumber'],
                 'transform' => 1,
             ],
             [
                 'match' => $configPrioritized['furigana'],
                 'transform' => 'ナシ',
+            ],
+            [
+                'match' => $configPrioritized['company'],
+                'transform' => $contact->company,
             ],
         ];
 
@@ -739,7 +749,7 @@ class SubmitContactByClientRequest extends Command
             ],
             [
                 'match' => $configMapper['phoneNumber2Match'],
-                'key' => $configMapper['phoneNumber2Match'],
+                'key' => $configMapper['phoneNumber2Key'],
                 'transform' => $contact->phoneNumber2,
             ],
             [
