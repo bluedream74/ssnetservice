@@ -23,6 +23,7 @@ return [
             '電話番号[data][0]',
             'FAX番号[data][0]',
             'cTel[data][0]',
+            'Form0001_Tel1_8',
         ],
 
         'phoneNumber2' => [
@@ -49,6 +50,7 @@ return [
             '電話番号[data][1]',
             'FAX番号[data][1]',
             'tel[data][1]',
+            'Form0001_Tel2_8',
         ],
 
         'phoneNumber3' => [
@@ -68,6 +70,7 @@ return [
             'TEL3',
             'e_30[tel3]',
             'field_93664_3',
+            'Form0001_Tel3_8',
         ],
 
         'postalCode1' => [
@@ -128,6 +131,8 @@ return [
             'yubin',
             'zip01',
             'zipcode',
+            'contact_zip',
+            'tx_form_0_field_5',
         ],
 
         'email' => [
@@ -145,6 +150,10 @@ return [
             'メールアドレス',
             'メールアドレス（確認）',
             'email',
+            'mailform6',
+            'E-Mail',
+            'item_1_24_r',
+            'tx_form_0_field_4',
         ],
 
         'address' => [
@@ -177,6 +186,9 @@ return [
         ],
         'full_name' => [
             'form[name]',
+        ],
+        'randomString' => [
+            'お問い合わせ内容',
         ],
     ],
 
@@ -269,6 +281,8 @@ return [
             '物件番号',
             '社名',
             'item01',
+            'corp',
+            'COMPANY',
         ],
 
         'companyPattern' => [
@@ -356,6 +370,10 @@ return [
             '部署',
             'ask_input_value_4_4',
             'item05',
+            'email',
+            'item4',
+            'tx_form_0_field_3',
+            'MAIL',
         ],
 
         'emailPattern' => [
@@ -436,6 +454,7 @@ return [
             'zipcode[data][1]',
             'ZIPCODE2_HOME',
             'ask_input_value_4_2',
+            'Form0001_Zip2_6',
         ],
 
         'postCode2Key' => [
@@ -454,6 +473,7 @@ return [
             'postal-code',
             'RequestForm$Attr-4-1',
             '郵便番号',
+            'ZIP',
         ],
 
         'fullPostCode2Pattern' => [
@@ -499,6 +519,7 @@ return [
             '建物名・施設名',
             '番地',
             'item03',
+            '市区郡（町村）',
         ],
 
         'addressPattern' => [
@@ -632,6 +653,7 @@ return [
             '法人名',
             'name',
             'item02',
+            'name',
         ],
 
         'fullnamePattern' => [
@@ -651,6 +673,7 @@ return [
             'kana_s',
             'onf',
             'your-name-ruby',
+            'contact_kana',
         ],
 
         'fullFurnamePattern' => [
@@ -697,6 +720,7 @@ return [
             'セイ',
             'フリガナ(姓)',
             '担当者名：姓（カナ）',
+            'Form0001_FamilyName9',
         ],
 
         'fursurnamePattern' => [
@@ -732,6 +756,7 @@ return [
             'めい',
             'メイ',
             '担当者名：名（カナ）',
+            'Form0001_PersonalName9',
         ],
 
         'furlastnamePattern' => [
@@ -798,6 +823,8 @@ return [
             'telnum',
             'txtTEL',
             '市区町村',
+            'tel',
+            'fax',
         ],
 
         'fullPhoneNumber2Key' => [
@@ -924,11 +951,14 @@ return [
             'ext_07',
             'fHouseNumber',
             '市区町村',
+            'Form0001_Street6',
         ],
 
         'randomNumber1Match' => [
             '丁目番地',
             '建物名',
+            '家族数',
+            'Mナンバー',
         ],
 
         'randomNumber2Match' => [
@@ -962,6 +992,7 @@ return [
             'Birthday1',
             'f012956299:y',
             '生年_need',
+            '年齢',
         ],
 
         'monthMatch' => [
@@ -981,7 +1012,7 @@ return [
         ],
 
         'randomString2Match' => [
-            '資料',
+            '資料', '業種',
         ],
 
         'mailConfirm1Match' => [
@@ -1030,7 +1061,9 @@ return [
         | //a[contains(text(),"次へ")]
         | //a[contains(text(),"確認")]
         | //a[contains(text(),"送信")]
+        | //a[contains(@class,"submit-btn")]
         | //button[@class="nttdatajpn-submit-button"]
+        | //button[@type="submit" and (contains(@class,"btn-cmn--red"))]
         | //button[@type="button" and (contains(@class,"ahover"))]
         | //button[@type="submit" ][contains(@class,"btn")]
         | //button[@type="submit" and (contains(@class,"　上記の内容で送信する　"))]
@@ -1047,6 +1080,7 @@ return [
         | //button[@type="submit"][contains(@value,"この内容で無料相談する")]
         | //button[@type="submit"][contains(@value,"送信する")]
         | //button[@type="submit"]//span[contains(text(),"同意して進む")]
+        | //button[@type="submit"][contains(@onclick,"return _tx_mailform_submit")]
         | //button[@type="button"][contains(@role,"button")]
         | //button[@type="button"][contains(@value,"確認")]
         | //button[@type="button"][contains(@value,"送信")]
@@ -1080,6 +1114,11 @@ return [
         | //input[@type="image"][contains(@name,"check_entry_button") and @type!="hidden"]
         | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
         | //input[@type="image"][contains(@value,"この内容で登録する") and @type!="hidden"]
+        | //input[@type="image"][contains(@class,"errPosRight") and @type!="hidden"]
+        | //input[@type="image"][contains(@src,"http://www.eisho-sunrise.com/images/inquiry/confirm_button.png") and @type!="hidden"]
+        | //input[@type="image"][contains(@src,"http://www.eisho-sunrise.com/images/inquiry/send_button.png") and @type!="hidden"]
+        | //input[@type="image"][contains(@src,"/images/contact/submit.png") and @type!="hidden"]
+        | //input[@type="image"][contains(@value,"送 信") and @type!="hidden"]
         | //input[@type="submit" and contains(@name,"sendmail")]
         | //input[@type="submit" and contains(@name,"submitConfirm")]
         | //input[@type="submit" and contains(@value,"　送　信　")]
@@ -1092,6 +1131,8 @@ return [
         | //input[@type="submit" and contains(@value,"送信する") and contains(@name,"submitSubmit")]
         | //input[@type="submit" and contains(@value,"送信する")]
         | //input[@type="submit" and contains(@value,"送信する")]
+        | //input[@type="submit" and contains(@value,"この内容で送信する")]
+        | //input[@type="submit" and (contains(@value,"送　信"))]
         | //input[@type="submit" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
         | //input[contains(@alt,"次へ") and @type!="hidden"]
         | //input[contains(@alt,"確認") and @type!="hidden"]

@@ -580,6 +580,10 @@ class SubmitContact extends Command
                 'match' => $configPrioritized['company'],
                 'transform' => $contact->company,
             ],
+            [
+                'match' => $configPrioritized['randomString'],
+                'transform' => 'お問い合わせ内容の文字数は',
+            ],
         ];
 
         // Use list prioritize mappers
