@@ -47,6 +47,12 @@ class BaseController extends Controller
                         'role' => 'admin',
                     ],
                     [
+                        'text' => 'テンプレート',
+                        'url'  => '/admin/contact/templates',
+                        'icon' => 'fas fa-tachometer-alt',
+                        'role' => 'admin',
+                    ],
+                    [
                         'text' => 'マスター設定',
                         'url'  => '/admin/master/config',
                         'icon' => 'fas fa-tachometer-alt',
