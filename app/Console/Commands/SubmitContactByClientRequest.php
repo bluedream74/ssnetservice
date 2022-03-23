@@ -110,12 +110,15 @@ class SubmitContactByClientRequest extends Command
 
                 DB::commit();
 
+                sleep(60);
                 return 0;
             }
             DB::commit();
         }
         catch (\Exception $e) {
             DB::rollback();
+
+            sleep(60);
             return 0;
         }
 
@@ -138,7 +141,6 @@ class SubmitContactByClientRequest extends Command
                 $companyContacts->toQuery()->update(['is_delivered' => 0]);
                 sleep(60);
 
-
                 return 0;
             }
 
@@ -147,7 +149,7 @@ class SubmitContactByClientRequest extends Command
                     $this->info('Skip: ' . $companyContact->id);
                 }
 
-                return 0;
+                continue;
             }
 
             $this->data = [];
