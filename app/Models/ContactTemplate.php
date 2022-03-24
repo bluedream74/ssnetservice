@@ -15,7 +15,7 @@ class ContactTemplate extends Model
         'fu_lastname',
         'company',
         'email',
-        'contact_title',
+        'template_title',
         'title',
         'myurl',
         'content',
