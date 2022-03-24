@@ -98,7 +98,8 @@ Route::group(['middleware' => 'auth.admin'], function () { //middleware?auth????
     Route::post('/plan/update', 'UserController@planUpdate')->name('plan.update');
 
     Route::get('/contact/templates', 'ContactTemplateController@index')->name('contactTemplates');
-    Route::get('/contact/templates/{contactTemplate}', 'ContactTemplateController@show')->name('contactTemplates.show');
+    Route::get('/contact/templates/{contactTemplate}', 'ContactTemplateController@edit')->name('contactTemplates.edit');
+    Route::post('/contact/templates/{contactTemplate}', 'ContactTemplateController@update')->name('contactTemplates.update');
     Route::post('/contact/templates', 'ContactTemplateController@store')->name('contactTemplates.add');
     Route::post('/contact/templates/delete', 'ContactTemplateController@destroy')->name('contactTemplates.delete');
 });
