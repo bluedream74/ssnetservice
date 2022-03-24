@@ -101,5 +101,5 @@ Route::group(['middleware' => 'auth.admin'], function () { //middleware?auth????
     Route::get('/contact/templates/{contactTemplate}', 'ContactTemplateController@edit')->name('contactTemplates.edit');
     Route::post('/contact/templates/{contactTemplate}', 'ContactTemplateController@update')->name('contactTemplates.update');
     Route::post('/contact/templates', 'ContactTemplateController@store')->name('contactTemplates.add');
-    Route::post('/contact/templates/delete', 'ContactTemplateController@destroy')->name('contactTemplates.delete');
+    Route::delete('/contact/templates/delete', 'ContactTemplateController@destroy')->name('contactTemplates.delete');
 });

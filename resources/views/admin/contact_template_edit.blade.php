@@ -69,7 +69,7 @@
 
         <label class="col-sm-12">都道府県</label>
         <div class="col-sm-8 form-group">
-          {{ Form::select('zone', $prefectures, $contactTemplate->zone, ['class' => 'form-control', 'placeholder' =>
+          {{ Form::select('area', $prefectures, $contactTemplate->area, ['class' => 'form-control', 'placeholder' =>
           'すべて']) }}
         </div>
 
@@ -77,10 +77,10 @@
         <div class="col-sm-12 form-group row">
           <div class="col-sm-6">{{ Form::text('postalCode1', $contactTemplate->postalCode1, ['class' =>
             'form-control','id' =>
-            'address1']) }}</div>
+            'postalCode1']) }}</div>
           <div class="col-sm-6">{{ Form::text('postalCode2', $contactTemplate->postalCode2, ['class' =>
             'form-control','id' =>
-            'address1']) }}</div>
+            'postalCode2']) }}</div>
         </div>
 
         <label class="col-sm-12">住所</label>

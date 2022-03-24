@@ -11,7 +11,7 @@ class ContactTemplateController extends BaseController
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Support\Facades\View
      */
     public function index()
     {
@@ -48,7 +48,7 @@ class ContactTemplateController extends BaseController
             'company'           => 'required',
         ]);
 
-        $data = $request->only('surname', 'lastname', 'fu_surname', 'fu_lastname', 'email', 'title', 'myurl', 'content', 'homepageUrl', 'area', 'postalCode1', 'postalCode2', 'address', 'phoneNumber1', 'phoneNumber2', 'phoneNumber3', 'company');
+        $data = $request->only('template_title', 'surname', 'lastname', 'fu_surname', 'fu_lastname', 'email', 'title', 'myurl', 'content', 'homepageUrl', 'area', 'postalCode1', 'postalCode2', 'address', 'phoneNumber1', 'phoneNumber2', 'phoneNumber3', 'company');
 
         $contactTemplate = ContactTemplate::create($data);
 
@@ -60,7 +60,7 @@ class ContactTemplateController extends BaseController
      *
      * @param \App\ContactTemplate $contactTemplate
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Support\Facades\View
      */
     public function edit(ContactTemplate $contactTemplate)
     {
@@ -76,8 +76,6 @@ class ContactTemplateController extends BaseController
      * Update the specified resource in storage.
      *
      * @param \App\ContactTemplate $contactTemplate
-     *
-     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, contactTemplate $contactTemplate)
     {
@@ -93,22 +91,14 @@ class ContactTemplateController extends BaseController
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param \App\ContactTemplate $contactTemplate
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(ContactTemplate $contactTemplate, Request $request)
+    public function destroy()
     {
-        $request->validate([
-            'id' => 'required'
-        ]);
         try {
-            ContactTemplate::findOrFail($request->id)->delete();
+            ContactTemplate::findOrFail(request()->get('id'))->delete();
 
             return back()->with(['system.message.success' => '削除しました。']);
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
             return back()->with(['system.message.error' => '見つかりませんでした。']);
         }
     }

@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Artisan;
 use App\Imports\CompanyImport;
+use App\Models\ContactTemplate;
 use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Facades\Crypt;
@@ -64,11 +65,13 @@ class DashboardController extends BaseController
                     $subsources[$value->name] = $value->name;
                 }
             }
-                
+
+            $contactTemplates = ContactTemplate::all();
+
             if(isset($subsources)){
-                return view('admin.index', compact('companies', 'prefectures','subsources', 'config'));
+                return view('admin.index', compact('companies', 'prefectures', 'contactTemplates', 'subsources', 'config'));
             } else {
-                return view('admin.index', compact('companies', 'prefectures', 'config'));
+                return view('admin.index', compact('companies', 'prefectures', 'contactTemplates', 'config'));
             }
             
         }catch (\Throwable $e) {
