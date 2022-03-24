@@ -15,6 +15,7 @@ class CreateContactTemplatesTables extends Migration
     {
         Schema::create('contact_templates', function (Blueprint $table) {
             $table->id();
+            $table->string('template_title', 1000)->nullable();
             $table->string('surname',30);
             $table->string('lastname',30);
             $table->string('fu_surname',30)->nullable();
