@@ -6,8 +6,16 @@
 @section('content')
 <div class="card">
   <div class="card-body table-responsive">
+    {{ Form::open(['route' => ['admin.contactTemplates.update', $contactTemplate->id], 'method' => 'POST', 'id' =>
+    'contactForm', 'files' => true]) }}
     <div class="modal-body">
       <div class="row">
+        <label class="col-sm-12">テンプレート名<span class="essential">*</span></label>
+        <div class="col-sm-12 form-group">
+          {{ Form::text('template_title', $contactTemplate->template_title, ['class' => 'form-control','id' =>
+          'template_title']) }}
+        </div>
+
         <label class="col-sm-12">名前<span class="essential">*</span></label>
         <div class="col-sm-12 form-group row">
           <div class="col-sm-6">{{ Form::text('surname', $contactTemplate->surname, ['class' => 'form-control', 'id' =>
@@ -67,10 +75,10 @@
 
         <label class="col-sm-12">郵便番号</label>
         <div class="col-sm-12 form-group row">
-          <div class="col-sm-6">{{ Form::text('postalCode1', $contactTemplate->postalcode1, ['class' =>
+          <div class="col-sm-6">{{ Form::text('postalCode1', $contactTemplate->postalCode1, ['class' =>
             'form-control','id' =>
             'address1']) }}</div>
-          <div class="col-sm-6">{{ Form::text('postalCode2', $contactTemplate->postalcode2, ['class' =>
+          <div class="col-sm-6">{{ Form::text('postalCode2', $contactTemplate->postalCode2, ['class' =>
             'form-control','id' =>
             'address1']) }}</div>
         </div>
@@ -99,69 +107,40 @@
           </div> -->
       </div>
     </div>
+    {{ Form::close() }}
   </div>
   <div class="card-footer">
-    <button class="btn btn-sm btn-update btn-primary">
-      Update
+    <button class="btn btn-sm btn-update btn-primary" id="btnSubmit">
+      保存
     </button>
-    <button class="btn btn-sm btn-return">
-      Return
+    <button class="btn btn-sm btn-return" id="btnCancel">
+      閉じる
     </button>
   </div>
 </div>
 
-{{ Form::open(['route' => 'admin.user.stop', 'method' => 'POST', 'id' => 'stopForm']) }}
-{{ Form::hidden('id', '', ['id' => 'stopUserId']) }}
+{{ Form::open(['route' => 'admin.contactTemplates', 'method' => 'GET','id' => 'indexForm']) }}
 {{ Form::close() }}
 
-{{ Form::open(['route' => 'admin.user.start', 'method' => 'POST', 'id' => 'startForm']) }}
-{{ Form::hidden('id', '', ['id' => 'startUserId']) }}
-{{ Form::close() }}
 @stop
-
 
 @section('scripts')
 <script>
-  $('.stop').click(function() {
-    var id = $(this).data('id');
-    toastr.fire({
-      html: "このユーザの利用を停止しますか？",
-      showDenyButton: false,
-      showCancelButton: true,
-      showConfirmButton: true,
-      confirmButtonText: "停止",
-      cancelButtonText: "キャンセル",
-      confirmButtonColor: "#dc3545",
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      timer: undefined
-    }).then((result) => {
-      if (result.isConfirmed) {
-        $('#stopUserId').val(id);
-        $('#stopForm').submit();
-        $('#showLoading').click();
+  $(document).ready(function() {
+    $('#btnSubmit').click(function() {
+      if ($("#template_title").val() === '' || $("#surname").val() === '' || $("#lastname").val() === '' || $(
+          "#email").val() === '' || $("#title").val() === '' || $('#content').val() === '' || $('#company')
+        .val() === '') {
+        alert('内容を入力してください。')
+        return;
       }
+      $('#showLoading').click();
+      $('#contactForm').submit();
     })
-  })
-  $('.start').click(function() {
-    var id = $(this).data('id');
-    toastr.fire({
-      html: "このユーザの利用を継続しますか？",
-      showDenyButton: false,
-      showCancelButton: true,
-      showConfirmButton: true,
-      confirmButtonText: "継続",
-      cancelButtonText: "キャンセル",
-      confirmButtonColor: "#dc3545",
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      timer: undefined
-    }).then((result) => {
-      if (result.isConfirmed) {
-        $('#startUserId').val(id);
-        $('#startForm').submit();
-        $('#showLoading').click();
-      }
+
+    $('#btnCancel').click(function() {
+      $('#showLoading').click();
+      $('#indexForm').submit();
     })
   })
 </script>
@@ -176,5 +155,10 @@
 
   .btn-return {
     background-color: #c7cfd7 !important;
+  }
+
+  .essential {
+    color: red;
+    font-size: 16px;
   }
 </style>

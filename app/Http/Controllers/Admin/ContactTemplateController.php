@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\ContactTemplate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ContactTemplateController extends BaseController
 {
@@ -40,17 +41,10 @@ class ContactTemplateController extends BaseController
         $request->validate([
             'surname'           => 'required',
             'lastname'          => 'required',
-            'fu_surname'        => 'required',
-            'fu_lastname'       => 'required',
             'email'             => 'required',
+            'template_title'    => 'required',
             'title'             => 'required',
             'content'           => 'required',
-            'homepageUrl'       => 'required',
-            'postalCode1'       => 'required',
-            'postalCode2'       => 'required',
-            'phoneNumber1'      => 'required',
-            'phoneNumber2'      => 'required',
-            'phoneNumber3'      => 'required',
             'company'           => 'required',
         ]);
 
@@ -62,13 +56,13 @@ class ContactTemplateController extends BaseController
     }
 
     /**
-     * Display the specified resource.
+     * Show the form for editing the specified resource.
      *
      * @param \App\ContactTemplate $contactTemplate
      *
      * @return \Illuminate\Http\Response
      */
-    public function show(ContactTemplate $contactTemplate)
+    public function edit(ContactTemplate $contactTemplate)
     {
         $prefectures = array();
         foreach (config('values.prefectures') as $value) {
@@ -79,25 +73,22 @@ class ContactTemplateController extends BaseController
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param \App\ContactTemplate $contactTemplate
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(ContactTemplate $contactTemplate)
-    {
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param \App\ContactTemplate $contactTemplate
      *
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, ContactTemplate $contactTemplate)
+    public function update(Request $request, contactTemplate $contactTemplate)
     {
+        try {
+            $contactTemplate->update($request->all());
+
+            return back()->with(['system.message.success' => '更新されました。']);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return back()->with(['system.message.error' => '更新できませんでした。']);
+        }
     }
 
     /**
@@ -117,6 +108,7 @@ class ContactTemplateController extends BaseController
 
             return back()->with(['system.message.success' => '削除しました。']);
         } catch (\Exception $e) {
+            Log::error($e->getMessage());
             return back()->with(['system.message.error' => '見つかりませんでした。']);
         }
     }

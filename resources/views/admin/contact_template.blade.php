@@ -27,7 +27,7 @@
             {{ $template->title }}
           </td>
           <td>
-            <a href="{{ route('admin.contactTemplates.show', $template->id) }}"
+            <a href="{{ route('admin.contactTemplates.edit', $template->id) }}"
               class="btn btn-sm btn-block btn-primary">編集</a>
             <button type="button" class="btn btn-sm btn-danger btn-remove mt-2 btn-block"
               data-id="{{ $template->id }}">削除</button>
@@ -56,6 +56,11 @@
       </div>
       <div class="modal-body">
         <div class="row">
+          <label class="col-sm-12">テンプレート名<span class="essential">*</span></label>
+          <div class="col-sm-12 form-group">
+            {{ Form::text('template_title', old('template_title'), ['class' => 'form-control','id' => 'template_title']) }}
+          </div>
+
           <label class="col-sm-12">名前<span class="essential">*</span></label>
           <div class="col-sm-12 form-group row">
             <div class="col-sm-6">{{ Form::text('surname', old('surname'), ['class' => 'form-control', 'id' =>
@@ -190,13 +195,8 @@
         timer: undefined
       }).then((result) => {
         if (result.isConfirmed) {
-          // $.ajax({
-          //   type: "DELETE",
-          //   url: '/admin/contact/templates/' + $(this).data('id'),
-          //   headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
-          // });
-          $('#deleteForm').submit();
           $('#showLoading').click();
+          $('#deleteForm').submit();
         }
       })
     })
@@ -208,5 +208,9 @@
   .add_button {
     display: flex;
     float: right;
+  }
+  .essential {
+      color:red;
+      font-size:16px;
   }
 </style>
