@@ -448,7 +448,6 @@ return [
             'dnn$ctr434$ViewMailForm$grdMain$PageID3$repCategory$ctl01$repField$ItemID20$fldValue$txtSingleTextBox',
             'zipcode',
             '郵便番号',
-            '郵便番号',
         ],
 
         'fullPostcode1Key' => [
