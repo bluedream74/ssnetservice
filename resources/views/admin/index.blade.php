@@ -161,7 +161,9 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <label>フォーム作成</label>
-                        {{ Form::select('template_id', $contactTemplates->pluck('template_title'), '', ['class' => 'form-control', 'placeholder' => 'テンプレートを選択', 'id' => 'contact_template_select']) }}
+                        <div class="select-template">
+                            {{ Form::select('template_id', $contactTemplates->pluck('template_title'), '', ['class' => 'form-control', 'placeholder' => 'テンプレートを選択', 'id' => 'contact_template_select']) }}
+                        </div>
                     </div>
                     <div class="modal-body">
                         <div class="row">
