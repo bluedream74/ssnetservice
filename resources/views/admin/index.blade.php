@@ -1,6 +1,7 @@
 @extends('layouts.admin.app')
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.1/css/bootstrap-multiselect.min.css" />
 <style>
   .bd-example-modal-lg .modal-dialog{
     position: absolute;
@@ -35,7 +36,8 @@
                     </div>
                     <div class="col-sm-3">
                         <label>エリア</label>
-                        {{ Form::select('area', $prefectures, Request::get('area'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                        <br />
+                        {{ Form::select('area', $prefectures, Request::get('area'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'area_multi_select', 'multiple' => 'multiple',]) }}
                     </div>
                     <div class="col-sm-3">
                         <label>ステータス</label>
@@ -161,9 +163,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <label>フォーム作成</label>
-                        <div class="select-template">
-                            {{ Form::select('template_id', $contactTemplates->pluck('template_title'), '', ['class' => 'form-control', 'placeholder' => 'テンプレートを選択', 'id' => 'contact_template_select']) }}
-                        </div>
+                        {{ Form::select('template_id', $contactTemplates->pluck('template_title'), '', ['class' => 'form-control select-template', 'placeholder' => 'テンプレートを選択', 'id' => 'contact_template_select']) }}
                     </div>
                     <div class="modal-body">
                         <div class="row">
@@ -306,6 +306,8 @@
                 });
             }
         })
+
+        $('#area_multi_select').multiselect();
 
         $('#btnSend').click(function() {
             if ( $("#surname").val() ==='' || $("#lastname").val() ==='' || $("#mailaddress").val() ==='' || $("#title").val() === '' || $('#content').val() === '' ) {
@@ -470,4 +472,11 @@
         })
     })
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.1/js/bootstrap-multiselect.min.js" integrity="sha512-fp+kGodOXYBIPyIXInWgdH2vTMiOfbLC9YqwEHslkUxc8JLI7eBL2UQ8/HbB5YehvynU3gA3klc84rAQcTQvXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 @stop
+
+<style type="text/css">
+    .select-template {
+        max-width: 400px;
+    }
+</style>
