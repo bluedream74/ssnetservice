@@ -24,6 +24,8 @@ return [
             'FAX番号[data][0]',
             'cTel[data][0]',
             'Form0001_Tel1_8',
+            '電話番号',
+            'fax1',
         ],
 
         'phoneNumber2' => [
@@ -51,6 +53,7 @@ return [
             'FAX番号[data][1]',
             'tel[data][1]',
             'Form0001_Tel2_8',
+            '電話番号2',
         ],
 
         'phoneNumber3' => [
@@ -71,6 +74,7 @@ return [
             'e_30[tel3]',
             'field_93664_3',
             'Form0001_Tel3_8',
+            '電話番号3',
         ],
 
         'postalCode1' => [
@@ -86,6 +90,7 @@ return [
             '郵便番号01',
             '郵便番号1',
             'yuubin1',
+            '郵便番号3桁',
         ],
 
         'postalCode2' => [
@@ -98,6 +103,12 @@ return [
             '郵便番号02',
             '郵便番号2',
             'yuubin2',
+            '郵便番号4桁',
+            'address-874953-zip2',
+            'address-900668-zip2',
+            'address-659151-zip2',
+            'j_zip_code_2',
+            'address-319714-zip2',
         ],
 
         'fullPhoneNumber1' => [
@@ -154,20 +165,28 @@ return [
             'E-Mail',
             'item_1_24_r',
             'tx_form_0_field_4',
+            '_field_1',
+            'textbox-900666-confirm',
+            'textbox-585164-confirm',
+            'field_533832',
+            'field_533832_mcon',
         ],
 
         'address' => [
             'InquiryFront[address01]',
             'InquiryFront[address02]',
             '丁目番地',
+            '丁目番地(必須)',
         ],
 
         'fu_surname' => [
             'item_11_name1',
+            'field_533836_mei',
         ],
 
         'fu_lastname' => [
             'item_11_name2',
+            'field_533836_sei',
         ],
 
         'randomNumber' => [
@@ -180,6 +199,7 @@ return [
             '会社名フリガナ',
             'fname',
             'form[furigana]',
+            'お子様の学年(必須)',
         ],
         'company' => [
             'form[company]',
@@ -283,6 +303,7 @@ return [
             'item01',
             'corp',
             'COMPANY',
+            '会社名',
         ],
 
         'companyPattern' => [
@@ -374,6 +395,9 @@ return [
             'item4',
             'tx_form_0_field_3',
             'MAIL',
+            'email(必須)',
+            'contact_5',
+            '955203_3675pi_955203_3675',
         ],
 
         'emailPattern' => [
@@ -520,6 +544,7 @@ return [
             '番地',
             'item03',
             '市区郡（町村）',
+            '住所(必須)',
         ],
 
         'addressPattern' => [
@@ -534,6 +559,7 @@ return [
             '建物名・施設名',
             '所在地',
             '町名',
+            '丁目番地 ',
         ],
 
         'titleMatch' => [
@@ -589,6 +615,7 @@ return [
             'お名前(姓)',
             'お名前（漢字）[]',
             '姓',
+            'CASECF15',
         ],
 
         'lastNameKey' => [
@@ -622,6 +649,8 @@ return [
             'お名前(名)',
             'お名前（漢字）[]',
             '名',
+            '837403_16897pi_837403_16897',
+            'Reported By',
         ],
 
         'surnameKey' => [
@@ -654,6 +683,10 @@ return [
             'name',
             'item02',
             'name',
+            'お名前',
+            'お名前(必須)',
+            '955203_3669pi_955203_3669',
+            '955203_3671pi_955203_3671',
         ],
 
         'fullnamePattern' => [
@@ -806,6 +839,7 @@ return [
             'FAX番号',
             'singleAnswer(ANSWER3408)',
             '電話番号',
+            '電話番号',
         ],
 
         'fullPhoneNumber2Match' => [
@@ -825,6 +859,8 @@ return [
             '市区町村',
             'tel',
             'fax',
+            '電話番号',
+            'FAX番号',
         ],
 
         'fullPhoneNumber2Key' => [
@@ -976,6 +1012,7 @@ return [
 
         'answerPattern' => [
             'answer[category]',
+            'ご用件(必須)',
         ],
 
         'urlPattern' => [
@@ -1012,7 +1049,9 @@ return [
         ],
 
         'randomString2Match' => [
-            '資料', '業種',
+            '資料',
+            '業種',
+            'お問い合わせ内容',
         ],
 
         'mailConfirm1Match' => [
@@ -1026,43 +1065,45 @@ return [
 
     'successMessages' => [
         'ありがとうございま',
-        'ありがとうございます',
-        'お問い合わせを承りました',
-        'お申し込みを承りました',
+        '問い合わせを承りま',
+        '申し込みを承りま',
         'ございました',
-        'ご返事させていただきます',
-        'ご連絡させていただき',
-        'ご連絡させて頂',
+        '返事させていただき',
+        '連絡させていただき',
+        '連絡させて頂',
         'メール送信が正常終了',
         '内容を確認させていただき',
-        '受けしました',
+        '受けしま',
         '受け付けま',
-        '受け付けました',
         '問い合わせを受付',
-        '完了いたしま',
         '完了しまし',
         '成功しました',
         '有難うございま',
         '自動返信メール',
         '送信いたしま',
         '送信されま',
-        '送信しました',
+        '送信しま',
         '送信完了',
     ],
 
     'xpathButton' => '
         // button[@type="submit"]//span[contains(text(),"入力内容の確認")]
+        | //input[@type="submit" and (contains(@class,"send"))]
+        | //input[@type="submit" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
         | //*[contains(text(),"この内容で送信する")]
         | //*[contains(text(),"に同意する")]
         | //*[contains(text(),"確認する")]
         | //a[@class="js-formSend btnsubmit"]
         | //a[@href="kagawa-casting-08.php"]
+        | //a[contains(@href,"./conf.php")]
+        | //a[contains(@href,"./commit.php")]
         | //a[@id="js__submit"]
         | //a[contains(text(),"次へ")]
         | //a[contains(text(),"確認")]
         | //a[contains(text(),"送信")]
         | //a[contains(@class,"submit-btn")]
         | //button[@class="nttdatajpn-submit-button"]
+        | //button[@type="submit" and (contains(@name,"unisphere-submit"))]
         | //button[@type="submit" and (contains(@class,"btn-cmn--red"))]
         | //button[@type="button" and (contains(@class,"ahover"))]
         | //button[@type="submit" ][contains(@class,"btn")]
@@ -1076,14 +1117,17 @@ return [
         | //button[@type="submit"][contains(@name,"regist") and contains(@value,"送信")]
         | //button[@type="submit"][contains(@name,"_exec")]
         | //button[@type="submit"][contains(@name,"Action")]
+        | //button[@type="submit" and  (contains(@data-disable-with-permanent,"true"))]
         | //button[@type="submit"][contains(@value,"send")]
         | //button[@type="submit"][contains(@value,"この内容で無料相談する")]
         | //button[@type="submit"][contains(@value,"送信する")]
         | //button[@type="submit"]//span[contains(text(),"同意して進む")]
         | //button[@type="submit"][contains(@onclick,"return _tx_mailform_submit")]
+        | //button[@type="submit"][contains(@class,"_form")]
         | //button[@type="button"][contains(@role,"button")]
         | //button[@type="button"][contains(@value,"確認")]
         | //button[@type="button"][contains(@value,"送信")]
+        | //button[@type="button"][contains(@class,"contact-btn")]
         | //button[contains(@class,"mfp_element_button")]
         | //button[contains(@value,"送信")]
         | //button[contains(text(),"上記の内容で登録する")]
@@ -1127,13 +1171,13 @@ return [
         | //input[@type="submit" and contains(@value,"内容確認へ")]
         | //input[@type="submit" and contains(@value,"確認画面へ")]
         | //input[@type="submit" and contains(@value,"送信")]
+        | //input[@type="submit" and contains(@value,"送信する")]
         | //input[@type="submit" and contains(@value,"送信する") and contains(@name,"ACMS_POST_Form_Submit")]
         | //input[@type="submit" and contains(@value,"送信する") and contains(@name,"submitSubmit")]
-        | //input[@type="submit" and contains(@value,"送信する")]
-        | //input[@type="submit" and contains(@value,"送信する")]
         | //input[@type="submit" and contains(@value,"この内容で送信する")]
-        | //input[@type="submit" and (contains(@value,"送　信"))]
-        | //input[@type="submit" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
+        | //input[@type="submit" and contains(@value,"送　信") and contains(@name,"sousin")]
+        | //input[@type="submit" and contains(@value,"送　信")]
+        | //input[@type="submit" and contains(@class,"formsubmit")]
         | //input[contains(@alt,"次へ") and @type!="hidden"]
         | //input[contains(@alt,"確認") and @type!="hidden"]
         | //input[contains(@value,"次へ") and @type!="hidden"]
@@ -1146,27 +1190,26 @@ return [
 
     'xpathMessage' => '
         //*[contains(text(),"ありがとうございま")]
-        | //*[contains(text(),"ありがとうございます")]
-        | //*[contains(text(),"お申し込みを承りました")]
-        | //*[contains(text(),"ご連絡させていただき")]
-        | //*[contains(text(),"ご連絡させて頂")]
-        | //*[contains(text(),"メール送信が正常終了")]
-        | //*[contains(text(),"内容を確認させていただき")]
-        | //*[contains(text(),"受けしました")]
+        | //*[contains(text(),"お申し込みを承りま")]
+        | //*[contains(text(),"連絡させていただき")]
+        | //*[contains(text(),"連絡させて頂")]
+        | //*[contains(text(),"正常終了")]
+        | //*[contains(text(),"確認させていただき")]
+        | //*[contains(text(),"受けしま")]
         | //*[contains(text(),"受け付けま")]
         | //*[contains(text(),"問い合わせを受付")]
         | //*[contains(text(),"完了いたしま")]
-        | //*[contains(text(),"完了しまし")]
-        | //*[contains(text(),"成功しました")]
+        | //*[contains(text(),"完了しま")]
+        | //*[contains(text(),"成功しま")]
         | //*[contains(text(),"有難うございま")]
         | //*[contains(text(),"自動返信メール")]
         | //*[contains(text(),"送信いたしま")]
         | //*[contains(text(),"送信されま")]
-        | //*[contains(text(),"送信しました")]
+        | //*[contains(text(),"送信しま")]
         | //*[contains(text(),"送信完了") and not(contains(text(),"入力内容のご確認")]"))]
-        | //*[text()[contains(.,"お問い合わせを承りました")]]
+        | //*[text()[contains(.,"問い合わせを承りま")]]
         | //*[text()[contains(.,"ございました")]]
-        | //*[text()[contains(.,"ご返事させていただきます")]]
-        | //*[text()[contains(.,"受け付けました")]]
+        | //*[text()[contains(.,"返事させて")]]
+        | //*[text()[contains(.,"受け付けま")]]
     ',
 ];
