@@ -161,6 +161,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <label>フォーム作成</label>
+                        {{ Form::select('template_id', $contactTemplates->pluck('template_title'), '', ['class' => 'form-control', 'placeholder' => 'テンプレートを選択', 'id' => 'contact_template_select']) }}
                     </div>
                     <div class="modal-body">
                         <div class="row">
@@ -208,14 +209,14 @@
 
                             <label class="col-sm-12">都道府県</label>
                             <div class="col-sm-8 form-group">
-                                {{ Form::select('zone', $prefectures, Request::get('zone'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                                {{ Form::select('zone', $prefectures, Request::get('zone'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'area']) }}
                             </div>
 
                            
                             <label class="col-sm-12">郵便番号</label>
                             <div class="col-sm-12 form-group row">
-                                <div class="col-sm-6">{{ Form::text('postalCode1', old('postalcode1'), ['class' => 'form-control','id' => 'address1']) }}</div>
-                                <div class="col-sm-6">{{ Form::text('postalCode2', old('postalcode2'), ['class' => 'form-control','id' => 'address1']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('postalCode1', old('postalcode1'), ['class' => 'form-control','id' => 'postalCode1']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('postalCode2', old('postalcode2'), ['class' => 'form-control','id' => 'postalCode2']) }}</div>
                             </div>
 
                             <label class="col-sm-12">住所</label>
@@ -292,6 +293,18 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
+        const contactTemplates = <?php echo $contactTemplates; ?>;
+        $('#contact_template_select').on('change', function() {
+            let index = $(this).val();
+            if (index || index === 0) {
+                Object.entries(contactTemplates[index]).forEach(([key, value]) => {
+                    if (value && typeof $('#' + key).val() !== 'undefined') {
+                        $('#' + key).val(value);
+                    }
+                });
+            }
+        })
+
         $('#btnSend').click(function() {
             if ( $("#surname").val() ==='' || $("#lastname").val() ==='' || $("#mailaddress").val() ==='' || $("#title").val() === '' || $('#content').val() === '' ) {
                 alert('内容を入力してください。')

@@ -24,7 +24,7 @@
         @foreach($templates as $template)
         <tr>
           <td>
-            {{ $template->title }}
+            {{ $template->template_title }}
           </td>
           <td>
             <a href="{{ route('admin.contactTemplates.edit', $template->id) }}"
@@ -39,7 +39,7 @@
   </div>
 </div>
 
-{{ Form::open(['route' => 'admin.contactTemplates.delete', 'id' => 'deleteForm', 'method' => 'POST']) }}
+{{ Form::open(['route' => 'admin.contactTemplates.delete', 'id' => 'deleteForm', 'method' => 'DELETE']) }}
 {{ Form::hidden('id', '', ['id' => 'delete_id']) }}
 {{ Form::close() }}
 
@@ -109,16 +109,16 @@
 
           <label class="col-sm-12">都道府県</label>
           <div class="col-sm-8 form-group">
-            {{ Form::select('zone', $prefectures, Request::get('zone'), ['class' => 'form-control', 'placeholder' =>
+            {{ Form::select('area', $prefectures, Request::get('area'), ['class' => 'form-control', 'placeholder' =>
             'すべて']) }}
           </div>
 
           <label class="col-sm-12">郵便番号</label>
           <div class="col-sm-12 form-group row">
             <div class="col-sm-6">{{ Form::text('postalCode1', old('postalcode1'), ['class' => 'form-control','id' =>
-              'address1']) }}</div>
+              'postalCode1']) }}</div>
             <div class="col-sm-6">{{ Form::text('postalCode2', old('postalcode2'), ['class' => 'form-control','id' =>
-              'address1']) }}</div>
+              'postalCode2']) }}</div>
           </div>
 
           <label class="col-sm-12">住所</label>
@@ -164,14 +164,9 @@
 <script>
   $(document).ready(function() {
     $('#btnSubmit').click(function() {
-      if ($("#surname").val() === '' || $("#lastname").val() === '' || $("#mail").val() === '' || $(
-          "#title").val() === '' || $('#content').val() === '' || $('#fu_surname').val() === '' || $(
-          '#fu_lastname')
-        .val() === '' || $('#company').val() === '' || $('#postalCode1').val() === '' || $('#postalCode2')
-        .val() === '' || $('#phoneNumber1').val() === '' || $('#phoneNumber2').val() === '' || $(
-          '#phoneNumber3')
-        .val() === ''
-      ) {
+      if ($("#template_title").val() === '' || $("#surname").val() === '' || $("#lastname").val() === '' || $(
+          "#email").val() === '' || $("#title").val() === '' || $('#content').val() === '' || $('#company')
+        .val() === '') {
         alert('内容を入力してください。')
         return;
       }
