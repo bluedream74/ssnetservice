@@ -58,7 +58,8 @@
         <div class="row">
           <label class="col-sm-12">テンプレート名<span class="essential">*</span></label>
           <div class="col-sm-12 form-group">
-            {{ Form::text('template_title', old('template_title'), ['class' => 'form-control','id' => 'template_title']) }}
+            {{ Form::text('template_title', old('template_title'), ['class' => 'form-control','id' => 'template_title'])
+            }}
           </div>
 
           <label class="col-sm-12">名前<span class="essential">*</span></label>
@@ -154,6 +155,10 @@
 @else
 <div class="card">
   <div class="card-body">
+    <div class="add_button">
+      <button type="button" class="btn btn-sm btn-primary mr-3 btn-primary" data-toggle="modal"
+        data-target="#contact-template-modal">テンプレートを追加</button>
+    </div>
     <h4 class="text-center mt-3">テンプレートはありません。</h4>
   </div>
 </div>
@@ -204,8 +209,9 @@
     display: flex;
     float: right;
   }
+
   .essential {
-      color:red;
-      font-size:16px;
+    color: red;
+    font-size: 16px;
   }
 </style>
