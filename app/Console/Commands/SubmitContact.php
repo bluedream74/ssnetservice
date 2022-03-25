@@ -85,7 +85,7 @@ class SubmitContact extends Command
             return 0;
         }
 
-        $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
+        $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->get();
         if (count($companyContacts)) {
             $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
         } else {
@@ -235,7 +235,6 @@ class SubmitContact extends Command
                     'transform' => [$contact->phoneNumber1, $contact->phoneNumber2, $contact->phoneNumber3],
                 ],
             ];
-
             foreach ($this->form->all() as $key => $input) {
                 if ((!isset($this->data[$key]) || empty($this->data[$key])) && $input->isHidden() != 'hidden' && strpos($key, 'wpcf7') !== false) {
                     $this->data[$key] = $input->getValue();
@@ -260,6 +259,7 @@ class SubmitContact extends Command
                     }
                 }
             }
+            $this->mapForm2($companyContact);
 
             foreach ($sections as $section) {
                 if (count($section['part']) >= count($section['transform'])) {
@@ -595,7 +595,7 @@ class SubmitContact extends Command
         // Use list prioritize mappers
         foreach ($prioritizedMappers as $map) {
             // Check if form key contains any string on 'match' array, then use that value
-            if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
+            if (isset($map['match'], array_flip($map['match'])[$key])) {
                 $this->data[$key] = $map['transform'];
             }
         }
@@ -775,13 +775,209 @@ class SubmitContact extends Command
                 'transform' => isset($dataMail[1]) ? $dataMail[1] : null,
             ],
         ];
+        // $mapper[$key];
 
         foreach ($mapper as $map) {
             // Check if form key contains any string on 'match' array, then use that value
-            if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
+            if (isset($map['match'], array_flip($map['match'])[$key])) {
                 $this->data[$key] = $map['transform'];
-            }
 
+                return;
+            }
+        }
+    }
+
+    /**
+     * Mapping form.
+     *
+     * @param mixed $input
+     * @param mixed $companyContact
+     */
+    public function mapForm2($companyContact)
+    {
+        $contact = $companyContact->contact;
+        $company = $companyContact->company;
+
+        $content = str_replace('%company_name%', $company->name, $contact->content);
+        $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
+
+        if (!$this->isDebug) {
+            $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+        }
+
+        $dataMail = explode('@', $contact->email);
+        $configMapper = config('constant.mapper');
+        $mapper = [
+            [
+                'pattern' => $configMapper['furiganaPattern'],
+                'match' => $configMapper['furiganaMatch'],
+                'transform' => 'ナシ',
+            ],
+            [
+                'match' => $configMapper['companyMatch'],
+                'pattern' => $configMapper['companyPattern'],
+                'transform' => $contact->company,
+            ],
+            [
+                'match' => $configMapper['emailMatch'],
+                'pattern' => $configMapper['emailPattern'],
+                'key' => $configMapper['emailKey'],
+                'transform' => $contact->email,
+            ],
+            [
+                'match' => $configMapper['postalCode1Match'],
+                'key' => $configMapper['postalCode1Key'],
+                'transform' => $contact->postalCode1,
+            ],
+            [
+                'match' => $configMapper['fullPostcode1Match'],
+                'key' => $configMapper['fullPostcode1Key'],
+                'transform' => $contact->postalCode1 . $contact->postalCode2,
+            ],
+            [
+                'match' => $configMapper['postCode2Match'],
+                'key' => $configMapper['postCode2Key'],
+                'transform' => $contact->postalCode2,
+            ],
+            [
+                'match' => $configMapper['fullPostCode2Match'],
+                'pattern' => $configMapper['fullPostCode2Pattern'],
+                'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
+            ],
+            [
+                'match' => $configMapper['addressMatch'],
+                'pattern' => $configMapper['addressPattern'],
+                'transform' => $contact->address,
+            ],
+            [
+                'match' => $configMapper['titleMatch'],
+                'pattern' => $configMapper['titlePattern'],
+                'transform' => $contact->title,
+            ],
+            [
+                'match' => $configMapper['homePageUrlMatch'],
+                'transform' => $contact->homepageUrl,
+            ],
+            [
+                'match' => $configMapper['lastNameMatch'],
+                'key' => $configMapper['lastNameKey'],
+                'transform' => $contact->lastname,
+            ],
+            [
+                'match' => $configMapper['surnameMatch'],
+                'key' => $configMapper['surnameKey'],
+                'transform' => $contact->surname,
+            ],
+            [
+                'match' => $configMapper['fullnameMatch'],
+                'pattern' => $configMapper['fullnamePattern'],
+                'transform' => $contact->surname . $contact->lastname,
+            ],
+            [
+                'match' => $configMapper['fullFurnameMatch'],
+                'pattern' => $configMapper['fullFurnamePattern'],
+                'transform' => $contact->fu_surname . $contact->fu_lastname,
+            ],
+            [
+                'match' => $configMapper['fursurnameMatch'],
+                'pattern' => $configMapper['fursurnamePattern'],
+                'transform' => $contact->fu_surname,
+            ],
+            [
+                'match' => $configMapper['furlastnameMatch'],
+                'pattern' => $configMapper['furlastnamePattern'],
+                'transform' => $contact->fu_lastname,
+            ],
+            [
+                'pattern' => $configMapper['areaPattern'],
+                'match' => $configMapper['areaMatch'],
+                'transform' => $contact->area,
+            ],
+            [
+                'pattern' => $configMapper['fullPhoneNumer1Pattern'],
+                'match' => $configMapper['fullPhoneNumer1Match'],
+                'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
+            ],
+            [
+                'match' => $configMapper['fullPhoneNumber2Match'],
+                'key' => $configMapper['fullPhoneNumber2Key'],
+                'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
+            ],
+            [
+                'match' => $configMapper['phoneNumber1match'],
+                'key' => $configMapper['phoneNumber1key'],
+                'transform' => $contact->phoneNumber1,
+            ],
+            [
+                'match' => $configMapper['phoneNumber2Match'],
+                'key' => $configMapper['phoneNumber2Key'],
+                'transform' => $contact->phoneNumber2,
+            ],
+            [
+                'match' => $configMapper['phoneNumber3Match'],
+                'key' => $configMapper['phoneNumber3Key'],
+                'transform' => $contact->phoneNumber3,
+            ],
+            [
+                'match' => $configMapper['address2Match'],
+                'transform' => mb_substr($contact->address, 0, 3),
+            ],
+            [
+                'match' => $configMapper['randomNumber1Match'],
+                'transform' => 0,
+            ],
+            [
+                'pattern' => $configMapper['randomStringPattern'],
+                'transform' => 'なし',
+            ],
+            [
+                'pattern' => $configMapper['orderPattern'],
+                'transform' => 'order',
+            ],
+            [
+                'pattern' => $configMapper['randomNumber2Match'],
+                'transform' => 35,
+            ],
+            [
+                'pattern' => $configMapper['answerPattern'],
+                'transform' => 1,
+            ],
+            [
+                'pattern' => $configMapper['urlPattern'],
+                'key' => $configMapper['urlKey'],
+                'transform' => $contact->myurl,
+            ],
+            [
+                'match' => $configMapper['yearMatch'],
+                'transform' => '2022',
+            ],
+            [
+                'match' => $configMapper['monthMatch'],
+                'transform' => '03',
+            ],
+            [
+                'match' => $configMapper['dayMatch'],
+                'transform' => '04',
+            ],
+            [
+                'match' => $configMapper['fullDateMatch'],
+                'transform' => '2022/03/14',
+            ],
+            [
+                'match' => $configMapper['randomString2Match'],
+                'transform' => '管理運営受託業務',
+            ],
+            [
+                'match' => $configMapper['mailConfirm1Match'],
+                'transform' => isset($dataMail[0]) ? $dataMail[0] : null,
+            ],
+            [
+                'match' => $configMapper['mailConfirm2Match'],
+                'transform' => isset($dataMail[1]) ? $dataMail[1] : null,
+            ],
+        ];
+
+        foreach ($mapper as $map) {
             // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
             if (isset($map['pattern'])) {
                 foreach ($map['pattern'] as $pattern) {
@@ -1041,8 +1237,10 @@ class SubmitContact extends Command
      */
     public function containsAny(string $string, array $list)
     {
-        return collect($list)->contains(function ($item) use ($string) {
-            return strpos($string, $item) !== false;
-        });
+        // return collect($list)->contains(function ($item) use ($string) {
+        //     return strpos($string, $item) !== false;
+        // });
+
+        return (isset($list[$string]) && !empty($list[$string])) ? true : false;
     }
 }
