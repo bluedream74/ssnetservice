@@ -1237,10 +1237,8 @@ class SubmitContact extends Command
      */
     public function containsAny(string $string, array $list)
     {
-        // return collect($list)->contains(function ($item) use ($string) {
-        //     return strpos($string, $item) !== false;
-        // });
-
-        return (isset($list[$string]) && !empty($list[$string])) ? true : false;
+        return collect($list)->contains(function ($item) use ($string) {
+            return strpos($string, $item) !== false;
+        });
     }
 }
