@@ -340,7 +340,16 @@ class DashboardController extends BaseController
         $count = $targetCompanies->count();
         $targetCompanies->delete();
 
-        return back()->with(['system.message.info' => $count . '件のリストが正常に削除されました。']);
+        $sources = Source::leftjoin('companies', 'companies.source', '=', 'sources.name')->whereNull('companies.source')->pluck('sources.id');
+        if (count($sources)) {
+            Source::whereIn('id', $sources)->delete();
+        }
+        $subsources = SubSource::leftjoin('companies', 'companies.subsource', '=', 'subsources.name')->whereNull('companies.subsource')->pluck('subsources.id');
+        if (count($subsources)) {
+            SubSource::whereIn('id', $subsources)->delete();
+        }
+
+        return back()->withInput(array('source' => '', 'subsource' => ''))->with(['system.message.info' => $count . '件のリストが正常に削除されました。']);
 
     }
     
