@@ -576,7 +576,9 @@ class DashboardController extends BaseController
 
         $companies = $query->paginate(20);
 
-        return view('admin.contact_show', compact('contact', 'companies','prefectures', 'totalCounts'));
+        $contactTemplates = ContactTemplate::all();
+
+        return view('admin.contact_show', compact('contact', 'companies','prefectures', 'totalCounts', 'contactTemplates'));
     }
 
     public function sendShowContact(Contact $contact)
