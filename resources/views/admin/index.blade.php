@@ -1,6 +1,7 @@
 @extends('layouts.admin.app')
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.1/css/bootstrap-multiselect.min.css" />
 <style>
   .bd-example-modal-lg .modal-dialog{
     position: absolute;
@@ -35,7 +36,8 @@
                     </div>
                     <div class="col-sm-3">
                         <label>エリア</label>
-                        {{ Form::select('area', $prefectures, Request::get('area'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                        <br />
+                        {{ Form::select('area[]', $prefectures, Request::get('area'), ['class' => 'form-control', 'id' => 'area_multi_select', 'multiple' => 'multiple',]) }}
                     </div>
                     <div class="col-sm-3">
                         <label>ステータス</label>
@@ -76,7 +78,7 @@
         <div class="card">
             <div class="card-body table-responsive">
                 {{ Form::open(['route' => 'admin.reset.company', 'method' => 'POST', 'id' => 'resetForm']) }}
-                    @foreach (Request::except('_token') as $key => $value)
+                    @foreach (Request::except('_token', 'area') as $key => $value)
                         <input type="hidden" name="{{ $key }}" value="{{ $value }}" />
                     @endforeach
                     <div class="row">
@@ -92,7 +94,7 @@
                             <button type="button" class="btn btn-sm btn-primary mr-3 btn-warning" data-toggle="modal" data-target="#email-modal">フォーム作成</button>
                             <button type="button" class="btn btn-sm btn-info mr-3 btn-duplicate-delete">重複をチェックして削除</button>
                             <button type="button" class="btn btn-sm btn-warning mr-3 btn-reset">送信済みを一括リセット</button>
-                            <a href="{{ route('admin.companies.export', Request::all()) }}" class="btn btn-sm btn-success mr-3" target="_blank">CSV出力</a>
+                            <a href="{{ route('admin.companies.export', Request::except('area')) }}" class="btn btn-sm btn-success mr-3" target="_blank">CSV出力</a>
                             <button type="button" class="btn btn-sm btn-warning" id="btnImport"><i class="fas fa-file-csv mr-2"></i>{{ __('アップロード(CSV)') }}</button>
                         </div>
                     </div>
@@ -149,18 +151,19 @@
 
         <div class="row mb-5">
             <div class="col-sm-12">
-                {{ $companies->appends(Request::all())->render() }}
+                {{ $companies->appends(Request::except('area'))->render() }}
             </div>
         </div>
         <div class="modal fade" id="email-modal" style="z-index: 9999;">
             {{ Form::open(['route' => 'admin.contact.send', 'method' => 'POST', 'id' => 'contactForm', 'files' => true]) }}
-            @foreach (Request::all() as $key => $value)
+            @foreach (Request::except('area') as $key => $value)
                 {{ Form::hidden($key, $value) }}
             @endforeach
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
                         <label>フォーム作成</label>
+                        {{ Form::select('template_id', $contactTemplates->pluck('template_title'), '', ['class' => 'form-control select-template', 'placeholder' => 'テンプレートを選択', 'id' => 'contact_template_select']) }}
                     </div>
                     <div class="modal-body">
                         <div class="row">
@@ -208,14 +211,14 @@
 
                             <label class="col-sm-12">都道府県</label>
                             <div class="col-sm-8 form-group">
-                                {{ Form::select('zone', $prefectures, Request::get('zone'), ['class' => 'form-control', 'placeholder' => 'すべて']) }}
+                                {{ Form::select('zone', $prefectures, Request::get('zone'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'area']) }}
                             </div>
 
                            
                             <label class="col-sm-12">郵便番号</label>
                             <div class="col-sm-12 form-group row">
-                                <div class="col-sm-6">{{ Form::text('postalCode1', old('postalcode1'), ['class' => 'form-control','id' => 'address1']) }}</div>
-                                <div class="col-sm-6">{{ Form::text('postalCode2', old('postalcode2'), ['class' => 'form-control','id' => 'address1']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('postalCode1', old('postalcode1'), ['class' => 'form-control','id' => 'postalCode1']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('postalCode2', old('postalcode2'), ['class' => 'form-control','id' => 'postalCode2']) }}</div>
                             </div>
 
                             <label class="col-sm-12">住所</label>
@@ -252,19 +255,19 @@
         </div>
         <div class="modal fade" style="z-index: 9999;">
             {{ Form::open(['route' => 'admin.batchCheck', 'method' => 'POST', 'id' => 'batchCheck_Form', 'files' => true]) }}
-            @foreach (Request::all() as $key => $value)
+            @foreach (Request::except('area') as $key => $value)
                 {{ Form::hidden($key, $value) }}
             @endforeach
             {{ Form::close() }}
         </div>
     {{ Form::open(['route' => 'admin.deleteCompanies', 'method' => 'POST', 'id' => 'deleteCompanies_Form', 'files' => true]) }}
-        @foreach (Request::all() as $key => $value)
+        @foreach (Request::except('area') as $key => $value)
             {{ Form::hidden($key, $value) }}
         @endforeach
     {{ Form::close() }}
 
     {{ Form::open(['route' => 'admin.delete.duplicate', 'method' => 'POST', 'id' => 'duplicateForm']) }}
-        @foreach (Request::all() as $key => $value)
+        @foreach (Request::except('area') as $key => $value)
                 {{ Form::hidden($key, $value) }}
             @endforeach
     {{ Form::close() }}
@@ -292,6 +295,24 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
+        const contactTemplates = <?php echo $contactTemplates; ?>;
+        $('#contact_template_select').on('change', function() {
+            let index = $(this).val();
+            if (index || index === 0) {
+                Object.entries(contactTemplates[index]).forEach(([key, value]) => {
+                    if (value && typeof $('#' + key).val() !== 'undefined') {
+                        $('#' + key).val(value);
+                    }
+                });
+            }
+        })
+
+        $('#area_multi_select').multiselect({
+            includeSelectAllOption: true,
+            selectAllValue: '',
+            selectAllText: 'すべて'
+        });
+
         $('#btnSend').click(function() {
             if ( $("#surname").val() ==='' || $("#lastname").val() ==='' || $("#mailaddress").val() ==='' || $("#title").val() === '' || $('#content').val() === '' ) {
                 alert('内容を入力してください。')
@@ -455,4 +476,16 @@
         })
     })
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.1/js/bootstrap-multiselect.min.js" integrity="sha512-fp+kGodOXYBIPyIXInWgdH2vTMiOfbLC9YqwEHslkUxc8JLI7eBL2UQ8/HbB5YehvynU3gA3klc84rAQcTQvXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 @stop
+
+<style type="text/css">
+    .select-template {
+        max-width: 400px;
+    }
+
+    .multiselect-container.dropdown-menu {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+    }
+</style>
