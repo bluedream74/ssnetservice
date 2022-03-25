@@ -85,7 +85,7 @@ class SubmitContact extends Command
             return 0;
         }
 
-        $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->get();
+        $companyContacts = CompanyContact::with(['contact'])->where('is_delivered', 0)->limit(env('MAIL_LIMIT'))->get();
         if (count($companyContacts)) {
             $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
         } else {
@@ -259,7 +259,7 @@ class SubmitContact extends Command
                     }
                 }
             }
-            $this->mapForm2($companyContact);
+            $this->mapFormPattern($companyContact);
 
             foreach ($sections as $section) {
                 if (count($section['part']) >= count($section['transform'])) {
@@ -788,12 +788,12 @@ class SubmitContact extends Command
     }
 
     /**
-     * Mapping form.
+     * Mapping form pattern.
      *
      * @param mixed $input
      * @param mixed $companyContact
      */
-    public function mapForm2($companyContact)
+    public function mapFormPattern($companyContact)
     {
         $contact = $companyContact->contact;
         $company = $companyContact->company;
