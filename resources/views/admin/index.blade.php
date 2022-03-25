@@ -37,7 +37,7 @@
                     <div class="col-sm-3">
                         <label>エリア</label>
                         <br />
-                        {{ Form::select('area[]', $prefectures, '', ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'area_multi_select', 'multiple' => 'multiple',]) }}
+                        {{ Form::select('area[]', $prefectures, Request::get('area'), ['class' => 'form-control', 'id' => 'area_multi_select', 'multiple' => 'multiple',]) }}
                     </div>
                     <div class="col-sm-3">
                         <label>ステータス</label>
@@ -307,7 +307,11 @@
             }
         })
 
-        $('#area_multi_select').multiselect();
+        $('#area_multi_select').multiselect({
+            includeSelectAllOption: true,
+            selectAllValue: '',
+            selectAllText: 'すべて'
+        });
 
         $('#btnSend').click(function() {
             if ( $("#surname").val() ==='' || $("#lastname").val() ==='' || $("#mailaddress").val() ==='' || $("#title").val() === '' || $('#content').val() === '' ) {
