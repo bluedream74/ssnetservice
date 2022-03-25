@@ -43,6 +43,17 @@
 {{ Form::hidden('id', '', ['id' => 'delete_id']) }}
 {{ Form::close() }}
 
+@else
+<div class="card">
+  <div class="card-body">
+    <div class="add_button">
+      <button type="button" class="btn btn-sm btn-primary mr-3 btn-primary" data-toggle="modal"
+        data-target="#contact-template-modal">テンプレートを追加</button>
+    </div>
+    <h4 class="text-center mt-3">テンプレートはありません。</h4>
+  </div>
+</div>
+@endif
 <div class="modal fade" id="contact-template-modal" style="z-index: 9999;">
   {{ Form::open(['route' => 'admin.contactTemplates.add', 'method' => 'POST', 'id' => 'contactForm', 'files' => true])
   }}
@@ -151,18 +162,6 @@
   </div>
   {{ Form::close() }}
 </div>
-
-@else
-<div class="card">
-  <div class="card-body">
-    <div class="add_button">
-      <button type="button" class="btn btn-sm btn-primary mr-3 btn-primary" data-toggle="modal"
-        data-target="#contact-template-modal">テンプレートを追加</button>
-    </div>
-    <h4 class="text-center mt-3">テンプレートはありません。</h4>
-  </div>
-</div>
-@endif
 @stop
 
 @section('scripts')
