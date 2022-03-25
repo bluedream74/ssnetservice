@@ -161,9 +161,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <label>フォーム作成</label>
-                        <div class="select-template">
-                            {{ Form::select('template_id', $contactTemplates->pluck('template_title'), '', ['class' => 'form-control', 'placeholder' => 'テンプレートを選択', 'id' => 'contact_template_select']) }}
-                        </div>
+                        {{ Form::select('template_id', $contactTemplates->pluck('template_title'), '', ['class' => 'form-control select-template', 'placeholder' => 'テンプレートを選択', 'id' => 'contact_template_select']) }}
                     </div>
                     <div class="modal-body">
                         <div class="row">
@@ -471,3 +469,9 @@
     })
 </script>
 @stop
+
+<style type="text/css">
+    .select-template {
+        max-width: 400px;
+    }
+</style>
