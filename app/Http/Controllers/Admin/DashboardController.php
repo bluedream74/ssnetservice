@@ -102,7 +102,7 @@ class DashboardController extends BaseController
         }
 
         if (!empty($value = Arr::get($attributes, 'area'))) {
-            $query->where('area', 'like', "%{$value}%");
+            $query->whereIn('area', $value);
         }
 
         if (!empty($value = Arr::get($attributes, 'status'))) {
