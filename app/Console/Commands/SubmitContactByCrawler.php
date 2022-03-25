@@ -562,6 +562,10 @@ class SubmitContactByCrawler extends Command
                 break;
         }
 
+        if (isset($this->data[$key]) && !empty($this->data[$key])) {
+            return;
+        }
+
         $configPrioritized = config('constant.prioritizedMappers');
         $prioritizedMappers = [
             [
@@ -822,6 +826,8 @@ class SubmitContactByCrawler extends Command
             // Check if form key contains any string on 'match' array, then use that value
             if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
                 $this->data[$key] = $map['transform'];
+
+                return;
             }
 
             // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
@@ -832,6 +838,8 @@ class SubmitContactByCrawler extends Command
                         preg_match('/name="(?<name>[A-z0-9-]+)"/m', $stringToSearch, $match);
                         if (isset($match['name']) && (!isset($this->data[$match['name']]) || empty($this->data[$match['name']]))) {
                             $this->data[$match['name']] = $map['transform'];
+
+                            return;
                         }
                     }
                 }
@@ -841,6 +849,8 @@ class SubmitContactByCrawler extends Command
                 foreach ($map['key'] as $value) {
                     if ((strpos($this->html, "name='" . $value) !== false || strpos($this->html, 'name="' . $value) !== false) && (!isset($this->data[$value]) || empty($this->data[$value]))) {
                         $this->data[$value] = $map['transform'];
+
+                        return;
                     }
                 }
             }

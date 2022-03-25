@@ -1217,33 +1217,31 @@ return [
 
     'successMessages' => [
         'ありがとうございま',
-        'ありがとうございます',
-        'お問い合わせを承りました',
-        'お申し込みを承りました',
+        '問い合わせを承りま',
+        '申し込みを承りま',
         'ございました',
-        'ご返事させていただきます',
-        'ご連絡させていただき',
-        'ご連絡させて頂',
+        '返事させていただき',
+        '連絡させていただき',
+        '連絡させて頂',
         'メール送信が正常終了',
         '内容を確認させていただき',
-        '受けしました',
+        '受けしま',
         '受け付けま',
-        '受け付けました',
         '問い合わせを受付',
-        '完了いたしま',
         '完了しまし',
         '成功しました',
         '有難うございま',
         '自動返信メール',
         '送信いたしま',
         '送信されま',
-        '送信しました',
+        '送信しま',
         '送信完了',
     ],
 
     'xpathButton' => '
         // button[@type="submit"]//span[contains(text(),"入力内容の確認")]
         | //input[@type="submit" and (contains(@class,"send"))]
+        | //input[@type="submit" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
         | //*[contains(text(),"この内容で送信する")]
         | //*[contains(text(),"に同意する")]
         | //*[contains(text(),"確認する")]
@@ -1326,14 +1324,12 @@ return [
         | //input[@type="submit" and contains(@value,"内容確認へ")]
         | //input[@type="submit" and contains(@value,"確認画面へ")]
         | //input[@type="submit" and contains(@value,"送信")]
+        | //input[@type="submit" and contains(@value,"送信する")]
         | //input[@type="submit" and contains(@value,"送信する") and contains(@name,"ACMS_POST_Form_Submit")]
         | //input[@type="submit" and contains(@value,"送信する") and contains(@name,"submitSubmit")]
-        | //input[@type="submit" and contains(@value,"送信する")]
-        | //input[@type="submit" and contains(@value,"送信する")]
         | //input[@type="submit" and contains(@value,"この内容で送信する")]
         | //input[@type="submit" and contains(@value,"送　信") and contains(@name,"sousin")]
-        | //input[@type="submit" and (contains(@value,"送　信"))]
-        | //input[@type="submit" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
+        | //input[@type="submit" and contains(@value,"送　信")]
         | //input[@type="submit" and contains(@class,"formsubmit")]
         | //input[contains(@alt,"次へ") and @type!="hidden"]
         | //input[contains(@alt,"確認") and @type!="hidden"]
@@ -1347,27 +1343,26 @@ return [
 
     'xpathMessage' => '
         //*[contains(text(),"ありがとうございま")]
-        | //*[contains(text(),"ありがとうございます")]
-        | //*[contains(text(),"お申し込みを承りました")]
-        | //*[contains(text(),"ご連絡させていただき")]
-        | //*[contains(text(),"ご連絡させて頂")]
-        | //*[contains(text(),"メール送信が正常終了")]
-        | //*[contains(text(),"内容を確認させていただき")]
-        | //*[contains(text(),"受けしました")]
+        | //*[contains(text(),"お申し込みを承りま")]
+        | //*[contains(text(),"連絡させていただき")]
+        | //*[contains(text(),"連絡させて頂")]
+        | //*[contains(text(),"正常終了")]
+        | //*[contains(text(),"確認させていただき")]
+        | //*[contains(text(),"受けしま")]
         | //*[contains(text(),"受け付けま")]
         | //*[contains(text(),"問い合わせを受付")]
         | //*[contains(text(),"完了いたしま")]
-        | //*[contains(text(),"完了しまし")]
-        | //*[contains(text(),"成功しました")]
+        | //*[contains(text(),"完了しま")]
+        | //*[contains(text(),"成功しま")]
         | //*[contains(text(),"有難うございま")]
         | //*[contains(text(),"自動返信メール")]
         | //*[contains(text(),"送信いたしま")]
         | //*[contains(text(),"送信されま")]
-        | //*[contains(text(),"送信しました")]
+        | //*[contains(text(),"送信しま")]
         | //*[contains(text(),"送信完了") and not(contains(text(),"入力内容のご確認")]"))]
-        | //*[text()[contains(.,"お問い合わせを承りました")]]
+        | //*[text()[contains(.,"問い合わせを承りま")]]
         | //*[text()[contains(.,"ございました")]]
-        | //*[text()[contains(.,"ご返事させていただきます")]]
-        | //*[text()[contains(.,"受け付けました")]]
+        | //*[text()[contains(.,"返事させて")]]
+        | //*[text()[contains(.,"受け付けま")]]
     ',
 ];
