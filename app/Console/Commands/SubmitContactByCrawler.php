@@ -577,7 +577,7 @@ class SubmitContactByCrawler extends Command
      */
     public function mapFormPattern($companyContact)
     {
-        $mapper = getMapper($companyContact);
+        $mapper = $this->getMapper($companyContact);
 
         foreach ($mapper as $map) {
             // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
