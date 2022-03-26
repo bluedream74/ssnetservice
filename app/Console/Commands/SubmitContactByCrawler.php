@@ -557,7 +557,7 @@ class SubmitContactByCrawler extends Command
             return;
         }
 
-        $mapper = getMapper($companyContact);
+        $mapper = $this->getMapper($companyContact);
 
         foreach ($mapper as $map) {
             // Check if form key contains any string on 'match' array, then use that value
