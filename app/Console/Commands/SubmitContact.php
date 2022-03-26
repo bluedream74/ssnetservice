@@ -462,16 +462,7 @@ class SubmitContact extends Command
      */
     public function mapForm(string $key, $input, $companyContact)
     {
-        $contact = $companyContact->contact;
-        $company = $companyContact->company;
         $type = $input->getType();
-
-        $content = str_replace('%company_name%', $company->name, $contact->content);
-        $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
-
-        if (!$this->isDebug) {
-            $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
-        }
 
         switch ($type) {
             case 'select':
@@ -520,262 +511,12 @@ class SubmitContact extends Command
             default:
                 break;
         }
-        $configPrioritized = config('constant.prioritizedMappers');
-        $prioritizedMappers = [
-            [
-                'match' => $configPrioritized['phoneNumber1'],
-                'transform' => $contact->phoneNumber1,
-            ],
-            [
-                'match' => $configPrioritized['phoneNumber2'],
-                'transform' => $contact->phoneNumber2,
-            ],
-            [
-                'match' => $configPrioritized['phoneNumber3'],
-                'transform' => $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configPrioritized['postalCode1'],
-                'transform' => $contact->postalCode1,
-            ],
-            [
-                'match' => $configPrioritized['postalCode2'],
-                'transform' => $contact->postalCode2,
-            ],
-            [
-                'match' => $configPrioritized['fullPhoneNumber1'],
-                'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configPrioritized['fullPhoneNumber2'],
-                'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configPrioritized['fullPostCode1'],
-                'transform' => $contact->postalCode1 . $contact->postalCode2,
-            ],
-            [
-                'match' => $configPrioritized['email'],
-                'transform' => $contact->email,
-            ],
-            [
-                'match' => $configPrioritized['address'],
-                'transform' => $contact->address,
-            ],
-            [
-                'match' => $configPrioritized['fu_surname'],
-                'transform' => $contact->fu_surname,
-            ],
-            [
-                'match' => $configPrioritized['fu_lastname'],
-                'transform' => $contact->fu_lastname,
-            ],
-            [
-                'match' => $configPrioritized['full_name'],
-                'transform' => $contact->fu_lastname . $contact->fu_surname,
-            ],
-            [
-                'match' => $configPrioritized['randomNumber'],
-                'transform' => 1,
-            ],
-            [
-                'match' => $configPrioritized['furigana'],
-                'transform' => 'ナシ',
-            ],
-            [
-                'match' => $configPrioritized['company'],
-                'transform' => $contact->company,
-            ],
-            [
-                'match' => $configPrioritized['randomString'],
-                'transform' => $content,
-            ],
-        ];
-
-        // Use list prioritize mappers
-        foreach ($prioritizedMappers as $map) {
-            // Check if form key contains any string on 'match' array, then use that value
-            if (isset($map['match'], array_flip($map['match'])[$key])) {
-                $this->data[$key] = $map['transform'];
-            }
-        }
 
         if (isset($this->data[$key]) && !empty($this->data[$key])) {
             return;
         }
 
-        $dataMail = explode('@', $contact->email);
-        $configMapper = config('constant.mapper');
-        $mapper = [
-            [
-                'pattern' => $configMapper['furiganaPattern'],
-                'match' => $configMapper['furiganaMatch'],
-                'transform' => 'ナシ',
-            ],
-            [
-                'match' => $configMapper['companyMatch'],
-                'pattern' => $configMapper['companyPattern'],
-                'transform' => $contact->company,
-            ],
-            [
-                'match' => $configMapper['emailMatch'],
-                'pattern' => $configMapper['emailPattern'],
-                'key' => $configMapper['emailKey'],
-                'transform' => $contact->email,
-            ],
-            [
-                'match' => $configMapper['postalCode1Match'],
-                'key' => $configMapper['postalCode1Key'],
-                'transform' => $contact->postalCode1,
-            ],
-            [
-                'match' => $configMapper['fullPostcode1Match'],
-                'key' => $configMapper['fullPostcode1Key'],
-                'transform' => $contact->postalCode1 . $contact->postalCode2,
-            ],
-            [
-                'match' => $configMapper['postCode2Match'],
-                'key' => $configMapper['postCode2Key'],
-                'transform' => $contact->postalCode2,
-            ],
-            [
-                'match' => $configMapper['fullPostCode2Match'],
-                'pattern' => $configMapper['fullPostCode2Pattern'],
-                'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
-            ],
-            [
-                'match' => $configMapper['addressMatch'],
-                'pattern' => $configMapper['addressPattern'],
-                'transform' => $contact->address,
-            ],
-            [
-                'match' => $configMapper['titleMatch'],
-                'pattern' => $configMapper['titlePattern'],
-                'transform' => $contact->title,
-            ],
-            [
-                'match' => $configMapper['homePageUrlMatch'],
-                'transform' => $contact->homepageUrl,
-            ],
-            [
-                'match' => $configMapper['lastNameMatch'],
-                'key' => $configMapper['lastNameKey'],
-                'transform' => $contact->lastname,
-            ],
-            [
-                'match' => $configMapper['surnameMatch'],
-                'key' => $configMapper['surnameKey'],
-                'transform' => $contact->surname,
-            ],
-            [
-                'match' => $configMapper['fullnameMatch'],
-                'pattern' => $configMapper['fullnamePattern'],
-                'transform' => $contact->surname . $contact->lastname,
-            ],
-            [
-                'match' => $configMapper['fullFurnameMatch'],
-                'pattern' => $configMapper['fullFurnamePattern'],
-                'transform' => $contact->fu_surname . $contact->fu_lastname,
-            ],
-            [
-                'match' => $configMapper['fursurnameMatch'],
-                'pattern' => $configMapper['fursurnamePattern'],
-                'transform' => $contact->fu_surname,
-            ],
-            [
-                'match' => $configMapper['furlastnameMatch'],
-                'pattern' => $configMapper['furlastnamePattern'],
-                'transform' => $contact->fu_lastname,
-            ],
-            [
-                'pattern' => $configMapper['areaPattern'],
-                'match' => $configMapper['areaMatch'],
-                'transform' => $contact->area,
-            ],
-            [
-                'pattern' => $configMapper['fullPhoneNumer1Pattern'],
-                'match' => $configMapper['fullPhoneNumer1Match'],
-                'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configMapper['fullPhoneNumber2Match'],
-                'key' => $configMapper['fullPhoneNumber2Key'],
-                'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configMapper['phoneNumber1match'],
-                'key' => $configMapper['phoneNumber1key'],
-                'transform' => $contact->phoneNumber1,
-            ],
-            [
-                'match' => $configMapper['phoneNumber2Match'],
-                'key' => $configMapper['phoneNumber2Key'],
-                'transform' => $contact->phoneNumber2,
-            ],
-            [
-                'match' => $configMapper['phoneNumber3Match'],
-                'key' => $configMapper['phoneNumber3Key'],
-                'transform' => $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configMapper['address2Match'],
-                'transform' => mb_substr($contact->address, 0, 3),
-            ],
-            [
-                'match' => $configMapper['randomNumber1Match'],
-                'transform' => 0,
-            ],
-            [
-                'pattern' => $configMapper['randomStringPattern'],
-                'transform' => 'なし',
-            ],
-            [
-                'pattern' => $configMapper['orderPattern'],
-                'transform' => 'order',
-            ],
-            [
-                'pattern' => $configMapper['randomNumber2Match'],
-                'transform' => 35,
-            ],
-            [
-                'pattern' => $configMapper['answerPattern'],
-                'transform' => 1,
-            ],
-            [
-                'pattern' => $configMapper['urlPattern'],
-                'key' => $configMapper['urlKey'],
-                'transform' => $contact->myurl,
-            ],
-            [
-                'match' => $configMapper['yearMatch'],
-                'transform' => '2022',
-            ],
-            [
-                'match' => $configMapper['monthMatch'],
-                'transform' => '03',
-            ],
-            [
-                'match' => $configMapper['dayMatch'],
-                'transform' => '04',
-            ],
-            [
-                'match' => $configMapper['fullDateMatch'],
-                'transform' => '2022/03/14',
-            ],
-            [
-                'match' => $configMapper['randomString2Match'],
-                'transform' => '管理運営受託業務',
-            ],
-            [
-                'match' => $configMapper['mailConfirm1Match'],
-                'transform' => isset($dataMail[0]) ? $dataMail[0] : null,
-            ],
-            [
-                'match' => $configMapper['mailConfirm2Match'],
-                'transform' => isset($dataMail[1]) ? $dataMail[1] : null,
-            ],
-        ];
-        // $mapper[$key];
+        $mapper = getMapper($companyContact);
 
         foreach ($mapper as $map) {
             // Check if form key contains any string on 'match' array, then use that value
@@ -795,6 +536,39 @@ class SubmitContact extends Command
      */
     public function mapFormPattern($companyContact)
     {
+        $mapper = getMapper($companyContact);
+
+        foreach ($mapper as $map) {
+            // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
+            if (isset($map['pattern'])) {
+                foreach ($map['pattern'] as $pattern) {
+                    if (strpos($this->htmlText, $pattern) !== false) {
+                        $stringToSearch = substr($this->html, strpos($this->html, $pattern) - 6);
+                        preg_match('/name="(?<name>[A-z0-9-]+)"/m', $stringToSearch, $match);
+                        if (isset($match['name']) && (!isset($this->data[$match['name']]) || empty($this->data[$match['name']]))) {
+                            $this->data[$match['name']] = $map['transform'];
+                        }
+                    }
+                }
+            }
+
+            if (isset($map['key'])) {
+                foreach ($map['key'] as $value) {
+                    if ((strpos($this->html, "name='" . $value) !== false || strpos($this->html, 'name="' . $value) !== false) && (!isset($this->data[$value]) || empty($this->data[$value]))) {
+                        $this->data[$value] = $map['transform'];
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Get Mapper
+     *
+     * @param mixed $company
+     */
+    public function getMapper($companyContact)
+    {
         $contact = $companyContact->contact;
         $company = $companyContact->company;
 
@@ -807,7 +581,8 @@ class SubmitContact extends Command
 
         $dataMail = explode('@', $contact->email);
         $configMapper = config('constant.mapper');
-        $mapper = [
+
+        return $mapper = [
             [
                 'pattern' => $configMapper['furiganaPattern'],
                 'match' => $configMapper['furiganaMatch'],
@@ -976,29 +751,6 @@ class SubmitContact extends Command
                 'transform' => isset($dataMail[1]) ? $dataMail[1] : null,
             ],
         ];
-
-        foreach ($mapper as $map) {
-            // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
-            if (isset($map['pattern'])) {
-                foreach ($map['pattern'] as $pattern) {
-                    if (strpos($this->htmlText, $pattern) !== false) {
-                        $stringToSearch = substr($this->html, strpos($this->html, $pattern) - 6);
-                        preg_match('/name="(?<name>[A-z0-9-]+)"/m', $stringToSearch, $match);
-                        if (isset($match['name']) && (!isset($this->data[$match['name']]) || empty($this->data[$match['name']]))) {
-                            $this->data[$match['name']] = $map['transform'];
-                        }
-                    }
-
-                    if (isset($map['key'])) {
-                        foreach ($map['key'] as $value) {
-                            if ((strpos($this->html, "name='" . $value) !== false || strpos($this->html, 'name="' . $value) !== false) && (!isset($this->data[$value]) || empty($this->data[$value]))) {
-                                $this->data[$value] = $map['transform'];
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**
