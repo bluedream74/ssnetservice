@@ -669,8 +669,8 @@ class SubmitContact extends Command
                 'transform' => $contact->area,
             ],
             [
-                'pattern' => $configMapper['fullPhoneNumer1Pattern'],
-                'match' => $configMapper['fullPhoneNumer1Match'],
+                'pattern' => $configMapper['fullPhoneNumberPattern'],
+                'match' => $configMapper['fullPhoneNumberMatch'],
                 'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
             [
