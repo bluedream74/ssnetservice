@@ -235,7 +235,6 @@ class SubmitContact extends Command
                     'transform' => [$contact->phoneNumber1, $contact->phoneNumber2, $contact->phoneNumber3],
                 ],
             ];
-
             foreach ($this->form->all() as $key => $input) {
                 if ((!isset($this->data[$key]) || empty($this->data[$key])) && $input->isHidden() != 'hidden' && strpos($key, 'wpcf7') !== false) {
                     $this->data[$key] = $input->getValue();
@@ -260,6 +259,7 @@ class SubmitContact extends Command
                     }
                 }
             }
+            $this->mapFormPattern($companyContact);
 
             foreach ($sections as $section) {
                 if (count($section['part']) >= count($section['transform'])) {
@@ -462,16 +462,7 @@ class SubmitContact extends Command
      */
     public function mapForm(string $key, $input, $companyContact)
     {
-        $contact = $companyContact->contact;
-        $company = $companyContact->company;
         $type = $input->getType();
-
-        $content = str_replace('%company_name%', $company->name, $contact->content);
-        $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
-
-        if (!$this->isDebug) {
-            $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
-        }
 
         switch ($type) {
             case 'select':
@@ -520,93 +511,78 @@ class SubmitContact extends Command
             default:
                 break;
         }
-        $configPrioritized = config('constant.prioritizedMappers');
-        $prioritizedMappers = [
-            [
-                'match' => $configPrioritized['phoneNumber1'],
-                'transform' => $contact->phoneNumber1,
-            ],
-            [
-                'match' => $configPrioritized['phoneNumber2'],
-                'transform' => $contact->phoneNumber2,
-            ],
-            [
-                'match' => $configPrioritized['phoneNumber3'],
-                'transform' => $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configPrioritized['postalCode1'],
-                'transform' => $contact->postalCode1,
-            ],
-            [
-                'match' => $configPrioritized['postalCode2'],
-                'transform' => $contact->postalCode2,
-            ],
-            [
-                'match' => $configPrioritized['fullPhoneNumber1'],
-                'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configPrioritized['fullPhoneNumber2'],
-                'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configPrioritized['fullPostCode1'],
-                'transform' => $contact->postalCode1 . $contact->postalCode2,
-            ],
-            [
-                'match' => $configPrioritized['email'],
-                'transform' => $contact->email,
-            ],
-            [
-                'match' => $configPrioritized['address'],
-                'transform' => $contact->address,
-            ],
-            [
-                'match' => $configPrioritized['fu_surname'],
-                'transform' => $contact->fu_surname,
-            ],
-            [
-                'match' => $configPrioritized['fu_lastname'],
-                'transform' => $contact->fu_lastname,
-            ],
-            [
-                'match' => $configPrioritized['full_name'],
-                'transform' => $contact->fu_lastname . $contact->fu_surname,
-            ],
-            [
-                'match' => $configPrioritized['randomNumber'],
-                'transform' => 1,
-            ],
-            [
-                'match' => $configPrioritized['furigana'],
-                'transform' => 'ナシ',
-            ],
-            [
-                'match' => $configPrioritized['company'],
-                'transform' => $contact->company,
-            ],
-            [
-                'match' => $configPrioritized['randomString'],
-                'transform' => $content,
-            ],
-        ];
-
-        // Use list prioritize mappers
-        foreach ($prioritizedMappers as $map) {
-            // Check if form key contains any string on 'match' array, then use that value
-            if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
-                $this->data[$key] = $map['transform'];
-            }
-        }
 
         if (isset($this->data[$key]) && !empty($this->data[$key])) {
             return;
         }
 
+        $mapper = getMapper($companyContact);
+
+        foreach ($mapper as $map) {
+            // Check if form key contains any string on 'match' array, then use that value
+            if (isset($map['match'], array_flip($map['match'])[$key])) {
+                $this->data[$key] = $map['transform'];
+
+                return;
+            }
+        }
+    }
+
+    /**
+     * Mapping form pattern.
+     *
+     * @param mixed $input
+     * @param mixed $companyContact
+     */
+    public function mapFormPattern($companyContact)
+    {
+        $mapper = getMapper($companyContact);
+
+        foreach ($mapper as $map) {
+            // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
+            if (isset($map['pattern'])) {
+                foreach ($map['pattern'] as $pattern) {
+                    if (strpos($this->htmlText, $pattern) !== false) {
+                        $stringToSearch = substr($this->html, strpos($this->html, $pattern) - 6);
+                        preg_match('/name="(?<name>[A-z0-9-]+)"/m', $stringToSearch, $match);
+                        if (isset($match['name']) && (!isset($this->data[$match['name']]) || empty($this->data[$match['name']]))) {
+                            $this->data[$match['name']] = $map['transform'];
+                        }
+                    }
+                }
+            }
+
+            if (isset($map['key'])) {
+                foreach ($map['key'] as $value) {
+                    if ((strpos($this->html, "name='" . $value) !== false || strpos($this->html, 'name="' . $value) !== false) && (!isset($this->data[$value]) || empty($this->data[$value]))) {
+                        $this->data[$value] = $map['transform'];
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Get Mapper
+     *
+     * @param mixed $company
+     */
+    public function getMapper($companyContact)
+    {
+        $contact = $companyContact->contact;
+        $company = $companyContact->company;
+
+        $content = str_replace('%company_name%', $company->name, $contact->content);
+        $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
+
+        if (!$this->isDebug) {
+            $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+        }
+
         $dataMail = explode('@', $contact->email);
         $configMapper = config('constant.mapper');
-        $mapper = [
+
+        return $mapper = [
             [
                 'pattern' => $configMapper['furiganaPattern'],
                 'match' => $configMapper['furiganaMatch'],
@@ -775,34 +751,6 @@ class SubmitContact extends Command
                 'transform' => isset($dataMail[1]) ? $dataMail[1] : null,
             ],
         ];
-
-        foreach ($mapper as $map) {
-            // Check if form key contains any string on 'match' array, then use that value
-            if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
-                $this->data[$key] = $map['transform'];
-            }
-
-            // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
-            if (isset($map['pattern'])) {
-                foreach ($map['pattern'] as $pattern) {
-                    if (strpos($this->htmlText, $pattern) !== false) {
-                        $stringToSearch = substr($this->html, strpos($this->html, $pattern) - 6);
-                        preg_match('/name="(?<name>[A-z0-9-]+)"/m', $stringToSearch, $match);
-                        if (isset($match['name']) && (!isset($this->data[$match['name']]) || empty($this->data[$match['name']]))) {
-                            $this->data[$match['name']] = $map['transform'];
-                        }
-                    }
-
-                    if (isset($map['key'])) {
-                        foreach ($map['key'] as $value) {
-                            if ((strpos($this->html, "name='" . $value) !== false || strpos($this->html, 'name="' . $value) !== false) && (!isset($this->data[$value]) || empty($this->data[$value]))) {
-                                $this->data[$value] = $map['transform'];
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**
