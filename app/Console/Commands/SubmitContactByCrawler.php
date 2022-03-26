@@ -710,8 +710,8 @@ class SubmitContactByCrawler extends Command
                 'transform' => $contact->area,
             ],
             [
-                'pattern' => $configMapper['fullPhoneNumer1Pattern'],
-                'match' => $configMapper['fullPhoneNumer1Match'],
+                'pattern' => $configMapper['fullPhoneNumberPattern'],
+                'match' => $configMapper['fullPhoneNumberMatch'],
                 'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
             [
@@ -847,9 +847,11 @@ class SubmitContactByCrawler extends Command
      */
     public function submitByUsingCrawler($company)
     {
-        $response = $this->client->submit($this->form, $this->data);
+        try {
+            $response = $this->client->submit($this->form, $this->data);
+            $responseHTML = $response->html();
+        } catch (\Exception $e) {}
 
-        $responseHTML = $response->html();
         if ($this->isDebug) {
             file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
         }
