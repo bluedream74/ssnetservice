@@ -334,6 +334,8 @@ return [
             '組織名',
             '職種',
             '貴社名',
+            '資料',
+            '業種',
         ],
 
         'emailMatch' => [
@@ -637,6 +639,7 @@ return [
             '所在地',
             '町名',
             '丁目番地 ',
+            'お客様のご住所'
         ],
 
         'titleMatch' => [
@@ -779,6 +782,7 @@ return [
             '差出人',
             '担当者',
             '氏名',
+            'ご担当者名'
         ],
 
         'fullFurnameMatch' => [
@@ -790,14 +794,7 @@ return [
         ],
 
         'fullFurnamePattern' => [
-            'お名前',
-            'お名前(必須)',
-            'お名前(漢字)',
-            'ネーム',
-            '名前',
-            '差出人',
-            '担当者',
-            '氏名',
+            'フリガナ',
         ],
 
         'fursurnameMatch' => [
@@ -904,7 +901,7 @@ return [
             'ご意見・ご希望・お問合せ内容',
         ],
 
-        'fullPhoneNumer1Pattern' => [
+        'fullPhoneNumberPattern' => [
             'c_q30',
             'C021',
             'fax',
@@ -919,7 +916,7 @@ return [
             '電話番号2',
         ],
 
-        'fullPhoneNumer1Match' => [
+        'fullPhoneNumberMatch' => [
             'cf2_field_5',
             'FAX',
             'FAX番号',
@@ -1201,8 +1198,6 @@ return [
         ],
 
         'randomString2Match' => [
-            '資料',
-            '業種',
             'お問い合わせ内容',
         ],
 
