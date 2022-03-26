@@ -129,6 +129,7 @@ class SubmitContactByClientRequest extends Command
 
         foreach ($companyContacts as $companyContact) {
             if (!$companyContact->contact) {
+                $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, 'Failed to get data');
                 continue;
             }
             $contact = $companyContact->contact;
@@ -148,6 +149,8 @@ class SubmitContactByClientRequest extends Command
                 if ($this->isDebug) {
                     $this->info('Skip: ' . $companyContact->id);
                 }
+
+                $this->updateCompanyContact($companyContact, self::STATUS_NO_FORM, 'Contact form not found');
 
                 continue;
             }
