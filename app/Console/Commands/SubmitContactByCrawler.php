@@ -850,16 +850,16 @@ class SubmitContactByCrawler extends Command
         try {
             $response = $this->client->submit($this->form, $this->data);
             $responseHTML = $response->html();
+
+            if ($this->isDebug) {
+                file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
+            }
+            $isSuccess = $this->hasSuccessMessage($responseHTML);
+
+            if ($isSuccess) {
+                return;
+            }
         } catch (\Exception $e) {}
-
-        if ($this->isDebug) {
-            file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
-        }
-        $isSuccess = $this->hasSuccessMessage($responseHTML);
-
-        if ($isSuccess) {
-            return;
-        }
 
         $confirmStep = 0;
         do {
