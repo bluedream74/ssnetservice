@@ -782,10 +782,10 @@ class SubmitContactByCrawler extends Command
                 'match' => $configMapper['fullDateMatch'],
                 'transform' => '2022/03/14',
             ],
-            [
-                'match' => $configMapper['randomString2Match'],
-                'transform' => '管理運営受託業務',
-            ],
+            // [
+            //     'match' => $configMapper['randomString2Match'],
+            //     'transform' => '管理運営受託業務',
+            // ],
             [
                 'match' => $configMapper['mailConfirm1Match'],
                 'transform' => isset($dataMail[0]) ? $dataMail[0] : null,
