@@ -149,6 +149,8 @@ class SubmitContactByClientRequest extends Command
                     $this->info('Skip: ' . $companyContact->id);
                 }
 
+                $this->updateCompanyContact($companyContact, self::STATUS_NO_FORM, 'Contact form not found');
+
                 continue;
             }
 
