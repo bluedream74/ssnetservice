@@ -711,7 +711,7 @@ class SubmitContactByCrawler extends Command
             [
                 'pattern' => $configMapper['areaPattern'],
                 'match' => $configMapper['areaMatch'],
-                'transform' => $contact->area,
+                'transform' => $contact->area ? $contact->area : '東京都',
             ],
             [
                 'pattern' => $configMapper['fullPhoneNumberPattern'],
@@ -789,11 +789,11 @@ class SubmitContactByCrawler extends Command
             // ],
             [
                 'match' => $configMapper['mailConfirm1Match'],
-                'transform' => isset($dataMail[0]) ? $dataMail[0] : null,
+                'transform' => isset($dataMail[0]) ? $dataMail[0] : "test",
             ],
             [
                 'match' => $configMapper['mailConfirm2Match'],
-                'transform' => isset($dataMail[1]) ? $dataMail[1] : null,
+                'transform' => isset($dataMail[1]) ? $dataMail[1] : "gmail.com",
             ],
         ];
     }
