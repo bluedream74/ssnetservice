@@ -819,11 +819,11 @@ class SubmitContactByClientRequest extends Command
             ],
             [
                 'match' => $configMapper['mailConfirm1Match'],
-                'transform' => isset($dataMail[0]) ? $dataMail[0] : null,
+                'transform' => isset($dataMail[0]) ? $dataMail[0] : "dummy",
             ],
             [
                 'match' => $configMapper['mailConfirm2Match'],
-                'transform' => isset($dataMail[1]) ? $dataMail[1] : null,
+                'transform' => isset($dataMail[1]) ? $dataMail[1] : "gmail.com",
             ],
         ];
 
