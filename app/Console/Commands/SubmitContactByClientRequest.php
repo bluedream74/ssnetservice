@@ -323,7 +323,7 @@ class SubmitContactByClientRequest extends Command
             $javascriptCheck = strpos($crawler->html(), 'recaptcha') === false;
             if ($javascriptCheck) {
                 try {
-                    $this->submitByUsingCrawler($company, $this->data);
+                    $this->submitByUsingCrawler($company);
                     $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                 } catch (\Exception $e) {
                     $this->updateCompanyContact($companyContact, self::STATUS_RETRY, $e->getMessage());
@@ -417,7 +417,7 @@ class SubmitContactByClientRequest extends Command
             }
 
             try {
-                $this->submitByUsingCrawler($company, $this->data);
+                $this->submitByUsingCrawler($company);
                 $this->updateCompanyContact($companyContact, self::STATUS_SENT);
             } catch (\Exception $e) {
                 $this->updateCompanyContact($companyContact, self::STATUS_RETRY, $e->getMessage());
@@ -741,7 +741,7 @@ class SubmitContactByClientRequest extends Command
             [
                 'pattern' => $configMapper['areaPattern'],
                 'match' => $configMapper['areaMatch'],
-                'transform' => $contact->area,
+                'transform' => $contact->area ? $contact->area : '東京都',
             ],
             [
                 'pattern' => $configMapper['fullPhoneNumer1Pattern'],
@@ -893,6 +893,7 @@ class SubmitContactByClientRequest extends Command
             throw new \Exception('Confirm form not found');
         }
 
+        $this->data = array_map('strval', $this->data);
         $response = $this->client->submit($confirmForm, $this->data);
         $confirmHTML = $response->html();
         if ($this->isDebug) {
@@ -909,6 +910,7 @@ class SubmitContactByClientRequest extends Command
      */
     public function submitByUsingCrawler($company)
     {
+        $this->data = array_map('strval', $this->data);
         $response = $this->client->submit($this->form, $this->data);
 
         $responseHTML = $response->html();
