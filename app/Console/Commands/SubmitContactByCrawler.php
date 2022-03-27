@@ -74,6 +74,7 @@ class SubmitContactByCrawler extends Command
     {
         $config = Config::get()->first();
         $this->isDebug = config('app.debug');
+        $limit = env('MAIL_LIMIT') ? env('MAIL_LIMIT') : 5;
 
         if (
             ($config->start && $config->end)
@@ -93,7 +94,7 @@ class SubmitContactByCrawler extends Command
         DB::beginTransaction();
         try
         {
-            $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', self::STATUS_RETRY)->limit(env('MAIL_LIMIT'))->get();
+            $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', self::STATUS_RETRY)->limit($limit)->get();
             if (count($companyContacts)) {
                 $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
             } else {
@@ -101,7 +102,7 @@ class SubmitContactByCrawler extends Command
                 $companyContacts = CompanyContact::with(['contact'])
                     ->lockForUpdate()
                     ->where('is_delivered', self::STATUS_SENDING)
-                    ->where('updated_at', '<=', $selectedTime->modify('-' . strval(env('MAIL_LIMIT') * 2) . ' minutes'))
+                    ->where('updated_at', '<=', $selectedTime->modify('-' . strval($limit * 2) . ' minutes'))
                     ->where('updated_at', '>=', $selectedTime->modify('-1 day'))
                     ->get();
                 if (count($companyContacts)) {
