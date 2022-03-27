@@ -318,7 +318,7 @@ class SubmitContactByCrawler extends Command
             $javascriptCheck = strpos($crawler->html(), 'recaptcha') === false;
             if ($javascriptCheck) {
                 try {
-                    $this->submitByUsingBrower($company, $this->data);
+                    $this->submitByUsingBrower($company);
                     $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                 } catch (\Exception $e) {
                     $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
@@ -412,7 +412,7 @@ class SubmitContactByCrawler extends Command
             }
 
             try {
-                $this->submitByUsingCrawler($company, $this->data);
+                $this->submitByUsingCrawler($company);
                 $this->updateCompanyContact($companyContact, self::STATUS_SENT);
             } catch (\Exception $e) {
                 $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
@@ -887,6 +887,7 @@ class SubmitContactByCrawler extends Command
             throw new \Exception('Confirm form not found');
         }
 
+        $this->data = array_map('strval', $this->data);
         $response = $this->client->submit($confirmForm, $this->data);
         $confirmHTML = $response->html();
         if ($this->isDebug) {
@@ -903,6 +904,7 @@ class SubmitContactByCrawler extends Command
      */
     public function submitByUsingCrawler($company)
     {
+        $this->data = array_map('strval', $this->data);
         $response = $this->client->submit($this->form, $this->data);
 
         $responseHTML = $response->html();
