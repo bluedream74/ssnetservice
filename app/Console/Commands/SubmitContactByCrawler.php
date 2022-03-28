@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\CompanyContact;
 use App\Models\Config;
+use DateTime;
+use DB;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -12,8 +14,6 @@ use Facebook\WebDriver\WebDriverCheckboxes;
 use Facebook\WebDriver\WebDriverRadios;
 use Facebook\WebDriver\WebDriverSelect;
 use Goutte\Client;
-use DB;
-use DateTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
@@ -90,12 +90,12 @@ class SubmitContactByCrawler extends Command
             }
 
             sleep(60);
+
             return 0;
         }
 
         DB::beginTransaction();
-        try
-        {
+        try {
             $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', self::STATUS_RETRY)->limit($limit)->get();
             if (count($companyContacts)) {
                 $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
@@ -118,8 +118,7 @@ class SubmitContactByCrawler extends Command
                 return 0;
             }
             DB::commit();
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             sleep(60);
 
@@ -128,6 +127,7 @@ class SubmitContactByCrawler extends Command
 
         if (!count($companyContacts)) {
             sleep(60);
+
             return 0;
         }
 
@@ -139,11 +139,9 @@ class SubmitContactByCrawler extends Command
             $contact = $companyContact->contact;
             $company = $companyContact->company;
 
-
             if ($contact->date
                     && $contact->time
                     && now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))) {
-
                 $companyContacts->toQuery()->update(['is_delivered' => 0]);
                 sleep(60);
 
@@ -158,7 +156,6 @@ class SubmitContactByCrawler extends Command
                 $this->updateCompanyContact($companyContact, self::STATUS_NO_FORM, 'Contact form not found');
 
                 continue;
-
             }
 
             $this->data = [];
@@ -508,6 +505,16 @@ class SubmitContactByCrawler extends Command
      */
     public function mapForm(string $key, $input, $companyContact)
     {
+        $contact = $companyContact->contact;
+        $company = $companyContact->company;
+
+        $content = str_replace('%company_name%', $company->name, $contact->content);
+        $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
+
+        if ($this->isShowUnsubscribe) {
+            $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+        }
+
         $type = $input->getType();
 
         switch ($type) {
@@ -540,7 +547,6 @@ class SubmitContactByCrawler extends Command
             case 'textarea':
                 if (!preg_match('/(captcha|address)/i', $key)) {
                     $this->data[$key] = $content;
-
                 }
                 break;
             case 'email':
@@ -610,9 +616,10 @@ class SubmitContactByCrawler extends Command
     }
 
     /**
-     * Get Mapper
+     * Get Mapper.
      *
      * @param mixed $company
+     * @param mixed $companyContact
      */
     public function getMapper($companyContact)
     {
@@ -791,11 +798,11 @@ class SubmitContactByCrawler extends Command
             // ],
             [
                 'match' => $configMapper['mailConfirm1Match'],
-                'transform' => isset($dataMail[0]) ? $dataMail[0] : "test",
+                'transform' => isset($dataMail[0]) ? $dataMail[0] : 'test',
             ],
             [
                 'match' => $configMapper['mailConfirm2Match'],
-                'transform' => isset($dataMail[1]) ? $dataMail[1] : "gmail.com",
+                'transform' => isset($dataMail[1]) ? $dataMail[1] : 'gmail.com',
             ],
         ];
     }
@@ -867,7 +874,8 @@ class SubmitContactByCrawler extends Command
             if ($isSuccess) {
                 return;
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         $confirmStep = 0;
         do {
