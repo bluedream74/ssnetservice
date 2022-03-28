@@ -14,7 +14,7 @@ class UpdateConfigTableV1 extends Migration
     public function up()
     {
         Schema::table('config', function (Blueprint $table) {
-            $table->tinyInteger('is_show_unsubscribe')->default(0)->after('plan');
+            $table->tinyInteger('is_show_unsubscribe')->default(1)->after('plan');
         });
     }
 
