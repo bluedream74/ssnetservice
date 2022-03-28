@@ -1004,4 +1004,20 @@ class DashboardController extends BaseController
         }
         return view('errors.404');
     }
+
+    /**
+     * Show info page
+     */
+    public function showInfo() {
+
+        return view('admin.info');
+    }
+
+    /**
+     * Show term page
+     */
+    public function showTerm() {
+
+        return view('admin.term');
+    }
 }
