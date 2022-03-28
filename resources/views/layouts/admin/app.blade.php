@@ -62,3 +62,22 @@
     @yield('scripts')
 
 @stop
+
+@section('footer')
+    <a href="/admin/term/agreement">利用規約</a>
+        /
+    <a href="/admin/company/info">会社概要</a>
+@stop
+
+<style type="text/css">
+    .main-footer {
+        background-color: #f4f6f9 !important;
+        border-top: unset !important;
+        text-align: right !important;
+    }
+
+    .main-footer > a {
+        text-decoration: underline !important;
+        color: black !important;
+    }
+</style>
