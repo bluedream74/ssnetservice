@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\CompanyContact;
 use App\Models\Config;
+use DateTime;
+use DB;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -12,8 +14,6 @@ use Facebook\WebDriver\WebDriverCheckboxes;
 use Facebook\WebDriver\WebDriverRadios;
 use Facebook\WebDriver\WebDriverSelect;
 use Goutte\Client;
-use DB;
-use DateTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
@@ -90,12 +90,12 @@ class SubmitContactByClientRequest extends Command
             }
 
             sleep(60);
+
             return 0;
         }
 
         DB::beginTransaction();
-        try
-        {
+        try {
             $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', 0)->limit($limit)->get();
             if (count($companyContacts)) {
                 $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
@@ -114,19 +114,21 @@ class SubmitContactByClientRequest extends Command
                 DB::commit();
 
                 sleep(60);
+
                 return 0;
             }
             DB::commit();
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
 
             sleep(60);
+
             return 0;
         }
 
         if (!count($companyContacts)) {
             sleep(60);
+
             return 0;
         }
 
@@ -137,7 +139,6 @@ class SubmitContactByClientRequest extends Command
             }
             $contact = $companyContact->contact;
             $company = $companyContact->company;
-
 
             if ($contact->date
                     && $contact->time
@@ -180,10 +181,10 @@ class SubmitContactByClientRequest extends Command
                 $crawler = $this->client->request('GET', $company->contact_form_url);
                 // $crawler = $this->getPageHTMLUsingBrowser($company->contact_form_url);
 
-                if(count($crawler->filter('textarea')) == 0) {
+                if (count($crawler->filter('textarea')) == 0) {
                     $company->update(['status' => 'フォームなし']);
                     $companyContact->update([
-                        'is_delivered' => self::STATUS_RETRY
+                        'is_delivered' => self::STATUS_RETRY,
                     ]);
                     continue;
                 }
@@ -455,7 +456,7 @@ class SubmitContactByClientRequest extends Command
             self::STATUS_SENDING => '未対応',
             self::STATUS_NO_FORM => 'フォームなし',
             self::STATUS_NG => 'NGワードあり',
-            self::STATUS_RETRY => '未対応'
+            self::STATUS_RETRY => '未対応',
         ];
 
         if (!array_key_exists($status, $deliveryStatus)) {
@@ -515,6 +516,16 @@ class SubmitContactByClientRequest extends Command
      */
     public function mapForm(string $key, $input, $companyContact)
     {
+        $contact = $companyContact->contact;
+        $company = $companyContact->company;
+
+        $content = str_replace('%company_name%', $company->name, $contact->content);
+        $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
+
+        if ($this->isShowUnsubscribe) {
+            $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+        }
+
         $type = $input->getType();
 
         switch ($type) {
@@ -547,7 +558,6 @@ class SubmitContactByClientRequest extends Command
             case 'textarea':
                 if (!preg_match('/(captcha|address)/i', $key)) {
                     $this->data[$key] = $content;
-
                 }
                 break;
             case 'email':
@@ -617,9 +627,10 @@ class SubmitContactByClientRequest extends Command
     }
 
     /**
-     * Get Mapper
+     * Get Mapper.
      *
      * @param mixed $company
+     * @param mixed $companyContact
      */
     public function getMapper($companyContact)
     {
@@ -798,11 +809,11 @@ class SubmitContactByClientRequest extends Command
             // ],
             [
                 'match' => $configMapper['mailConfirm1Match'],
-                'transform' => isset($dataMail[0]) ? $dataMail[0] : "dummy",
+                'transform' => isset($dataMail[0]) ? $dataMail[0] : 'dummy',
             ],
             [
                 'match' => $configMapper['mailConfirm2Match'],
-                'transform' => isset($dataMail[1]) ? $dataMail[1] : "gmail.com",
+                'transform' => isset($dataMail[1]) ? $dataMail[1] : 'gmail.com',
             ],
         ];
     }
@@ -867,14 +878,15 @@ class SubmitContactByClientRequest extends Command
             $responseHTML = $response->html();
 
             if ($this->isDebug) {
-              file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
+                file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
             }
             $isSuccess = $this->hasSuccessMessage($responseHTML);
 
             if ($isSuccess) {
                 return;
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         $confirmStep = 0;
         do {
