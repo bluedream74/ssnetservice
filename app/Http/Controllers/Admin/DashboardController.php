@@ -803,6 +803,7 @@ class DashboardController extends BaseController
                 'start' => $request->get('start'),
                 'end' => $request->get('end'),
                 'mailLimit' => $request->get('MAIL_LIMIT'),
+                'is_show_unsubscribe' => $request->get('is_show_unsubscribe'),
             ));
         }catch (\Throwable $e) {
 

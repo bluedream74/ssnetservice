@@ -52,6 +52,7 @@ class SubmitContactByCrawler extends Command
     protected $htmlText;
     protected $data;
     protected $isDebug = false;
+    protected $isShowUnsubscribe;
 
     /**
      * Create a new command instance.
@@ -74,6 +75,7 @@ class SubmitContactByCrawler extends Command
     {
         $config = Config::get()->first();
         $this->isDebug = config('app.debug');
+        $this->isShowUnsubscribe = $config->is_show_unsubscribe;
         $limit = env('MAIL_LIMIT') ? env('MAIL_LIMIT') : 5;
 
         if (
@@ -620,7 +622,7 @@ class SubmitContactByCrawler extends Command
         $content = str_replace('%company_name%', $company->name, $contact->content);
         $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
 
-        if (!$this->isDebug) {
+        if ($this->isShowUnsubscribe) {
             $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
         }
 
