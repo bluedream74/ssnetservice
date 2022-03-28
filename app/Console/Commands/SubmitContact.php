@@ -71,7 +71,7 @@ class SubmitContact extends Command
     public function handle()
     {
         $config = Config::get()->first();
-        $this->isDebug = config('app.debug');
+        $this->isDebug = $config->is_show_unsubscribe;
 
         if (
             ($config->start && $config->end)
