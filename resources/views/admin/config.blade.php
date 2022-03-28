@@ -19,7 +19,7 @@
     </div>
     <label class="col-sm-4">配信停止リンクを表示する</label>
     <div class="col-sm-8 form-group">
-      {{ Form::select('is_show_unsubscribe', getOptionsUnsubscribe(), $configs->is_show_unsubscribe, ['class' => 'form-control']) }}
+      {{ Form::select('is_show_unsubscribe', getOptionsShowUnsubscribe(), $configs->is_show_unsubscribe, ['class' => 'form-control']) }}
     </div>
     <label class="col-sm-4">配信許可時間</label>
     <div class="col-sm-8 form-group row">
