@@ -310,6 +310,7 @@
         $('#area_multi_select').multiselect({
             includeSelectAllOption: true,
             nonSelectedText: '都道府県を選択',
+            allSelectedText: 'すべて',
             selectAllValue: '',
             selectAllText: 'すべて'
         });
