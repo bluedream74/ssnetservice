@@ -726,7 +726,7 @@ class SubmitContact extends Command
                 'transform' => 'order',
             ],
             [
-                'pattern' => $configMapper['randomNumber2Match'],
+                'pattern' => $configMapper['randomNumber2'],
                 'transform' => 35,
             ],
             [

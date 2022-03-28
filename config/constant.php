@@ -1023,6 +1023,11 @@ return [
             'fUrl',
             '作成中ページの公開用URL',
         ],
+
+        'randomNumber2' => [
+            '年齢',
+            '築年数',
+        ],
     ],
 
     'successMessages' => [
