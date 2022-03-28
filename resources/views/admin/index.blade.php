@@ -311,6 +311,7 @@
             includeSelectAllOption: true,
             nonSelectedText: '都道府県を選択',
             allSelectedText: 'すべて',
+            nSelectedText: '件を選択した',
             selectAllValue: '',
             selectAllText: 'すべて'
         });
