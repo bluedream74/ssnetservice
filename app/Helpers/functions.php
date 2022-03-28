@@ -83,3 +83,11 @@ function getCompanyStatuses()
         '制約'              => '制約'
     ];
 }
+
+function getOptionsShowUnsubscribe()
+{
+    return [
+        '非表示する',
+        '表示する',
+    ];
+}
