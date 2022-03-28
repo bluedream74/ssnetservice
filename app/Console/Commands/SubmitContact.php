@@ -462,6 +462,11 @@ class SubmitContact extends Command
      */
     public function mapForm(string $key, $input, $companyContact)
     {
+        $contact = $companyContact->contact;
+        $company = $companyContact->company;
+
+        $content = str_replace('%company_name%', $company->name, $contact->content);
+        $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
         $type = $input->getType();
 
         switch ($type) {
@@ -563,9 +568,10 @@ class SubmitContact extends Command
     }
 
     /**
-     * Get Mapper
+     * Get Mapper.
      *
      * @param mixed $company
+     * @param mixed $companyContact
      */
     public function getMapper($companyContact)
     {
@@ -581,21 +587,22 @@ class SubmitContact extends Command
 
         $dataMail = explode('@', $contact->email);
         $configMapper = config('constant.mapper');
+        $pattern = config('constant.pattern');
 
-        return $mapper = [
+        return [
             [
-                'pattern' => $configMapper['furiganaPattern'],
+                'pattern' => $pattern['furigana'],
                 'match' => $configMapper['furiganaMatch'],
                 'transform' => 'ナシ',
             ],
             [
                 'match' => $configMapper['companyMatch'],
-                'pattern' => $configMapper['companyPattern'],
+                'pattern' => $pattern['company'],
                 'transform' => $contact->company,
             ],
             [
                 'match' => $configMapper['emailMatch'],
-                'pattern' => $configMapper['emailPattern'],
+                'pattern' => $pattern['email'],
                 'key' => $configMapper['emailKey'],
                 'transform' => $contact->email,
             ],
@@ -616,17 +623,17 @@ class SubmitContact extends Command
             ],
             [
                 'match' => $configMapper['fullPostCode2Match'],
-                'pattern' => $configMapper['fullPostCode2Pattern'],
+                'pattern' => $pattern['fullPostCode2'],
                 'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
             ],
             [
                 'match' => $configMapper['addressMatch'],
-                'pattern' => $configMapper['addressPattern'],
+                'pattern' => $pattern['address'],
                 'transform' => $contact->address,
             ],
             [
                 'match' => $configMapper['titleMatch'],
-                'pattern' => $configMapper['titlePattern'],
+                'pattern' => $pattern['title'],
                 'transform' => $contact->title,
             ],
             [
@@ -634,42 +641,44 @@ class SubmitContact extends Command
                 'transform' => $contact->homepageUrl,
             ],
             [
+                'pattern' => $pattern['lastname'],
                 'match' => $configMapper['lastNameMatch'],
                 'key' => $configMapper['lastNameKey'],
                 'transform' => $contact->lastname,
             ],
             [
+                'pattern' => $pattern['surname'],
                 'match' => $configMapper['surnameMatch'],
                 'key' => $configMapper['surnameKey'],
                 'transform' => $contact->surname,
             ],
             [
                 'match' => $configMapper['fullnameMatch'],
-                'pattern' => $configMapper['fullnamePattern'],
+                'pattern' => $pattern['fullname'],
                 'transform' => $contact->surname . $contact->lastname,
             ],
             [
                 'match' => $configMapper['fullFurnameMatch'],
-                'pattern' => $configMapper['fullFurnamePattern'],
+                'pattern' => $pattern['fullFurname'],
                 'transform' => $contact->fu_surname . $contact->fu_lastname,
             ],
             [
                 'match' => $configMapper['fursurnameMatch'],
-                'pattern' => $configMapper['fursurnamePattern'],
+                'pattern' => $pattern['fursurname'],
                 'transform' => $contact->fu_surname,
             ],
             [
                 'match' => $configMapper['furlastnameMatch'],
-                'pattern' => $configMapper['furlastnamePattern'],
+                'pattern' => $pattern['furlastname'],
                 'transform' => $contact->fu_lastname,
             ],
             [
-                'pattern' => $configMapper['areaPattern'],
+                'pattern' => $pattern['area'],
                 'match' => $configMapper['areaMatch'],
                 'transform' => $contact->area,
             ],
             [
-                'pattern' => $configMapper['fullPhoneNumberPattern'],
+                'pattern' => $pattern['fullPhoneNumber'],
                 'match' => $configMapper['fullPhoneNumberMatch'],
                 'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
@@ -702,11 +711,11 @@ class SubmitContact extends Command
                 'transform' => 0,
             ],
             [
-                'pattern' => $configMapper['randomStringPattern'],
+                'pattern' => $pattern['randomString'],
                 'transform' => 'なし',
             ],
             [
-                'pattern' => $configMapper['orderPattern'],
+                'pattern' => $pattern['order'],
                 'transform' => 'order',
             ],
             [
@@ -714,11 +723,11 @@ class SubmitContact extends Command
                 'transform' => 35,
             ],
             [
-                'pattern' => $configMapper['answerPattern'],
+                'pattern' => $pattern['answer'],
                 'transform' => 1,
             ],
             [
-                'pattern' => $configMapper['urlPattern'],
+                'pattern' => $pattern['url'],
                 'key' => $configMapper['urlKey'],
                 'transform' => $contact->myurl,
             ],
