@@ -84,7 +84,7 @@ function getCompanyStatuses()
     ];
 }
 
-function getOptionsUnsubscribe()
+function getOptionsShowUnsubscribe()
 {
     return [
         '非表示する',
