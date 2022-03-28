@@ -52,6 +52,9 @@ Route::group(['middleware' => 'auth.admin'], function () { //middleware?auth????
     Route::post('email/delete', 'DashboardController@deleteEmail')->name('email.delete');
     Route::post('company/update/status', 'DashboardController@updateCompanyStatus')->name('update.company.status');
 
+    Route::get('/company/info', 'DashboardController@showInfo')->name('company.info');
+    Route::get('/term/agreement', 'DashboardController@showTerm')->name('term.agreement');
+
     Route::get('/{company}/show', 'CompanyController@show')->name('companies.show');
     Route::post('/{company}/add/email', 'CompanyController@addEmail')->name('company.add.email');
     Route::post('/{company}/remove/email', 'CompanyController@removeEmail')->name('company.remove.email');
