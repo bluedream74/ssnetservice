@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Artisan;
 use App\Imports\CompanyImport;
+use App\Models\ContactTemplate;
 use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Facades\Crypt;
@@ -64,11 +65,13 @@ class DashboardController extends BaseController
                     $subsources[$value->name] = $value->name;
                 }
             }
-                
+
+            $contactTemplates = ContactTemplate::all();
+
             if(isset($subsources)){
-                return view('admin.index', compact('companies', 'prefectures','subsources', 'config'));
+                return view('admin.index', compact('companies', 'prefectures', 'contactTemplates', 'subsources', 'config'));
             } else {
-                return view('admin.index', compact('companies', 'prefectures', 'config'));
+                return view('admin.index', compact('companies', 'prefectures', 'contactTemplates', 'config'));
             }
             
         }catch (\Throwable $e) {
@@ -99,7 +102,7 @@ class DashboardController extends BaseController
         }
 
         if (!empty($value = Arr::get($attributes, 'area'))) {
-            $query->where('area', 'like', "%{$value}%");
+            $query->whereIn('area', $value);
         }
 
         if (!empty($value = Arr::get($attributes, 'status'))) {
@@ -337,7 +340,16 @@ class DashboardController extends BaseController
         $count = $targetCompanies->count();
         $targetCompanies->delete();
 
-        return back()->with(['system.message.info' => $count . '件のリストが正常に削除されました。']);
+        $sources = Source::leftjoin('companies', 'companies.source', '=', 'sources.name')->whereNull('companies.source')->pluck('sources.id');
+        if (count($sources)) {
+            Source::whereIn('id', $sources)->delete();
+        }
+        $subsources = SubSource::leftjoin('companies', 'companies.subsource', '=', 'subsources.name')->whereNull('companies.subsource')->pluck('subsources.id');
+        if (count($subsources)) {
+            SubSource::whereIn('id', $subsources)->delete();
+        }
+
+        return back()->withInput(array('source' => '', 'subsource' => ''))->with(['system.message.info' => $count . '件のリストが正常に削除されました。']);
 
     }
     
@@ -573,7 +585,9 @@ class DashboardController extends BaseController
 
         $companies = $query->paginate(20);
 
-        return view('admin.contact_show', compact('contact', 'companies','prefectures', 'totalCounts'));
+        $contactTemplates = ContactTemplate::all();
+
+        return view('admin.contact_show', compact('contact', 'companies','prefectures', 'totalCounts', 'contactTemplates'));
     }
 
     public function sendShowContact(Contact $contact)
@@ -789,6 +803,7 @@ class DashboardController extends BaseController
                 'start' => $request->get('start'),
                 'end' => $request->get('end'),
                 'mailLimit' => $request->get('MAIL_LIMIT'),
+                'is_show_unsubscribe' => $request->get('is_show_unsubscribe'),
             ));
         }catch (\Throwable $e) {
 
@@ -988,5 +1003,21 @@ class DashboardController extends BaseController
             
         }
         return view('errors.404');
+    }
+
+    /**
+     * Show info page
+     */
+    public function showInfo() {
+
+        return view('admin.info');
+    }
+
+    /**
+     * Show term page
+     */
+    public function showTerm() {
+
+        return view('admin.term');
     }
 }

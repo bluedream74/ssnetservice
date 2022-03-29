@@ -1,197 +1,6 @@
 <?php
 
 return [
-    'prioritizedMappers' => [
-        'phoneNumber1' => [
-            'contact_tel_tel01',
-            'e_29[tel1]',
-            'e_30[tel1]',
-            'fax-num[data][0]',
-            'fax[data][0]',
-            'field_93664_1',
-            'item_13_phone1',
-            'items[tel01]',
-            'PHONE1',
-            'tel_1',
-            'tel_no_1',
-            'tel-num[data][0]',
-            'TEL1_need',
-            'tel1',
-            'TEL1',
-            'telphone:a',
-            'tkph971-1',
-            '電話番号[data][0]',
-            'FAX番号[data][0]',
-            'cTel[data][0]',
-            'Form0001_Tel1_8',
-        ],
-
-        'phoneNumber2' => [
-            'c_q28_subscribercode',
-            'contact_tel_tel02',
-            'e_29[tel2]',
-            'e_30[tel2]',
-            'fax-num[data][1]',
-            'fax[data][1]',
-            'field_93664_2',
-            'InquiryFront[phone2]',
-            'item_13_phone2',
-            'items[tel02]',
-            'PHONE2',
-            'tel_2',
-            'tel_no_1',
-            'tel-num[data][1]',
-            'TEL2_need',
-            'tel2',
-            'TEL2',
-            'telphone:e',
-            'telphone:n',
-            'お電話番号[data][1]',
-            '電話番号[data][1]',
-            'FAX番号[data][1]',
-            'tel[data][1]',
-            'Form0001_Tel2_8',
-        ],
-
-        'phoneNumber3' => [
-            'items[tel02]',
-            'お電話番号[data][2]',
-            '電話番号[data][2]',
-            'FAX番号[data][2]',
-            'tel[data][2]',
-            'contact_tel_tel03',
-            'InquiryFront[phone3]',
-            'item_13_phone3',
-            'e_29[tel3]',
-            'tel_3',
-            'PHONE3',
-            'TEL3_need',
-            'tel3',
-            'TEL3',
-            'e_30[tel3]',
-            'field_93664_3',
-            'Form0001_Tel3_8',
-        ],
-
-        'postalCode1' => [
-            'address-1257114-zip1',
-            'contact[zip][zip01]',
-            'formElementVal124Zip1',
-            'items[pc01]',
-            'j_zip_code_1',
-            'smauto_prcsr_company_addr_zip',
-            'zip-code',
-            'zip',
-            'zip1',
-            '郵便番号01',
-            '郵便番号1',
-            'yuubin1',
-        ],
-
-        'postalCode2' => [
-            'address-1257114-zip2',
-            'formElementVal124Zip2',
-            'items[pc02]',
-            'zip-code-4',
-            'zipCode:t',
-            '郵便番号[data][1]',
-            '郵便番号02',
-            '郵便番号2',
-            'yuubin2',
-        ],
-
-        'fullPhoneNumber1' => [
-            'tel',
-            'TEL',
-            'txtTEL',
-            '電話番号(必須)',
-            'f',
-            'telephone',
-            'Tel',
-        ],
-
-        'fullPhoneNumber2' => [
-            'data[NomuraInquiry][tel]',
-            'dataTelephone',
-            'efo-form01-tel',
-            'fFax',
-            'input[tel]',
-            'tel',
-            'your-tel',
-            'ask_input_value_5',
-        ],
-
-        'fullPostCode1' => [
-            'data[NomuraInquiry][zip]',
-            'efo-form01-apa-zip',
-            'efo-form01-zip',
-            'postal_code',
-            'postalCode',
-            'txtZipCode',
-            'yubin',
-            'zip01',
-            'zipcode',
-            'contact_zip',
-            'tx_form_0_field_5',
-        ],
-
-        'email' => [
-            'confirm_email(必須)',
-            'data[FormItem][65][3][34][val][confirm]',
-            'e_854_re',
-            'email_conf2',
-            'email_confirm',
-            'email-confirm',
-            'Email',
-            'InquiryFront[email]',
-            'mail_address_conf',
-            'mail_confirm',
-            'mailConfirm',
-            'メールアドレス',
-            'メールアドレス（確認）',
-            'email',
-            'mailform6',
-            'E-Mail',
-            'item_1_24_r',
-            'tx_form_0_field_4',
-        ],
-
-        'address' => [
-            'InquiryFront[address01]',
-            'InquiryFront[address02]',
-            '丁目番地',
-        ],
-
-        'fu_surname' => [
-            'item_11_name1',
-        ],
-
-        'fu_lastname' => [
-            'item_11_name2',
-        ],
-
-        'randomNumber' => [
-            'c_q29',
-        ],
-
-        'furigana' => [
-            'companyname-furigana',
-            'お名前フリガナ',
-            '会社名フリガナ',
-            'fname',
-            'form[furigana]',
-        ],
-        'company' => [
-            'form[company]',
-        ],
-        'full_name' => [
-            'form[name]',
-        ],
-        'randomString' => [
-            'お問い合わせ内容',
-        ],
-    ],
-
     'mapper' => [
         'furiganaMatch' => [
             'aform-field-187',
@@ -236,11 +45,11 @@ return [
             'ふりがな',
             'フリガナ',
             'フリガナ(必須)',
-        ],
-
-        'furiganaPattern' => [
-            'フリガナ',
-            '氏名（カナ）',
+            'companyname-furigana',
+            'お名前フリガナ',
+            '会社名フリガナ',
+            'form[furigana]',
+            'お子様の学年(必須)',
         ],
 
         'companyMatch' => [
@@ -283,23 +92,9 @@ return [
             'item01',
             'corp',
             'COMPANY',
-        ],
-
-        'companyPattern' => [
-            'お名前 フリガナ (全角カナ)',
-            'お店の名前',
-            '企業名',
             '会社名',
-            '団体名',
-            '屋号',
-            '店舗名',
-            '御社名',
-            '機関名',
-            '法人名',
-            '社名',
-            '組織名',
-            '職種',
-            '貴社名',
+            'form[company]',
+            'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$Company$txtText',
         ],
 
         'emailMatch' => [
@@ -374,17 +169,31 @@ return [
             'item4',
             'tx_form_0_field_3',
             'MAIL',
-        ],
-
-        'emailPattern' => [
-            'E-mail (半角)',
-            'Mail アドレス',
-            'ペライチに登録しているメールアドレス',
-            'メールアドレス',
+            'email(必須)',
+            'contact_5',
+            '955203_3675pi_955203_3675',
+            '512111_41225pi_512111_41225',
+            'data[FormItem][65][3][34][val][confirm]',
+            'e_854_re',
+            'email_conf2',
+            'email_confirm',
+            'email-confirm',
+            'InquiryFront[email]',
+            'mail_address_conf',
             'メールアドレス（確認）',
-            'メールアドレス(確認用)',
-            'メールアドレス（確認用）',
-            'メールアドレス［確認］（E-mail）',
+            'mailform6',
+            'item_1_24_r',
+            'tx_form_0_field_4',
+            '_field_1',
+            'textbox-900666-confirm',
+            'textbox-585164-confirm',
+            'field_533832',
+            'field_533832_mcon',
+            '_field_4',
+            '_field_4_confirm',
+            'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$Email$txtEmailInput',
+            'メール',
+            'メール確認',
         ],
 
         'emailKey' => [
@@ -409,6 +218,17 @@ return [
             'ZIP1',
             'zipcode[data][0]',
             'zipcode1',
+            'address-1232227-zip1',
+            'address-1257114-zip1',
+            'contact[zip][zip01]',
+            'formElementVal124Zip1',
+            'items[pc01]',
+            'smauto_prcsr_company_addr_zip',
+            'zip1',
+            '郵便番号01',
+            '郵便番号1',
+            'yuubin1',
+            '郵便番号3桁',
         ],
 
         'postalCode1Key' => [
@@ -424,6 +244,19 @@ return [
             'dnn$ctr434$ViewMailForm$grdMain$PageID3$repCategory$ctl01$repField$ItemID20$fldValue$txtSingleTextBox',
             'zipcode',
             '郵便番号',
+            'data[NomuraInquiry][zip]',
+            'efo-form01-zip',
+            'postal_code',
+            'postalCode',
+            'txtZipCode',
+            'yubin',
+            'zip01',
+            'zipcode',
+            'contact_zip',
+            'tx_form_0_field_5',
+            'iid5',
+            'form_postal',
+            'address-323928-zip1',
         ],
 
         'fullPostcode1Key' => [
@@ -455,6 +288,9 @@ return [
             'ZIPCODE2_HOME',
             'ask_input_value_4_2',
             'Form0001_Zip2_6',
+            'custom_field[1cfadc42619fa9914]',
+            'address-1232227-zip2',
+            '郵便番号2',
         ],
 
         'postCode2Key' => [
@@ -474,12 +310,20 @@ return [
             'RequestForm$Attr-4-1',
             '郵便番号',
             'ZIP',
-        ],
-
-        'fullPostCode2Pattern' => [
-            '〒',
-            '郵便番号 (半角数字のみ)',
-            '郵便番号',
+            'address-1257114-zip2',
+            'formElementVal124Zip2',
+            'items[pc02]',
+            'zipCode:t',
+            '郵便番号[data][1]',
+            '郵便番号02',
+            '郵便番号2',
+            'yuubin2',
+            '郵便番号4桁',
+            'address-874953-zip2',
+            'address-900668-zip2',
+            'address-659151-zip2',
+            'address-319714-zip2',
+            'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$PostalCode$txtText',
         ],
 
         'addressMatch' => [
@@ -520,20 +364,15 @@ return [
             '番地',
             'item03',
             '市区郡（町村）',
-        ],
-
-        'addressPattern' => [
-            'C020',
-            'data4',
-            'data5',
-            'item117',
-            'ご住所',
-            '住所',
-            '市区',
-            '市区町村郡/町名/丁目',
-            '建物名・施設名',
-            '所在地',
-            '町名',
+            '住所(必須)',
+            'address-323928-ad1',
+            'address-323928-ad3',
+            'InquiryFront[address01]',
+            'InquiryFront[address02]',
+            '丁目番地',
+            '丁目番地(必須)',
+            'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$Address1$txtText',
+            'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$City$txtText',
         ],
 
         'titleMatch' => [
@@ -547,14 +386,6 @@ return [
             'text',
             'title',
             '件名',
-        ],
-
-        'titlePattern' => [
-            'Subject',
-            'Title',
-            '件名',
-            '用件名',
-            '題名',
         ],
 
         'homePageUrlMatch' => [
@@ -589,6 +420,8 @@ return [
             'お名前(姓)',
             'お名前（漢字）[]',
             '姓',
+            'CASECF15',
+            'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$LastName$txtText',
         ],
 
         'lastNameKey' => [
@@ -622,6 +455,11 @@ return [
             'お名前(名)',
             'お名前（漢字）[]',
             '名',
+            '837403_16897pi_837403_16897',
+            'Reported By',
+            '512111_41223pi_512111_41223',
+            'name-1232224-mei',
+            'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$FirstName$txtText',
         ],
 
         'surnameKey' => [
@@ -654,18 +492,11 @@ return [
             'name',
             'item02',
             'name',
-        ],
-
-        'fullnamePattern' => [
-            'おなまえ',
             'お名前',
             'お名前(必須)',
-            'お名前(漢字)',
-            'ネーム',
-            '名前',
-            '差出人',
-            '担当者',
-            '氏名',
+            '955203_3669pi_955203_3669',
+            '955203_3671pi_955203_3671',
+            'form[name]',
         ],
 
         'fullFurnameMatch' => [
@@ -674,17 +505,6 @@ return [
             'onf',
             'your-name-ruby',
             'contact_kana',
-        ],
-
-        'fullFurnamePattern' => [
-            'お名前',
-            'お名前(必須)',
-            'お名前(漢字)',
-            'ネーム',
-            '名前',
-            '差出人',
-            '担当者',
-            '氏名',
         ],
 
         'fursurnameMatch' => [
@@ -721,10 +541,10 @@ return [
             'フリガナ(姓)',
             '担当者名：姓（カナ）',
             'Form0001_FamilyName9',
-        ],
-
-        'fursurnamePattern' => [
-            '名 フリガナ',
+            'name-1232224-rubymei',
+            'item_11_name1',
+            'field_533836_mei',
+            'first_name_kana',
         ],
 
         'furlastnameMatch' => [
@@ -757,14 +577,8 @@ return [
             'メイ',
             '担当者名：名（カナ）',
             'Form0001_PersonalName9',
-        ],
-
-        'furlastnamePattern' => [
-            '姓 フリガナ',
-        ],
-
-        'areaPattern' => [
-            '都道府県',
+            'item_11_name2',
+            'field_533836_sei',
         ],
 
         'areaMatch' => [
@@ -785,27 +599,27 @@ return [
             'ご意見・ご希望・お問合せ内容',
         ],
 
-        'fullPhoneNumer1Pattern' => [
-            'c_q30',
-            'C021',
-            'fax',
-            'FAX番号',
-            'Phone',
-            'TEL',
-            '携帯電話',
-            '確認のため再度ご入力下さい。',
-            '連絡先',
-            '電話',
-            '電話番号',
-            '電話番号2',
-        ],
-
-        'fullPhoneNumer1Match' => [
+        'fullPhoneNumberMatch' => [
             'cf2_field_5',
             'FAX',
             'FAX番号',
             'singleAnswer(ANSWER3408)',
             '電話番号',
+            '電話番号',
+            'TEL',
+            '電話番号(必須)',
+            'f',
+            'telephone',
+            'Tel',
+            '_field_11',
+            'data[NomuraInquiry][tel]',
+            'dataTelephone',
+            'efo-form01-tel',
+            'fFax',
+            'input[tel]',
+            'tel',
+            'your-tel',
+            'ask_input_value_5',
         ],
 
         'fullPhoneNumber2Match' => [
@@ -825,6 +639,8 @@ return [
             '市区町村',
             'tel',
             'fax',
+            '電話番号',
+            'FAX番号',
         ],
 
         'fullPhoneNumber2Key' => [
@@ -857,6 +673,26 @@ return [
             'txt_tel[]',
             'txtPhonea',
             'ファックス番号[data][0]',
+            'contact_tel_tel01',
+            'e_29[tel1]',
+            'e_30[tel1]',
+            'fax[data][0]',
+            'field_93664_1',
+            'item_13_phone1',
+            'items[tel01]',
+            'PHONE1',
+            'TEL1_need',
+            'tel1',
+            'telphone:a',
+            'tkph971-1',
+            '電話番号[data][0]',
+            'FAX番号[data][0]',
+            'cTel[data][0]',
+            'Form0001_Tel1_8',
+            '電話番号',
+            'fax1',
+            'contact[tel][tel01]',
+            'phone1',
         ],
 
         'phoneNumber1key' => [
@@ -906,6 +742,25 @@ return [
             'ファックス番号[data][1]',
             'ファックス番号[data][2]',
             'cTel[data][1]',
+            'c_q28_subscribercode',
+            'contact_tel_tel02',
+            'e_29[tel2]',
+            'e_30[tel2]',
+            'fax[data][1]',
+            'field_93664_2',
+            'InquiryFront[phone2]',
+            'item_13_phone2',
+            'items[tel02]',
+            'PHONE2',
+            'TEL2_need',
+            'tel2',
+            'telphone:e',
+            'telphone:n',
+            'お電話番号[data][1]',
+            '電話番号[data][1]',
+            'FAX番号[data][1]',
+            'Form0001_Tel2_8',
+            '電話番号2',
         ],
 
         'phoneNumber2Key' => [
@@ -941,6 +796,20 @@ return [
             'tkph971-3',
             'txt_tel_2',
             'cTel[data][2]',
+            'お電話番号[data][2]',
+            '電話番号[data][2]',
+            'FAX番号[data][2]',
+            'contact_tel_tel03',
+            'InquiryFront[phone3]',
+            'item_13_phone3',
+            'e_29[tel3]',
+            'PHONE3',
+            'TEL3_need',
+            'tel3',
+            'e_30[tel3]',
+            'field_93664_3',
+            'Form0001_Tel3_8',
+            '電話番号3',
         ],
 
         'phoneNumber3Key' => [
@@ -952,6 +821,7 @@ return [
             'fHouseNumber',
             '市区町村',
             'Form0001_Street6',
+            'other',
         ],
 
         'randomNumber1Match' => [
@@ -959,28 +829,12 @@ return [
             '建物名',
             '家族数',
             'Mナンバー',
+            'c_q29',
         ],
 
         'randomNumber2Match' => [
             '年齢',
             '築年数',
-        ],
-
-        'randomStringPattern' => [
-            '部署',
-        ],
-
-        'orderPattern' => [
-            'オーダー',
-        ],
-
-        'answerPattern' => [
-            'answer[category]',
-        ],
-
-        'urlPattern' => [
-            'fUrl',
-            '作成中ページの公開用URL',
         ],
 
         'urlKey' => [
@@ -1012,7 +866,7 @@ return [
         ],
 
         'randomString2Match' => [
-            '資料', '業種',
+            'お問い合わせ内容',
         ],
 
         'mailConfirm1Match' => [
@@ -1024,45 +878,196 @@ return [
         ],
     ],
 
+    'pattern' => [
+        'surname' => [
+            'First Name',
+        ],
+
+        'lastname' => [
+            'Last Name ',
+        ],
+
+        'company' => [
+            'お名前 フリガナ (全角カナ)',
+            'お店の名前',
+            '企業名',
+            '会社名',
+            '団体名',
+            '屋号',
+            '店舗名',
+            '御社名',
+            '機関名',
+            '法人名',
+            '社名',
+            '組織名',
+            '職種',
+            '貴社名',
+            '資料',
+            '業種',
+            'Company',
+        ],
+
+        'address' => [
+            'C020',
+            'data4',
+            'data5',
+            'item117',
+            'ご住所',
+            '住所',
+            '市区',
+            '市区町村',
+            '市区町村郡/町名/丁目',
+            '建物名・施設名',
+            '所在地',
+            '町名',
+            '丁目番地',
+            'お客様のご住所',
+            'Address',
+            'City/Town',
+            'Country',
+        ],
+
+        'fullPostCode2' => [
+            '〒',
+            '郵便番号 (半角数字のみ)',
+            '郵便番号',
+            'ZIP/Postal Code',
+        ],
+
+        'email' => [
+            'Mail アドレス',
+            'メールアドレス',
+            '確認のためもう一度',
+            'Email',
+        ],
+
+        'fullPhoneNumber' => [
+            'c_q30',
+            'C021',
+            'fax',
+            'FAX番号',
+            'Phone',
+            'TEL',
+            '携帯電話',
+            '確認のため再度ご入力下さい。',
+            '連絡先',
+            '電話',
+            '電話番号',
+            '電話番号2',
+            'Phone Number',
+        ],
+
+        'answer' => [
+            'answer[category]',
+            'ご用件(必須)',
+            'Question or Comment',
+        ],
+
+        'furigana' => [
+            'フリガナ',
+            '氏名（カナ）',
+        ],
+
+        'title' => [
+            'Subject',
+            'Title',
+            '件名',
+            '用件名',
+            '題名',
+        ],
+
+        'fullname' => [
+            'おなまえ',
+            'お名前',
+            'お名前(必須)',
+            'お名前(漢字)',
+            'ネーム',
+            '名前',
+            '差出人',
+            '担当者',
+            '氏名',
+            'ご担当者名',
+        ],
+
+        'fullFurname' => [
+            'フリガナ',
+        ],
+
+        'fursurname' => [
+            '名 フリガナ',
+        ],
+
+        'furlastname' => [
+            '姓 フリガナ',
+        ],
+
+        'area' => [
+            '都道府県',
+        ],
+
+        'randomString' => [
+            '部署',
+        ],
+
+        'order' => [
+            'オーダー',
+        ],
+
+        'url' => [
+            'fUrl',
+            '作成中ページの公開用URL',
+        ],
+
+        'randomNumber2' => [
+            '年齢',
+            '築年数',
+        ],
+    ],
+
     'successMessages' => [
         'ありがとうございま',
-        'ありがとうございます',
-        'お問い合わせを承りました',
-        'お申し込みを承りました',
+        '問い合わせを承りま',
+        '申し込みを承りま',
         'ございました',
-        'ご返事させていただきます',
-        'ご連絡させていただき',
-        'ご連絡させて頂',
+        '返事させていただき',
+        '連絡させていただき',
+        '連絡させて頂',
         'メール送信が正常終了',
         '内容を確認させていただき',
-        '受けしました',
+        '受けしま',
         '受け付けま',
-        '受け付けました',
         '問い合わせを受付',
-        '完了いたしま',
         '完了しまし',
         '成功しました',
         '有難うございま',
         '自動返信メール',
         '送信いたしま',
         '送信されま',
-        '送信しました',
+        '送信しま',
         '送信完了',
     ],
 
     'xpathButton' => '
         // button[@type="submit"]//span[contains(text(),"入力内容の確認")]
+        | //input[@type="submit" and (contains(@class,"send"))]
+        | //input[@type="submit" and (contains(@value,"Send "))]
+        | //input[@type="submit" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
+        | //input[@type="submit" and contains(@value,"送信")]
         | //*[contains(text(),"この内容で送信する")]
         | //*[contains(text(),"に同意する")]
         | //*[contains(text(),"確認する")]
         | //a[@class="js-formSend btnsubmit"]
         | //a[@href="kagawa-casting-08.php"]
+        | //a[contains(@href,"./conf.php")]
+        | //a[contains(@href,"./commit.php")]
+        | //a[contains(@class,"form-btn-next")]
         | //a[@id="js__submit"]
         | //a[contains(text(),"次へ")]
         | //a[contains(text(),"確認")]
         | //a[contains(text(),"送信")]
         | //a[contains(@class,"submit-btn")]
         | //button[@class="nttdatajpn-submit-button"]
+        | //button[@type="submit" and (contains(@name,"unisphere-submit"))]
         | //button[@type="submit" and (contains(@class,"btn-cmn--red"))]
         | //button[@type="button" and (contains(@class,"ahover"))]
         | //button[@type="submit" ][contains(@class,"btn")]
@@ -1076,14 +1081,17 @@ return [
         | //button[@type="submit"][contains(@name,"regist") and contains(@value,"送信")]
         | //button[@type="submit"][contains(@name,"_exec")]
         | //button[@type="submit"][contains(@name,"Action")]
+        | //button[@type="submit" and  (contains(@data-disable-with-permanent,"true"))]
         | //button[@type="submit"][contains(@value,"send")]
         | //button[@type="submit"][contains(@value,"この内容で無料相談する")]
         | //button[@type="submit"][contains(@value,"送信する")]
         | //button[@type="submit"]//span[contains(text(),"同意して進む")]
         | //button[@type="submit"][contains(@onclick,"return _tx_mailform_submit")]
+        | //button[@type="submit"][contains(@class,"_form")]
         | //button[@type="button"][contains(@role,"button")]
         | //button[@type="button"][contains(@value,"確認")]
         | //button[@type="button"][contains(@value,"送信")]
+        | //button[@type="button"][contains(@class,"contact-btn")]
         | //button[contains(@class,"mfp_element_button")]
         | //button[contains(@value,"送信")]
         | //button[contains(text(),"上記の内容で登録する")]
@@ -1101,7 +1109,6 @@ return [
         | //input[@type="button" and contains(@name,"_check_x")]
         | //input[@type="button" and contains(@name,"_submit_x")]
         | //input[@type="button" and contains(@name,"conf")]
-        | //input[@type="button"][contains(@value,"入力画面に戻る")]
         | //input[@type="button"][contains(@value,"確認画面へ")]
         | //input[@type="checkbox"]
         | //input[@type="image" and contains(@name,"_send2_")]
@@ -1120,20 +1127,20 @@ return [
         | //input[@type="image"][contains(@src,"/images/contact/submit.png") and @type!="hidden"]
         | //input[@type="image"][contains(@value,"送 信") and @type!="hidden"]
         | //input[@type="submit" and contains(@name,"sendmail")]
+        | //input[@type="submit" and contains(@name,"submit") and contains(@value, "送信")]
         | //input[@type="submit" and contains(@name,"submitConfirm")]
         | //input[@type="submit" and contains(@value,"　送　信　")]
         | //input[@type="submit" and contains(@value,"入力内容を確認する")]
         | //input[@type="submit" and contains(@value,"入力内容確認")]
         | //input[@type="submit" and contains(@value,"内容確認へ")]
         | //input[@type="submit" and contains(@value,"確認画面へ")]
-        | //input[@type="submit" and contains(@value,"送信")]
+        | //input[@type="submit" and contains(@value,"送信する")]
         | //input[@type="submit" and contains(@value,"送信する") and contains(@name,"ACMS_POST_Form_Submit")]
         | //input[@type="submit" and contains(@value,"送信する") and contains(@name,"submitSubmit")]
-        | //input[@type="submit" and contains(@value,"送信する")]
-        | //input[@type="submit" and contains(@value,"送信する")]
         | //input[@type="submit" and contains(@value,"この内容で送信する")]
-        | //input[@type="submit" and (contains(@value,"送　信"))]
-        | //input[@type="submit" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
+        | //input[@type="submit" and contains(@value,"送　信") and contains(@name,"sousin")]
+        | //input[@type="submit" and contains(@value,"送　信")]
+        | //input[@type="submit" and contains(@class,"formsubmit")]
         | //input[contains(@alt,"次へ") and @type!="hidden"]
         | //input[contains(@alt,"確認") and @type!="hidden"]
         | //input[contains(@value,"次へ") and @type!="hidden"]
@@ -1146,27 +1153,26 @@ return [
 
     'xpathMessage' => '
         //*[contains(text(),"ありがとうございま")]
-        | //*[contains(text(),"ありがとうございます")]
-        | //*[contains(text(),"お申し込みを承りました")]
-        | //*[contains(text(),"ご連絡させていただき")]
-        | //*[contains(text(),"ご連絡させて頂")]
-        | //*[contains(text(),"メール送信が正常終了")]
-        | //*[contains(text(),"内容を確認させていただき")]
-        | //*[contains(text(),"受けしました")]
+        | //*[contains(text(),"お申し込みを承りま")]
+        | //*[contains(text(),"連絡させていただき")]
+        | //*[contains(text(),"連絡させて頂")]
+        | //*[contains(text(),"正常終了")]
+        | //*[contains(text(),"確認させていただき")]
+        | //*[contains(text(),"受けしま")]
         | //*[contains(text(),"受け付けま")]
         | //*[contains(text(),"問い合わせを受付")]
         | //*[contains(text(),"完了いたしま")]
-        | //*[contains(text(),"完了しまし")]
-        | //*[contains(text(),"成功しました")]
+        | //*[contains(text(),"完了しま")]
+        | //*[contains(text(),"成功しま")]
         | //*[contains(text(),"有難うございま")]
         | //*[contains(text(),"自動返信メール")]
         | //*[contains(text(),"送信いたしま")]
         | //*[contains(text(),"送信されま")]
-        | //*[contains(text(),"送信しました")]
-        | //*[contains(text(),"送信完了") and not(contains(text(),"入力内容のご確認")]"))]
-        | //*[text()[contains(.,"お問い合わせを承りました")]]
+        | //*[contains(text(),"送信しま")]
+        | //*[contains(text(),"メッセージが送信されました。")]
+        | //*[text()[contains(.,"問い合わせを承りま")]]
         | //*[text()[contains(.,"ございました")]]
-        | //*[text()[contains(.,"ご返事させていただきます")]]
-        | //*[text()[contains(.,"受け付けました")]]
+        | //*[text()[contains(.,"返事させて")]]
+        | //*[text()[contains(.,"受け付けま")]]
     ',
 ];
