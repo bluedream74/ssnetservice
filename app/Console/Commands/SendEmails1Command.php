@@ -90,8 +90,14 @@ class SendEmails1Command extends Command
                 
                 if($startCheck) {
                     try{
-                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
-                        $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+                        DB::beginTransaction();
+
+                        $companyContacts = $contact->companies()->lockForUpdate()->where('is_delivered', 0)->skip(0)->take($offset)->get();
+                        if (count($companyContacts)) {
+                            $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+                        }
+                        DB::commit();
+
                     }catch (\Throwable $e) {
                         $output->writeln($e);
                     }
