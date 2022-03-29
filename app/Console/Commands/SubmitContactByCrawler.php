@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\CompanyContact;
 use App\Models\Config;
+use DateTime;
+use DB;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -12,8 +14,6 @@ use Facebook\WebDriver\WebDriverCheckboxes;
 use Facebook\WebDriver\WebDriverRadios;
 use Facebook\WebDriver\WebDriverSelect;
 use Goutte\Client;
-use DB;
-use DateTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
@@ -52,6 +52,7 @@ class SubmitContactByCrawler extends Command
     protected $htmlText;
     protected $data;
     protected $isDebug = false;
+    protected $isShowUnsubscribe;
 
     /**
      * Create a new command instance.
@@ -74,6 +75,7 @@ class SubmitContactByCrawler extends Command
     {
         $config = Config::get()->first();
         $this->isDebug = config('app.debug');
+        $this->isShowUnsubscribe = $config->is_show_unsubscribe;
         $limit = env('MAIL_LIMIT') ? env('MAIL_LIMIT') : 5;
 
         if (
@@ -88,12 +90,12 @@ class SubmitContactByCrawler extends Command
             }
 
             sleep(60);
+
             return 0;
         }
 
         DB::beginTransaction();
-        try
-        {
+        try {
             $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', self::STATUS_RETRY)->limit($limit)->get();
             if (count($companyContacts)) {
                 $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
@@ -116,8 +118,7 @@ class SubmitContactByCrawler extends Command
                 return 0;
             }
             DB::commit();
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             sleep(60);
 
@@ -126,21 +127,21 @@ class SubmitContactByCrawler extends Command
 
         if (!count($companyContacts)) {
             sleep(60);
+
             return 0;
         }
 
         foreach ($companyContacts as $companyContact) {
             if (!$companyContact->contact) {
+                $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, 'Failed to get data');
                 continue;
             }
             $contact = $companyContact->contact;
             $company = $companyContact->company;
 
-
             if ($contact->date
                     && $contact->time
                     && now()->lt(Carbon::createFromTimestamp(strtotime("{$contact->date} {$contact->time}")))) {
-
                 $companyContacts->toQuery()->update(['is_delivered' => 0]);
                 sleep(60);
 
@@ -155,7 +156,6 @@ class SubmitContactByCrawler extends Command
                 $this->updateCompanyContact($companyContact, self::STATUS_NO_FORM, 'Contact form not found');
 
                 continue;
-
             }
 
             $this->data = [];
@@ -507,14 +507,15 @@ class SubmitContactByCrawler extends Command
     {
         $contact = $companyContact->contact;
         $company = $companyContact->company;
-        $type = $input->getType();
 
         $content = str_replace('%company_name%', $company->name, $contact->content);
         $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
 
-        if (!$this->isDebug) {
+        if ($this->isShowUnsubscribe) {
             $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
         }
+
+        $type = $input->getType();
 
         switch ($type) {
             case 'select':
@@ -546,7 +547,6 @@ class SubmitContactByCrawler extends Command
             case 'textarea':
                 if (!preg_match('/(captcha|address)/i', $key)) {
                     $this->data[$key] = $content;
-
                 }
                 break;
             case 'email':
@@ -565,106 +565,92 @@ class SubmitContactByCrawler extends Command
                 break;
         }
 
-        $configPrioritized = config('constant.prioritizedMappers');
-        $prioritizedMappers = [
-            [
-                'match' => $configPrioritized['phoneNumber1'],
-                'transform' => $contact->phoneNumber1,
-            ],
-            [
-                'match' => $configPrioritized['phoneNumber2'],
-                'transform' => $contact->phoneNumber2,
-            ],
-            [
-                'match' => $configPrioritized['phoneNumber3'],
-                'transform' => $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configPrioritized['postalCode1'],
-                'transform' => $contact->postalCode1,
-            ],
-            [
-                'match' => $configPrioritized['postalCode2'],
-                'transform' => $contact->postalCode2,
-            ],
-            [
-                'match' => $configPrioritized['fullPhoneNumber1'],
-                'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configPrioritized['fullPhoneNumber2'],
-                'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
-            ],
-            [
-                'match' => $configPrioritized['fullPostCode1'],
-                'transform' => $contact->postalCode1 . $contact->postalCode2,
-            ],
-            [
-                'match' => $configPrioritized['email'],
-                'transform' => $contact->email,
-            ],
-            [
-                'match' => $configPrioritized['address'],
-                'transform' => $contact->address,
-            ],
-            [
-                'match' => $configPrioritized['fu_surname'],
-                'transform' => $contact->fu_surname,
-            ],
-            [
-                'match' => $configPrioritized['fu_lastname'],
-                'transform' => $contact->fu_lastname,
-            ],
-            [
-                'match' => $configPrioritized['full_name'],
-                'transform' => $contact->fu_lastname . $contact->fu_surname,
-            ],
-            [
-                'match' => $configPrioritized['randomNumber'],
-                'transform' => 1,
-            ],
-            [
-                'match' => $configPrioritized['furigana'],
-                'transform' => 'ナシ',
-            ],
-            [
-                'match' => $configPrioritized['company'],
-                'transform' => $contact->company,
-            ],
-            [
-                'match' => $configPrioritized['randomString'],
-                'transform' => $content,
-            ],
-        ];
-
-        // Use list prioritize mappers
-        foreach ($prioritizedMappers as $map) {
-            // Check if form key contains any string on 'match' array, then use that value
-            if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
-                $this->data[$key] = $map['transform'];
-            }
-        }
-
         if (isset($this->data[$key]) && !empty($this->data[$key])) {
             return;
         }
 
+        $mapper = $this->getMapper($companyContact);
+
+        foreach ($mapper as $map) {
+            // Check if form key contains any string on 'match' array, then use that value
+            if (isset($map['match'], array_flip($map['match'])[$key])) {
+                $this->data[$key] = $map['transform'];
+
+                return;
+            }
+        }
+    }
+
+    /**
+     * Mapping form pattern.
+     *
+     * @param mixed $input
+     * @param mixed $companyContact
+     */
+    public function mapFormPattern($companyContact)
+    {
+        $mapper = $this->getMapper($companyContact);
+
+        foreach ($mapper as $map) {
+            // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
+            if (isset($map['pattern'])) {
+                foreach ($map['pattern'] as $pattern) {
+                    if (strpos($this->htmlText, $pattern) !== false) {
+                        $stringToSearch = substr($this->html, strpos($this->html, $pattern) - 6);
+                        preg_match('/name="(?<name>[A-z0-9-]+)"/m', $stringToSearch, $match);
+                        if (isset($match['name']) && (!isset($this->data[$match['name']]) || empty($this->data[$match['name']]))) {
+                            $this->data[$match['name']] = $map['transform'];
+                        }
+                    }
+                }
+            }
+
+            if (isset($map['key'])) {
+                foreach ($map['key'] as $value) {
+                    if ((strpos($this->html, "name='" . $value) !== false || strpos($this->html, 'name="' . $value) !== false) && (!isset($this->data[$value]) || empty($this->data[$value]))) {
+                        $this->data[$value] = $map['transform'];
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Get Mapper.
+     *
+     * @param mixed $company
+     * @param mixed $companyContact
+     */
+    public function getMapper($companyContact)
+    {
+        $contact = $companyContact->contact;
+        $company = $companyContact->company;
+
+        $content = str_replace('%company_name%', $company->name, $contact->content);
+        $content = str_replace('%myurl%', route('web.read', [$contact->id, $company->id]), $content);
+
+        if ($this->isShowUnsubscribe) {
+            $content .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+        }
+
         $dataMail = explode('@', $contact->email);
         $configMapper = config('constant.mapper');
-        $mapper = [
+        $pattern = config('constant.pattern');
+
+        return [
             [
-                'pattern' => $configMapper['furiganaPattern'],
+                'pattern' => $pattern['furigana'],
                 'match' => $configMapper['furiganaMatch'],
                 'transform' => 'ナシ',
             ],
             [
                 'match' => $configMapper['companyMatch'],
-                'pattern' => $configMapper['companyPattern'],
+                'pattern' => $pattern['company'],
                 'transform' => $contact->company,
             ],
             [
                 'match' => $configMapper['emailMatch'],
-                'pattern' => $configMapper['emailPattern'],
+                'pattern' => $pattern['email'],
                 'key' => $configMapper['emailKey'],
                 'transform' => $contact->email,
             ],
@@ -685,17 +671,17 @@ class SubmitContactByCrawler extends Command
             ],
             [
                 'match' => $configMapper['fullPostCode2Match'],
-                'pattern' => $configMapper['fullPostCode2Pattern'],
+                'pattern' => $pattern['fullPostCode2'],
                 'transform' => $contact->postalCode1 . '-' . $contact->postalCode2,
             ],
             [
                 'match' => $configMapper['addressMatch'],
-                'pattern' => $configMapper['addressPattern'],
+                'pattern' => $pattern['address'],
                 'transform' => $contact->address,
             ],
             [
                 'match' => $configMapper['titleMatch'],
-                'pattern' => $configMapper['titlePattern'],
+                'pattern' => $pattern['title'],
                 'transform' => $contact->title,
             ],
             [
@@ -714,32 +700,32 @@ class SubmitContactByCrawler extends Command
             ],
             [
                 'match' => $configMapper['fullnameMatch'],
-                'pattern' => $configMapper['fullnamePattern'],
+                'pattern' => $pattern['fullname'],
                 'transform' => $contact->surname . $contact->lastname,
             ],
             [
                 'match' => $configMapper['fullFurnameMatch'],
-                'pattern' => $configMapper['fullFurnamePattern'],
+                'pattern' => $pattern['fullFurname'],
                 'transform' => $contact->fu_surname . $contact->fu_lastname,
             ],
             [
                 'match' => $configMapper['fursurnameMatch'],
-                'pattern' => $configMapper['fursurnamePattern'],
+                'pattern' => $pattern['fursurname'],
                 'transform' => $contact->fu_surname,
             ],
             [
                 'match' => $configMapper['furlastnameMatch'],
-                'pattern' => $configMapper['furlastnamePattern'],
+                'pattern' => $pattern['furlastname'],
                 'transform' => $contact->fu_lastname,
             ],
             [
-                'pattern' => $configMapper['areaPattern'],
+                'pattern' => $pattern['area'],
                 'match' => $configMapper['areaMatch'],
                 'transform' => $contact->area ? $contact->area : '東京都',
             ],
             [
-                'pattern' => $configMapper['fullPhoneNumer1Pattern'],
-                'match' => $configMapper['fullPhoneNumer1Match'],
+                'pattern' => $pattern['fullPhoneNumber'],
+                'match' => $configMapper['fullPhoneNumberMatch'],
                 'transform' => $contact->phoneNumber1 . $contact->phoneNumber2 . $contact->phoneNumber3,
             ],
             [
@@ -771,23 +757,23 @@ class SubmitContactByCrawler extends Command
                 'transform' => 0,
             ],
             [
-                'pattern' => $configMapper['randomStringPattern'],
+                'pattern' => $pattern['randomString'],
                 'transform' => 'なし',
             ],
             [
-                'pattern' => $configMapper['orderPattern'],
+                'pattern' => $pattern['order'],
                 'transform' => 'order',
             ],
             [
-                'pattern' => $configMapper['randomNumber2Match'],
+                'pattern' => $pattern['randomNumber2'],
                 'transform' => 35,
             ],
             [
-                'pattern' => $configMapper['answerPattern'],
+                'pattern' => $pattern['answer'],
                 'transform' => 1,
             ],
             [
-                'pattern' => $configMapper['urlPattern'],
+                'pattern' => $pattern['url'],
                 'key' => $configMapper['urlKey'],
                 'transform' => $contact->myurl,
             ],
@@ -807,47 +793,19 @@ class SubmitContactByCrawler extends Command
                 'match' => $configMapper['fullDateMatch'],
                 'transform' => '2022/03/14',
             ],
-            [
-                'match' => $configMapper['randomString2Match'],
-                'transform' => '管理運営受託業務',
-            ],
+            // [
+            //     'match' => $configMapper['randomString2Match'],
+            //     'transform' => '管理運営受託業務',
+            // ],
             [
                 'match' => $configMapper['mailConfirm1Match'],
-                'transform' => isset($dataMail[0]) ? $dataMail[0] : "test",
+                'transform' => isset($dataMail[0]) ? $dataMail[0] : 'test',
             ],
             [
                 'match' => $configMapper['mailConfirm2Match'],
-                'transform' => isset($dataMail[1]) ? $dataMail[1] : "gmail.com",
+                'transform' => isset($dataMail[1]) ? $dataMail[1] : 'gmail.com',
             ],
         ];
-
-        foreach ($mapper as $map) {
-            // Check if form key contains any string on 'match' array, then use that value
-            if (isset($map['match']) && $this->containsAny($key, $map['match'])) {
-                $this->data[$key] = $map['transform'];
-            }
-
-            // Check if html contains any string on 'pattern' array, then search the next input with that name in html and use that value
-            if (isset($map['pattern'])) {
-                foreach ($map['pattern'] as $pattern) {
-                    if (strpos($this->htmlText, $pattern) !== false) {
-                        $stringToSearch = substr($this->html, strpos($this->html, $pattern) - 6);
-                        preg_match('/name="(?<name>[A-z0-9-]+)"/m', $stringToSearch, $match);
-                        if (isset($match['name']) && (!isset($this->data[$match['name']]) || empty($this->data[$match['name']]))) {
-                            $this->data[$match['name']] = $map['transform'];
-                        }
-                    }
-                }
-            }
-
-            if (isset($map['key'])) {
-                foreach ($map['key'] as $value) {
-                    if ((strpos($this->html, "name='" . $value) !== false || strpos($this->html, 'name="' . $value) !== false) && (!isset($this->data[$value]) || empty($this->data[$value]))) {
-                        $this->data[$value] = $map['transform'];
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -904,17 +862,20 @@ class SubmitContactByCrawler extends Command
      */
     public function submitByUsingCrawler($company)
     {
-        $this->data = array_map('strval', $this->data);
-        $response = $this->client->submit($this->form, $this->data);
+        try {
+            $this->data = array_map('strval', $this->data);
+            $response = $this->client->submit($this->form, $this->data);
+            $responseHTML = $response->html();
 
-        $responseHTML = $response->html();
-        if ($this->isDebug) {
-            file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
-        }
-        $isSuccess = $this->hasSuccessMessage($responseHTML);
+            if ($this->isDebug) {
+                file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
+            }
+            $isSuccess = $this->hasSuccessMessage($responseHTML);
 
-        if ($isSuccess) {
-            return;
+            if ($isSuccess) {
+                return;
+            }
+        } catch (\Exception $e) {
         }
 
         $confirmStep = 0;
