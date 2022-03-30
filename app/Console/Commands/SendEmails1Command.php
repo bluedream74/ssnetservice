@@ -1218,8 +1218,10 @@ class SendEmails1Command extends Command
                                             'is_delivered' => 2
                                         ]);
                                     }
-                                    $driver->manage()->deleteAllCookies();
-                                    $driver->quit();
+                                    if (isset($driver) && $driver) {
+                                        $driver->manage()->deleteAllCookies();
+                                        $driver->quit();
+                                    }
                                 }catch (Exception $e) {
                                     $company->update([
                                         'status'        => '送信済み'
