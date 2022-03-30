@@ -80,4 +80,17 @@
         text-decoration: underline !important;
         color: black !important;
     }
+
+    .layout-navbar-fixed .wrapper .content-wrapper {
+        margin-top: 0px !important;
+        min-height: 94vh !important;
+    }
+
+    .content-header {
+        padding-top: 80px !important;
+    }
+
+    div#page-wrapper {
+        background: #f4f6f9;
+    }
 </style>
