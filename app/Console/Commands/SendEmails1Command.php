@@ -9,7 +9,7 @@ use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use LaravelAnticaptcha\Anticaptcha\ImageToText;
 use Illuminate\Support\Carbon;
-
+use DB;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
