@@ -57,8 +57,11 @@ class SendEmails1Command extends Command
     {
         $offset = env('MAIL_LIMIT');
 
-        $start = Config::get()->first()->start;
-        $end = Config::get()->first()->end;
+        $config = Config::get()->first();
+
+        $start = $config->start;
+        $end = $config->end;
+        $this->isShowUnsubscribe = $config->is_show_unsubscribe;
 
         $today = Carbon::today();
         $startTimeStamp = Carbon::createFromTimestamp(strtotime($today->format('Y-m-d') .' '. $start));
@@ -295,7 +298,9 @@ class SendEmails1Command extends Command
                                                     $content = str_replace('%company_name%', $company->name, $contact->content);
                                                     $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                                     $data[$key] = $content;
-                                                    // $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';
+                                                    if ($this->isShowUnsubscribe) {
+                                                        $data[$key] .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+                                                    }
                                                 }
                                                 break;
                                             case 'email': 
