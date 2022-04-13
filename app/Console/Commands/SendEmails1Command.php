@@ -9,7 +9,7 @@ use Goutte\Client;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use LaravelAnticaptcha\Anticaptcha\ImageToText;
 use Illuminate\Support\Carbon;
-
+use DB;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
@@ -57,8 +57,11 @@ class SendEmails1Command extends Command
     {
         $offset = env('MAIL_LIMIT');
 
-        $start = Config::get()->first()->start;
-        $end = Config::get()->first()->end;
+        $config = Config::get()->first();
+
+        $start = $config->start;
+        $end = $config->end;
+        $this->isShowUnsubscribe = $config->is_show_unsubscribe;
 
         $today = Carbon::today();
         $startTimeStamp = Carbon::createFromTimestamp(strtotime($today->format('Y-m-d') .' '. $start));
@@ -90,8 +93,14 @@ class SendEmails1Command extends Command
                 
                 if($startCheck) {
                     try{
-                        $companyContacts = $contact->companies()->where('is_delivered', 0)->skip(0)->take($offset)->get();
-                        $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+                        DB::beginTransaction();
+
+                        $companyContacts = $contact->companies()->lockForUpdate()->where('is_delivered', 0)->skip(0)->take($offset)->get();
+                        if (count($companyContacts)) {
+                            $companyContacts->toQuery()->update(['is_delivered'=> 3]);
+                        }
+                        DB::commit();
+
                     }catch (\Throwable $e) {
                         $output->writeln($e);
                     }
@@ -289,7 +298,9 @@ class SendEmails1Command extends Command
                                                     $content = str_replace('%company_name%', $company->name, $contact->content);
                                                     $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
                                                     $data[$key] = $content;
-                                                    // $data[$key] .=PHP_EOL .PHP_EOL .PHP_EOL .PHP_EOL .'※※※※※※※※'.PHP_EOL .'配信停止希望の方は '.route('web.stop.receive', 'ajgm2a3jag'.$company->id.'25hgj').'   こちら'.PHP_EOL.'※※※※※※※※';
+                                                    if ($this->isShowUnsubscribe) {
+                                                        $data[$key] .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+                                                    }
                                                 }
                                                 break;
                                             case 'email': 
@@ -1212,8 +1223,10 @@ class SendEmails1Command extends Command
                                             'is_delivered' => 2
                                         ]);
                                     }
-                                    $driver->manage()->deleteAllCookies();
-                                    $driver->quit();
+                                    if (isset($driver) && $driver) {
+                                        $driver->manage()->deleteAllCookies();
+                                        $driver->quit();
+                                    }
                                 }catch (Exception $e) {
                                     $company->update([
                                         'status'        => '送信済み'
