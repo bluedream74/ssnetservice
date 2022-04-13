@@ -619,14 +619,6 @@ class SubmitContactByClientRequest extends Command
                     }
                 }
             }
-
-            if (isset($map['key'])) {
-                foreach ($map['key'] as $value) {
-                    if ((strpos($this->html, "name='" . $value) !== false || strpos($this->html, 'name="' . $value) !== false) && (!isset($this->data[$value]) || empty($this->data[$value]))) {
-                        $this->data[$value] = $map['transform'];
-                    }
-                }
-            }
         }
     }
 
@@ -666,22 +658,18 @@ class SubmitContactByClientRequest extends Command
             [
                 'match' => $configMapper['emailMatch'],
                 'pattern' => $pattern['email'],
-                'key' => $configMapper['emailKey'],
                 'transform' => $contact->email,
             ],
             [
                 'match' => $configMapper['postalCode1Match'],
-                'key' => $configMapper['postalCode1Key'],
                 'transform' => $contact->postalCode1,
             ],
             [
                 'match' => $configMapper['fullPostcode1Match'],
-                'key' => $configMapper['fullPostcode1Key'],
                 'transform' => $contact->postalCode1 . $contact->postalCode2,
             ],
             [
                 'match' => $configMapper['postCode2Match'],
-                'key' => $configMapper['postCode2Key'],
                 'transform' => $contact->postalCode2,
             ],
             [
@@ -705,12 +693,10 @@ class SubmitContactByClientRequest extends Command
             ],
             [
                 'match' => $configMapper['lastNameMatch'],
-                'key' => $configMapper['lastNameKey'],
                 'transform' => $contact->lastname,
             ],
             [
                 'match' => $configMapper['surnameMatch'],
-                'key' => $configMapper['surnameKey'],
                 'transform' => $contact->surname,
             ],
             [
@@ -745,22 +731,18 @@ class SubmitContactByClientRequest extends Command
             ],
             [
                 'match' => $configMapper['fullPhoneNumber2Match'],
-                'key' => $configMapper['fullPhoneNumber2Key'],
                 'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
             ],
             [
                 'match' => $configMapper['phoneNumber1match'],
-                'key' => $configMapper['phoneNumber1key'],
                 'transform' => $contact->phoneNumber1,
             ],
             [
                 'match' => $configMapper['phoneNumber2Match'],
-                'key' => $configMapper['phoneNumber2Key'],
                 'transform' => $contact->phoneNumber2,
             ],
             [
                 'match' => $configMapper['phoneNumber3Match'],
-                'key' => $configMapper['phoneNumber3Key'],
                 'transform' => $contact->phoneNumber3,
             ],
             [
@@ -789,7 +771,7 @@ class SubmitContactByClientRequest extends Command
             ],
             [
                 'pattern' => $pattern['url'],
-                'key' => $configMapper['urlKey'],
+                'match' => $configMapper['urlMatch'],
                 'transform' => $contact->myurl,
             ],
             [
