@@ -226,6 +226,23 @@ class SendEmails1Command extends Command
                             $html = $this->html;
                             $htmlText = $this->htmlText;
 
+                            try {
+                                $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ");
+                                $continue_check=false;
+                                foreach ($nonStrings as $str) {
+                                    if ((strpos($this->html, $str)!==false)) {
+                                        $this->updateCompanyContact($companyContact, self::STATUS_NG, 'NG word');
+                                        $continue_check=true;
+                                        break;
+                                    }
+                                }
+                                if ($continue_check) {
+                                    continue;
+                                }
+                            } catch (\Throwable $e) {
+                                $output->writeln($e);
+                            }
+
                             if (!empty($this->form->getValues())) {
                                 foreach ($this->form->all() as $key=>$value) {
                                     if (isset($data[$key])||(!empty($data[$key]))) {
@@ -1092,6 +1109,8 @@ class SendEmails1Command extends Command
                                     }
                                 }
                             }
+
+                            $this->data = $data;
                                 
                             $javascriptCheck=false;
                             if (strpos($crawler->html(), 'recaptcha')!==false) {
