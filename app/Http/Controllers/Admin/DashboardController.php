@@ -980,12 +980,21 @@ class DashboardController extends BaseController
     public function importCSV()
     {
         try {
-            
-          Excel::import(new CompanyImport, request()->file('file'));
-         
-        } catch (\Throwable $e) {
-            return back()->with(['system.message.error' => __('CSVファイルのアップロードに失敗しました')]);
-            
+           $file = request()->file('file');
+           $folder = '/tmp/';
+           $filename = $file->getClientOriginalName();
+           $path = $folder . $filename;
+           $file->move($folder, $filename);
+           $handle = fopen($path, 'r');
+           $content = fread($handle, filesize($path));
+           $enc = mb_detect_encoding($content, mb_list_encodings(), true);
+           if (strtolower($enc) !== 'utf-8') {
+               return back()->with(['system.message.info' => __('アップロードしたファイルの文字コードは、「' . $enc . '」です。UTF-8でアップロードしてください。')]);
+           }
+           Excel::import(new CompanyImport, $path);
+	} catch (\Throwable $e) {
+	    dd($e);
+            return back()->with(['system.message.info' => __('CSVファイルのアップロードに失敗しました')]);
         }
         
         return back()->with(['system.message.success' => __(':itemが完了しました。', ['item' => __('アップロード(CSV)')])]);
