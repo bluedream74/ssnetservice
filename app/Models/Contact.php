@@ -59,7 +59,7 @@ class Contact extends Model
 
     public function reserve_companies()
     {
-        return $this->companies()->where('is_delivered', 0);
+        return $this->companies()->whereIn('is_delivered', [0,3,10]);
     }
 
     public function logs()

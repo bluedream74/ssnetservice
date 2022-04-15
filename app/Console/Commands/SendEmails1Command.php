@@ -119,8 +119,8 @@ class SendEmails1Command extends Command
                             $companyContacts = CompanyContact::with(['contact'])
                                 ->lockForUpdate()
                                 ->where('is_delivered', self::STATUS_SENDING)
-                                ->where('updated_at', '<=', $selectedTime->modify('-' . strval($limit * 2) . ' minutes'))
-                                ->where('updated_at', '>=', $selectedTime->modify('-1 day'))
+                                ->where('updated_at', '<=', $selectedTime->modify('-' . strval($limit * 2) . ' minutes')->format('Y-m-d H:i:s'))
+                                ->where('updated_at', '>=', $selectedTime->modify('-1 day')->format('Y-m-d H:i:s'))
                                 ->get();
                             if (count($companyContacts)) {
                                 $companyContacts->toQuery()->update(['is_delivered' => 0]);
