@@ -1105,6 +1105,8 @@ class SendEmails1Command extends Command
                             }
                             if ($javascriptCheck) {
                                 try {
+                                    $this->initBrowser();
+                                    $crawler = $this->getPageHTMLUsingBrowser($company->contact_form_url);
                                     $this->submitByUsingBrower($company, $this->data);
                                     $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                                 } catch (\Exception $e) {
