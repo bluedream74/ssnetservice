@@ -14,19 +14,16 @@ class BaseController extends Controller
 
     public function __construct(
         Dispatcher $events
-    )
-    {
-
+    ) {
         $this->renderSidemenus($events);
     }
 
     public function renderSidemenus($events)
     {
         $events->listen(BuildingMenu::class, function (BuildingMenu $event) {
-            
             $this->middleware('auth.admin');
             $this->authUser = \Auth::guard('admin')->user();
-            if($this->authUser->id == 1) {
+            if ($this->authUser->id == 1) {
                 $menus = [
                     [
                         'text' => '会社一覧',
@@ -65,8 +62,8 @@ class BaseController extends Controller
                         'role' => 'admin',
                     ]
                 ];
-            }else {
-                if($this->authUser->paycheck == 1){
+            } else {
+                if ($this->authUser->paycheck == 1) {
                     $menus = [
                         [
                             'text' => '会社一覧',
@@ -79,13 +76,19 @@ class BaseController extends Controller
                             'url'  => '/admin/contact',
                             'icon' => 'fas fa-tachometer-alt',
                             'role' => 'admin',
-                        ], 
+                        ],
+                        [
+                            'text' => 'テンプレート',
+                            'url'  => '/admin/contact/templates',
+                            'icon' => 'fas fa-tachometer-alt',
+                            'role' => 'admin',
+                        ],
                         [
                             'text' => '支払い管理',
                             'url'  => '/admin/payment/settings',
                             'icon' => 'fas fa-tachometer-alt',
                             'role' => 'admin',
-                        ], 
+                        ],
                         [
                             'text' => '設定',
                             'url'  => '/admin/config',
@@ -93,17 +96,16 @@ class BaseController extends Controller
                             'role' => 'admin',
                         ]
                     ];
-                }else {
+                } else {
                     $menus = [
                         [
                             'text' => '支払い管理',
                             'url'  => '/admin/payment/settings',
                             'icon' => 'fas fa-tachometer-alt',
                             'role' => 'admin',
-                        ], 
+                        ],
                     ];
                 }
-                
             }
             foreach ($menus as $menu) {
                 $event->menu->add($menu);
