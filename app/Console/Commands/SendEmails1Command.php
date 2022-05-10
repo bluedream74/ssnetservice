@@ -1099,14 +1099,13 @@ class SendEmails1Command extends Command
 
                         $this->data = $data;
                         
-                        if (strpos($crawler->html(), 'recaptcha') === false || !$this->isClient) {
+                        if (strpos($crawler->html(), 'recaptcha') === false) {
                             try {
-                                if (!$this->driver) {
-                                    $this->initBrowser();
-                                    $crawler = $this->getPageHTMLUsingBrowser($company->contact_form_url);
+                                if ($this->isClient) {
+                                    $this->submitByUsingCrawler($company);
+                                } else {
+                                    $this->submitByUsingBrower($company, $this->data);
                                 }
-
-                                $this->submitByUsingBrower($company, $this->data);
                                 $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                             } catch (\Exception $e) {
                                 $this->updateCompanyContact($companyContact, self::STATUS_SENT, $e->getMessage());
@@ -1383,9 +1382,12 @@ class SendEmails1Command extends Command
      */
     public function closeBrowser()
     {
-        if ($this->driver) {
-            $this->driver->manage()->deleteAllCookies();
-            $this->driver->quit();
+        try {
+            if ($this->driver) {
+                $this->driver->manage()->deleteAllCookies();
+                $this->driver->quit();
+            }
+        } catch (\Exception $e) {
         }
     }
 
