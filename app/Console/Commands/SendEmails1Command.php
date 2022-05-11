@@ -1629,4 +1629,16 @@ class SendEmails1Command extends Command
 
         return $this->containsAny($htmlContent, $successMessages);
     }
+
+    /**
+     * Check if string contains any string.
+     *
+     * @return bool
+     */
+    public function containsAny(string $string, array $list)
+    {
+        return collect($list)->contains(function ($item) use ($string) {
+            return strpos($string, $item) !== false;
+        });
+    }
 }
