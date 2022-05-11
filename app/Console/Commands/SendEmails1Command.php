@@ -1617,4 +1617,16 @@ class SendEmails1Command extends Command
 
         return count($successTexts) > 0;
     }
+
+    /**
+     * Is success or not.
+     *
+     * @return bool
+     */
+    public function hasSuccessMessage(string $htmlContent)
+    {
+        $successMessages = config('constant.successMessages');
+
+        return $this->containsAny($htmlContent, $successMessages);
+    }
 }
