@@ -194,9 +194,6 @@ return [
             'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$Email$txtEmailInput',
             'メール',
             'メール確認',
-        ],
-
-        'emailKey' => [
             'email',
             'f000224114:cf',
             'f000224114',
@@ -229,9 +226,6 @@ return [
             '郵便番号1',
             'yuubin1',
             '郵便番号3桁',
-        ],
-
-        'postalCode1Key' => [
             'C019_LAST',
             'f000003518:a',
             'item_14_zip1',
@@ -257,9 +251,6 @@ return [
             'iid5',
             'form_postal',
             'address-323928-zip1',
-        ],
-
-        'fullPostcode1Key' => [
             'postal',
             'zipcode',
         ],
@@ -291,9 +282,6 @@ return [
             'custom_field[1cfadc42619fa9914]',
             'address-1232227-zip2',
             '郵便番号2',
-        ],
-
-        'postCode2Key' => [
             'C019_FIRST',
             'zip1',
             '郵便番号(必須)',
@@ -422,9 +410,6 @@ return [
             '姓',
             'CASECF15',
             'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$LastName$txtText',
-        ],
-
-        'lastNameKey' => [
             'f013008539',
             'seiName',
         ],
@@ -460,9 +445,6 @@ return [
             '512111_41223pi_512111_41223',
             'name-1232224-mei',
             'p$lt$ctl04$SubPage$p$lt$ctl02$MainContentText$ucEditableText$widget1$ctl00$viewBiz$FirstName$txtText',
-        ],
-
-        'surnameKey' => [
             'f013008540',
         ],
 
@@ -641,9 +623,6 @@ return [
             'fax',
             '電話番号',
             'FAX番号',
-        ],
-
-        'fullPhoneNumber2Key' => [
             'tel',
             'txtTEL',
         ],
@@ -693,9 +672,6 @@ return [
             'fax1',
             'contact[tel][tel01]',
             'phone1',
-        ],
-
-        'phoneNumber1key' => [
             'e_28[tel1]',
             'fax-num[data][0]',
             'inq_tel[data][0]',
@@ -761,9 +737,6 @@ return [
             'FAX番号[data][1]',
             'Form0001_Tel2_8',
             '電話番号2',
-        ],
-
-        'phoneNumber2Key' => [
             'fax-num[data][1]',
             'inq_tel[data][1]',
             'inq_tel[data][2]',
@@ -810,9 +783,6 @@ return [
             'field_93664_3',
             'Form0001_Tel3_8',
             '電話番号3',
-        ],
-
-        'phoneNumber3Key' => [
             'TEL3',
         ],
 
@@ -837,7 +807,7 @@ return [
             '築年数',
         ],
 
-        'urlKey' => [
+        'urlMatch' => [
             'customer[web_site]',
             'e_29',
         ],
