@@ -563,14 +563,6 @@ class SubmitContact extends Command
                     }
                 }
             }
-
-            if (isset($map['key'])) {
-                foreach ($map['key'] as $value) {
-                    if ((strpos($this->html, "name='" . $value) !== false || strpos($this->html, 'name="' . $value) !== false) && (!isset($this->data[$value]) || empty($this->data[$value]))) {
-                        $this->data[$value] = $map['transform'];
-                    }
-                }
-            }
         }
     }
 
@@ -610,22 +602,18 @@ class SubmitContact extends Command
             [
                 'match' => $configMapper['emailMatch'],
                 'pattern' => $pattern['email'],
-                'key' => $configMapper['emailKey'],
                 'transform' => $contact->email,
             ],
             [
                 'match' => $configMapper['postalCode1Match'],
-                'key' => $configMapper['postalCode1Key'],
                 'transform' => $contact->postalCode1,
             ],
             [
                 'match' => $configMapper['fullPostcode1Match'],
-                'key' => $configMapper['fullPostcode1Key'],
                 'transform' => $contact->postalCode1 . $contact->postalCode2,
             ],
             [
                 'match' => $configMapper['postCode2Match'],
-                'key' => $configMapper['postCode2Key'],
                 'transform' => $contact->postalCode2,
             ],
             [
@@ -650,13 +638,11 @@ class SubmitContact extends Command
             [
                 'pattern' => $pattern['lastname'],
                 'match' => $configMapper['lastNameMatch'],
-                'key' => $configMapper['lastNameKey'],
                 'transform' => $contact->lastname,
             ],
             [
                 'pattern' => $pattern['surname'],
                 'match' => $configMapper['surnameMatch'],
-                'key' => $configMapper['surnameKey'],
                 'transform' => $contact->surname,
             ],
             [
@@ -691,22 +677,18 @@ class SubmitContact extends Command
             ],
             [
                 'match' => $configMapper['fullPhoneNumber2Match'],
-                'key' => $configMapper['fullPhoneNumber2Key'],
                 'transform' => $contact->phoneNumber1 . '-' . $contact->phoneNumber2 . '-' . $contact->phoneNumber3,
             ],
             [
                 'match' => $configMapper['phoneNumber1match'],
-                'key' => $configMapper['phoneNumber1key'],
                 'transform' => $contact->phoneNumber1,
             ],
             [
                 'match' => $configMapper['phoneNumber2Match'],
-                'key' => $configMapper['phoneNumber2Key'],
                 'transform' => $contact->phoneNumber2,
             ],
             [
                 'match' => $configMapper['phoneNumber3Match'],
-                'key' => $configMapper['phoneNumber3Key'],
                 'transform' => $contact->phoneNumber3,
             ],
             [
@@ -735,7 +717,7 @@ class SubmitContact extends Command
             ],
             [
                 'pattern' => $pattern['url'],
-                'key' => $configMapper['urlKey'],
+                'match' => $configMapper['urlMatch'],
                 'transform' => $contact->myurl,
             ],
             [
@@ -780,6 +762,9 @@ class SubmitContact extends Command
         $confirmForm = null;
         $response->filter('form')->each(function ($form) use (&$confirmForm) {
             $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
+            var_dump("==============");
+            var_dump($isConfirmForm);
+            var_dump($form->form()->getName());
             if ($isConfirmForm) {
                 $confirmForm = $form->form();
             }
@@ -820,6 +805,8 @@ class SubmitContact extends Command
      */
     public function submitByUsingCrawler($company)
     {
+        var_dump("submitByUsingCrawler");
+        var_dump($this->data);
         $response = $this->client->submit($this->form, $this->data);
 
         $responseHTML = $response->html();
@@ -835,16 +822,18 @@ class SubmitContact extends Command
             $confirmStep++;
             try {
                 $isSuccess = $this->confirmByUsingCrawler($company, $response, $confirmStep);
+                var_dump("isSuccess");
 
                 if ($isSuccess) {
                     return;
                 }
             } catch (\Exception $e) {
+                var_dump($e->getMessage());
                 continue;
             }
         } while ($confirmStep < self::RETRY_COUNT);
 
-        throw new \Exception('Confirm step is not success');
+        throw new \Exception('Confirm step by Crawler is not success');
     }
 
     /**
@@ -926,7 +915,7 @@ class SubmitContact extends Command
 
         $this->closeBrowser();
 
-        throw new \Exception('Confirm step is not success');
+        throw new \Exception('Confirm step by Browser is not success');
     }
 
     /**
@@ -984,7 +973,7 @@ class SubmitContact extends Command
         $caps->setCapability('acceptSslCerts', false);
         $caps->setCapability(ChromeOptions::CAPABILITY, $options);
 
-        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000);
+        $this->driver = RemoteWebDriver::create('http://localhost:9515', $caps, 5000);
     }
 
     /**
@@ -994,7 +983,7 @@ class SubmitContact extends Command
     {
         if ($this->driver) {
             $this->driver->manage()->deleteAllCookies();
-            $this->driver->quit();
+            // $this->driver->quit();
         }
     }
 

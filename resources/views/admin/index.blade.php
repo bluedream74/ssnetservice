@@ -454,6 +454,7 @@
             if (file === undefined) return;
             
             $('#importForm').submit();
+            $('#showLoading').click();
         })
 
         $('.btn-delete-company').click(function() {
