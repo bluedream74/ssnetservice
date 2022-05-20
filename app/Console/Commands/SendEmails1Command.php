@@ -101,7 +101,7 @@ class SendEmails1Command extends Command
             foreach ($contacts as $contact) {
                 DB::beginTransaction();
                 try {
-                    $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('is_delivered', 0)->limit($limit)->get();
+                    $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('contact_id', $contact->id)->where('is_delivered', 0)->limit($limit)->get();
                     if (count($companyContacts)) {
                         $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
                     } else {
