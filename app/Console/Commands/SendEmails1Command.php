@@ -108,6 +108,7 @@ class SendEmails1Command extends Command
                         $selectedTime = new DateTime(date('Y-m-d H:i:s'));
                         $companyContacts = CompanyContact::with(['contact'])
                                 ->lockForUpdate()
+                                ->where('contact_id', $contact->id)
                                 ->where('is_delivered', self::STATUS_SENDING)
                                 ->where('updated_at', '<=', $selectedTime->modify('-' . strval($limit * 2) . ' minutes')->format('Y-m-d H:i:s'))
                                 ->where('updated_at', '>=', $selectedTime->modify('-1 day')->format('Y-m-d H:i:s'))
