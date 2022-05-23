@@ -119,17 +119,13 @@ class SendEmails1Command extends Command
 
                         DB::commit();
 
-                        sleep(60);
-
-                        return 0;
+                        continue;
                     }
                     DB::commit();
                 } catch (\Exception $e) {
                     DB::rollback();
 
-                    sleep(60);
-
-                    return 0;
+                    continue;
                 }
                 
                 foreach ($companyContacts as $companyContact) {
@@ -1306,6 +1302,9 @@ class SendEmails1Command extends Command
                 }
             }
         }
+
+        sleep(60);
+
         return 0;
     }
 
