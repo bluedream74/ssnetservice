@@ -78,8 +78,14 @@
         <div class="card">
             <div class="card-body table-responsive">
                 {{ Form::open(['route' => 'admin.reset.company', 'method' => 'POST', 'id' => 'resetForm']) }}
-                    @foreach (Request::except('_token', 'area') as $key => $value)
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}" />
+                    @foreach (Request::except('_token') as $key => $value)
+                        @if(is_array($value))
+                            @foreach($value as $v)
+                                <input type="hidden" name="{{ $key . '[]' }}" value="{{ $v }}" />
+                            @endforeach
+                        @else
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}" />
+                        @endif
                     @endforeach
                     <div class="row">
                         <label class="col-sm-2">Total: {{ $companies->total() }}</label>
@@ -94,7 +100,7 @@
                             <button type="button" class="btn btn-sm btn-primary mr-3 btn-warning" data-toggle="modal" data-target="#email-modal">フォーム作成</button>
                             <button type="button" class="btn btn-sm btn-info mr-3 btn-duplicate-delete">重複をチェックして削除</button>
                             <button type="button" class="btn btn-sm btn-warning mr-3 btn-reset">送信済みを一括リセット</button>
-                            <a href="{{ route('admin.companies.export', Request::except('area')) }}" class="btn btn-sm btn-success mr-3" target="_blank">CSV出力</a>
+                            <a href="{{ route('admin.companies.export', Request::all()) }}" class="btn btn-sm btn-success mr-3" target="_blank">CSV出力</a>
                             <button type="button" class="btn btn-sm btn-warning" id="btnImport"><i class="fas fa-file-csv mr-2"></i>{{ __('アップロード(CSV)') }}</button>
                         </div>
                     </div>
@@ -151,13 +157,19 @@
 
         <div class="row mb-5">
             <div class="col-sm-12">
-                {{ $companies->appends(Request::except('area'))->render() }}
+                {{ $companies->appends(Request::all())->render() }}
             </div>
         </div>
         <div class="modal fade" id="email-modal" style="z-index: 9999;">
             {{ Form::open(['route' => 'admin.contact.send', 'method' => 'POST', 'id' => 'contactForm', 'files' => true]) }}
-            @foreach (Request::except('area') as $key => $value)
-                {{ Form::hidden($key, $value) }}
+            @foreach (Request::all() as $key => $value)
+                @if(is_array($value))
+                    @foreach($value as $v)
+                        {{ Form::hidden($key . "[]", $v) }}
+                    @endforeach
+                @else
+                    {{ Form::hidden($key, $value) }}
+                @endif
             @endforeach
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -255,21 +267,39 @@
         </div>
         <div class="modal fade" style="z-index: 9999;">
             {{ Form::open(['route' => 'admin.batchCheck', 'method' => 'POST', 'id' => 'batchCheck_Form', 'files' => true]) }}
-            @foreach (Request::except('area') as $key => $value)
-                {{ Form::hidden($key, $value) }}
+            @foreach (Request::all() as $key => $value)
+                @if(is_array($value))
+                    @foreach($value as $v)
+                        {{ Form::hidden($key . "[]", $v) }}
+                    @endforeach
+                @else
+                    {{ Form::hidden($key, $value) }}
+                @endif
             @endforeach
             {{ Form::close() }}
         </div>
     {{ Form::open(['route' => 'admin.deleteCompanies', 'method' => 'POST', 'id' => 'deleteCompanies_Form', 'files' => true]) }}
-        @foreach (Request::except('area') as $key => $value)
-            {{ Form::hidden($key, $value) }}
+        @foreach (Request::all() as $key => $value)
+            @if(is_array($value))
+                @foreach($value as $v)
+                    {{ Form::hidden($key . "[]", $v) }}
+                @endforeach
+            @else
+                {{ Form::hidden($key, $value) }}
+            @endif
         @endforeach
     {{ Form::close() }}
 
     {{ Form::open(['route' => 'admin.delete.duplicate', 'method' => 'POST', 'id' => 'duplicateForm']) }}
-        @foreach (Request::except('area') as $key => $value)
+        @foreach (Request::all() as $key => $value)
+            @if(is_array($value))
+                @foreach($value as $v)
+                    {{ Form::hidden($key . "[]", $v) }}
+                @endforeach
+            @else
                 {{ Form::hidden($key, $value) }}
-            @endforeach
+            @endif
+        @endforeach
     {{ Form::close() }}
 
     {{ Form::open(['route' => 'admin.delete.email', 'method' => 'POST', 'id' => 'deleteEmailForm']) }}
