@@ -66,12 +66,16 @@ class CompanyExport implements FromCollection, WithHeadings, WithMapping
         }
 
         if (!empty($value = Arr::get($this->params, 'source'))) {
-			$value = Source::where('sort_no',$value)->first()->name;
+            $value = Source::where('sort_no', $value)->first()->name;
             $query->where('source', $value);
         }
 
         if (!empty($value = Arr::get($this->params, 'subsource'))) {
             $query->where('subsource', $value);
+        }
+
+        if (!empty($value = Arr::get($this->params, 'area'))) {
+            $query->whereIn('area', $value);
         }
 
         if (!empty($value = Arr::get($this->params, 'status'))) {
@@ -87,15 +91,14 @@ class CompanyExport implements FromCollection, WithHeadings, WithMapping
         }
 
         if (!empty($value = Arr::get($this->params, 'origin'))) {
-            if($value==1) {
+            if ($value==1) {
                 $query->whereNotNull('contact_form_url');
             }
-            if($value==2) {
+            if ($value==2) {
                 $query->whereNull('contact_form_url');
             }
         }
 
         return $query->orderByDesc('source')->orderBy('name')->cursor();
-        
     }
 }
