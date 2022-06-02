@@ -47,7 +47,7 @@ class deleteDuplicate implements ShouldQueue
         }
         
         if (!empty($value = Arr::get($this->attributes, 'source'))) {
-            $value = Source::where('sort_no',$value)->first()->name;
+            $value = Source::where('sort_no', $value)->first()->name;
             $query->where('source', $value);
         }
 
@@ -56,7 +56,7 @@ class deleteDuplicate implements ShouldQueue
         }
 
         if (!empty($value = Arr::get($this->attributes, 'area'))) {
-            $query->where('area', 'like', "%{$value}%");
+            $query->whereIn('area', $value);
         }
 
         if (!empty($value = Arr::get($this->attributes, 'status'))) {
@@ -72,10 +72,10 @@ class deleteDuplicate implements ShouldQueue
         }
         
         if (!empty($value = Arr::get($this->attributes, 'origin'))) {
-            if($value==1) {
+            if ($value==1) {
                 $query->whereNotNull('contact_form_url');
             }
-            if($value==2) {
+            if ($value==2) {
                 $query->whereNull('contact_form_url');
             }
         }
@@ -86,28 +86,28 @@ class deleteDuplicate implements ShouldQueue
                         ->pluck('url');
         
         if (sizeof($urls) < $query->whereNotNull('url')->count()) {
-        foreach ($urls as $url) {
-            $parse = parse_url($url);
-            try{
-            $host = $parse['path'];
-            if (!$host || !strlen($host)) {
-                continue;
-            }
-            $query = Company::query();
-            if ($query->where('url', 'LIKE', "%{$host}%")->count() > 1) {
-                $company = $query->where('url', 'LIKE', "%{$host}%")->latest()->first();
-                if(Company::where('subsource', $company->subsource)->count() == 1) {
-                SubSource::where('name',$company->subsource)->delete();
-                }
-                Company::where('url', 'LIKE', "%{$host}%")
+            foreach ($urls as $url) {
+                $parse = parse_url($url);
+                try {
+                    $host = $parse['path'];
+                    if (!$host || !strlen($host)) {
+                        continue;
+                    }
+                    $query = Company::query();
+                    if ($query->where('url', 'LIKE', "%{$host}%")->count() > 1) {
+                        $company = $query->where('url', 'LIKE', "%{$host}%")->latest()->first();
+                        if (Company::where('subsource', $company->subsource)->count() == 1) {
+                            SubSource::where('name', $company->subsource)->delete();
+                        }
+                        Company::where('url', 'LIKE', "%{$host}%")
                     ->where('id', '!=', $company->id)
                     ->delete();
+                    }
+                } catch (\Throwable $e) {
+                    print_r($e->getMessage());
+                    continue;
+                }
             }
-            }
-            catch(\Throwable $e) {
-                print_r($e->getMessage());continue;
-            }
-        }
         }
     }
 }
