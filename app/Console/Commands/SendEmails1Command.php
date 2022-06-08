@@ -95,7 +95,7 @@ class SendEmails1Command extends Command
         $output = new \Symfony\Component\Console\Output\ConsoleOutput();
         $output->writeln("<info>start</info>");
         if ($startTimeCheck && $endTimeCheck) {
-            $contacts = Contact::whereRaw("(`date` is NULL OR `time` is NULL OR (CURDATE() >= `date` AND CURTIME() >= `time`))")
+            $contacts = Contact::whereRaw("(`date` is NULL OR `time` is NULL OR (CURDATE() > `date` OR (CURDATE() = `date` AND CURTIME() >= `time`)))")
                                 ->whereHas('reserve_companies')->get();
 
             foreach ($contacts as $contact) {
