@@ -211,7 +211,7 @@ class SendEmails1Command extends Command
                         $htmlText = $this->htmlText;
 
                         try {
-                            $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ");
+                            $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ","営業メール","勧誘","売り込み","セールス");
                             $continue_check=false;
                             foreach ($nonStrings as $str) {
                                 if ((strpos($this->html, $str)!==false)) {
