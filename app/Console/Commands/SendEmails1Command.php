@@ -111,7 +111,7 @@ class SendEmails1Command extends Command
                                 ->where('contact_id', $contact->id)
                                 ->where('is_delivered', self::STATUS_SENDING)
                                 ->where('updated_at', '<=', $selectedTime->modify('-' . strval($limit * 2) . ' minutes')->format('Y-m-d H:i:s'))
-                                ->where('updated_at', '>=', $selectedTime->modify('-1 day')->format('Y-m-d H:i:s'))
+                                ->where('updated_at', '>=', $selectedTime->modify('-3 day')->format('Y-m-d H:i:s'))
                                 ->get();
                         if (count($companyContacts)) {
                             $companyContacts->toQuery()->update(['is_delivered' => 0]);
@@ -211,7 +211,7 @@ class SendEmails1Command extends Command
                         $htmlText = $this->htmlText;
 
                         try {
-                            $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ");
+                            $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ","営業メール","勧誘","売り込み","セールス");
                             $continue_check=false;
                             foreach ($nonStrings as $str) {
                                 if ((strpos($this->html, $str)!==false)) {
