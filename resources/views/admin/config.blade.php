@@ -34,12 +34,12 @@
 
   {{ Form::open(['route' => 'admin.config.mysql', 'method' => 'POST']) }}
   <div class="row" style="padding-top: 50px;">
-    <label class="col-sm-4">MYSQLステータス: </label>
+    <label class="col-sm-4">MySQLステータス</label>
     <div class="col-sm-8 form-group">
       {{ $mysqlStatus }}
     </div>
     <br /><br />
-    <label class="col-sm-4">MYSQL再起動</label>
+    <label class="col-sm-4">MySQL再起動</label>
     <div class="col-sm-4 form-group">
       {{ Form::text('password', null, ['class' => 'field required', 'id' => 'password', 'class' => 'form-control', 'placeholder'=>'rootパスワード']) }}
     </div>

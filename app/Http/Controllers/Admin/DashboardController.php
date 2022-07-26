@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Artisan;
 use App\Imports\CompanyImport;
 use App\Models\ContactTemplate;
 use Goutte\Client;
+use Illuminate\Support\Facades\DB;
+use PDO;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Facades\Crypt;
 
@@ -778,7 +780,7 @@ class DashboardController extends BaseController
     public function configIndex()
     {
         $configs = Config::get()->first();
-        $mysqlStatus = exec('sudo systemctl status mysqld');
+        $mysqlStatus = (DB::connection()->getPdo())->getAttribute(PDO::ATTR_CONNECTION_STATUS);
         return view('admin.config',compact('configs', 'mysqlStatus'));
     }
 
@@ -820,6 +822,7 @@ class DashboardController extends BaseController
                 return back()->with(['system.message.info' => 'rootパスワードが間違いました。']);
             }
             exec('sudo systemctl restart mysql');
+            exec('sudo systemctl restart mysqld');
             exec('sudo supervisorctl restart');
         }catch (\Throwable $e) {
             dd($e);
