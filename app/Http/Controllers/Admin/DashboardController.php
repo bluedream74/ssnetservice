@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Artisan;
 use App\Imports\CompanyImport;
 use App\Models\ContactTemplate;
 use Goutte\Client;
+use Illuminate\Support\Facades\DB;
+use PDO;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use Illuminate\Support\Facades\Crypt;
 
@@ -778,7 +780,8 @@ class DashboardController extends BaseController
     public function configIndex()
     {
         $configs = Config::get()->first();
-        return view('admin.config',compact('configs'));
+        $mysqlStatus = (DB::connection()->getPdo())->getAttribute(PDO::ATTR_SERVER_INFO);
+        return view('admin.config',compact('configs', 'mysqlStatus'));
     }
 
     public function updateConfig(Request $request)
@@ -809,6 +812,22 @@ class DashboardController extends BaseController
 
         }
         return back()->with(['system.message.success' => '保存しました。']);
+    }
+
+    public function restartMysql(Request $request)
+    {
+        try {
+            $password = $request->get('password') ?? "";
+            if ($password != "Plusidea-Partners@20160210") {
+                return back()->with(['system.message.info' => 'rootパスワードが間違いました。']);
+            }
+            exec('sudo systemctl restart mysql');
+            exec('sudo systemctl restart mysqld');
+            exec('sudo supervisorctl restart');
+        }catch (\Throwable $e) {
+            dd($e);
+        }
+        return back()->with(['system.message.info' => 'MySQLを再起動しました。']);
     }
 
     private function upsert($key, $value)
