@@ -780,7 +780,7 @@ class DashboardController extends BaseController
     public function configIndex()
     {
         $configs = Config::get()->first();
-        $mysqlStatus = (DB::connection()->getPdo())->getAttribute(PDO::ATTR_CONNECTION_STATUS);
+        $mysqlStatus = (DB::connection()->getPdo())->getAttribute(PDO::ATTR_SERVER_INFO);
         return view('admin.config',compact('configs', 'mysqlStatus'));
     }
 
