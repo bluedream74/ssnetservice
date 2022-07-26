@@ -823,7 +823,7 @@ class DashboardController extends BaseController
             }
             exec('sudo systemctl restart mysql');
             exec('sudo systemctl restart mysqld');
-            exec('sudo supervisorctl restart');
+            exec('sudo supervisorctl restart all');
         }catch (\Throwable $e) {
             dd($e);
         }
