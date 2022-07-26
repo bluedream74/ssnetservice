@@ -83,6 +83,7 @@ Route::group(['middleware' => 'auth.admin'], function () { //middleware?auth????
 
     Route::get('/config', 'DashboardController@configIndex')->name('config.index');
     Route::post('/config', 'DashboardController@updateConfig')->name('config.update');
+    Route::post('/mysql', 'DashboardController@restartMysql')->name('config.mysql');
 
     Route::get('/users', 'UserController@index')->name('user.index');
     Route::get('/user/edit/{id}', 'UserController@edit')->name('user.edit');
