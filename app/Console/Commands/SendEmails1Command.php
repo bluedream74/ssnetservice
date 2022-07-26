@@ -1303,8 +1303,6 @@ class SendEmails1Command extends Command
             }
         }
 
-        sleep(60);
-
         return 0;
     }
 
