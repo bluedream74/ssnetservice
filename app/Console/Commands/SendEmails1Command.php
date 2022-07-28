@@ -91,6 +91,14 @@ class SendEmails1Command extends Command
         $now = Carbon::now();
         $startTimeCheck = $now->gte($startTimeStamp);
         $endTimeCheck = $now->lte($endTimeStamp);
+        $requestOptions = [
+            "headers" => [
+                "User-Agent" => "Mozilla/5.0",
+            ],
+            "http_errors" => false,
+            "connect_timeout" => 5,  // <= サーバーへの接続を5秒まで待機
+            "timeout" => 10,  // <= レスポンスを10秒まで待機
+        ];
 
         $output = new \Symfony\Component\Console\Output\ConsoleOutput();
         $output->writeln("<info>start</info>");
@@ -149,7 +157,7 @@ class SendEmails1Command extends Command
                             continue;
                         }
                         $output->writeln("company url : ".$company->contact_form_url);
-                        $crawler = $this->client->request('GET', $company->contact_form_url);
+                        $crawler = $this->client->request('GET', $company->contact_form_url, $requestOptions);
 
                         $charset = $this->getCharset($crawler->html());
                         try {
@@ -175,7 +183,7 @@ class SendEmails1Command extends Command
                                 $iframes = array_merge($crawler->filter('iframe')->extract(['src']), $crawler->filter('iframe')->extract(['data-src']));
                                 foreach ($iframes as $i => $iframeURL) {
                                     try {
-                                        $frameResponse = $this->client->request('GET', $iframeURL);
+                                        $frameResponse = $this->client->request('GET', $iframeURL, $requestOptions);
                                         $hasFrameContactForm = $this->findContactForm($frameResponse);
                                         if ($hasFrameContactForm) {
                                             $hasContactForm = true;
@@ -1244,7 +1252,7 @@ class SendEmails1Command extends Command
                                         $iframes = array_merge($crawler->filter('iframe')->extract(['src']), $crawler->filter('iframe')->extract(['data-src']));
                                         foreach ($iframes as $i => $iframeURL) {
                                             try {
-                                                $frameResponse = $this->client->request('GET', $iframeURL);
+                                                $frameResponse = $this->client->request('GET', $iframeURL, $requestOptions);
                                                 if ($this->findContactForm($frameResponse)) {
                                                     $this->checkform = $this->form;
                                                     break;
@@ -1342,7 +1350,7 @@ class SendEmails1Command extends Command
         $caps->setCapability('acceptSslCerts', false);
         $caps->setCapability(ChromeOptions::CAPABILITY, $options);
 
-        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000);
+        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000, 10000);
     }
 
     /**
@@ -1437,7 +1445,7 @@ class SendEmails1Command extends Command
             $iframes = $response->filter('iframe')->extract(['src']);
             foreach ($iframes as $iframeURL) {
                 try {
-                    $frameResponse = $this->client->request('GET', $iframeURL);
+                    $frameResponse = $this->client->request('GET', $iframeURL, $requestOptions);
                     $response->filter('form')->each(function ($form) use (&$confirmForm) {
                         $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
                         if ($isConfirmForm) {
