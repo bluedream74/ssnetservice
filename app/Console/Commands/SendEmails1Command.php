@@ -1311,7 +1311,8 @@ class SendEmails1Command extends Command
             }
         }
 
-        return 0;
+        sleep(5);
+        die("finish");
     }
 
     public function getCharset(string $htmlContent)
