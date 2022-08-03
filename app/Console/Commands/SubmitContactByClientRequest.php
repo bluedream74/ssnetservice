@@ -75,7 +75,7 @@ class SubmitContactByClientRequest extends Command
     {
         $this->call('send:emails1');
         sleep(60);
-        return 0;
+        die("finish");
 
         $config = Config::get()->first();
         $this->isDebug = config('app.debug');
