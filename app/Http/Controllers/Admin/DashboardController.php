@@ -141,7 +141,15 @@ class DashboardController extends BaseController
     public function contact(Request $request)
     {
         $contacts = Contact::orderByDesc('created_at')->paginate(20);
+        $now = Carbon::now();
+
         foreach($contacts as $contact) {
+            $startTimeStamp = Carbon::createFromTimestamp(strtotime($contact->date .' '. $contact->time));
+            if($startTimeStamp && $now->lte($startTimeStamp)) {
+                $contact->isEditable = true;
+            } else {
+                $contact->isEditable = false;
+            }
             $contact->sent_count = $contact->companies()->where('is_delivered','2')->count();
             $contact->stand_by_count = $contact->companies()->whereIn('is_delivered',[0,3,10])->count();
         }
@@ -590,6 +598,42 @@ class DashboardController extends BaseController
         $contactTemplates = ContactTemplate::all();
 
         return view('admin.contact_show', compact('contact', 'companies','prefectures', 'totalCounts', 'contactTemplates'));
+    }
+
+    public function contactEdit(Contact $contact)
+    {
+        $now = Carbon::now();
+
+        $startTimeStamp = Carbon::createFromTimestamp(strtotime($contact->date .' '. $contact->time));
+        if(!$startTimeStamp || $now->gte($startTimeStamp)) {
+            return redirect(route('admin.contact'))->with(['system.message.info' => '配信が開始されましたので、更新できません。']);
+        }
+
+        $prefectures = array();
+        foreach (config('values.prefectures') as $value) {
+            $prefectures[$value] = $value;
+        }
+
+        return view('admin.contact_edit', compact('contact', 'prefectures'));
+    }
+
+    public function contactUpdate(Request $request, Contact $contact)
+    {
+        try {
+            $now = Carbon::now();
+
+            $startTimeStamp = Carbon::createFromTimestamp(strtotime($contact->date .' '. $contact->time));
+            if(!$startTimeStamp || $now->gte($startTimeStamp)) {
+                return back()->with(['system.message.info' => '配信が開始されましたので、更新できません。']);
+            }
+
+            $contact->update($request->all());
+
+            return back()->with(['system.message.success' => '更新されました。']);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return back()->with(['system.message.info' => '更新できませんでした。']);
+        }
     }
 
     public function sendShowContact(Contact $contact)
