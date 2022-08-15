@@ -14,9 +14,10 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th style="max-width: 400px;">タイトル</th>
+                            <th style="max-width: 500px;">タイトル</th>
                             <th style="max-width: 400px;">送信予定</th>
                             <th style="max-width: 400px;">送信済み</th>
+                            <th style="max-width: 200px;width: 160px;">配信予定日時</th>
                             <th style="max-width: 140px;width: 140px;">登録日時</th>
                             <th style="width: 100px;"></th>
                         </tr>
@@ -30,6 +31,7 @@
                             <td>{{ number_format($contact->stand_by_count) }}</td>
                             <td>{{ number_format($contact->sent_count) }}</td>
                             <!-- <td>{{ number_format($contact->logs()->count()) }}</td> -->
+                            <td style="width: 140px;">{{ $contact->date . " " . $contact->time }}</td>
                             <td style="width: 140px;">{{ $contact->created_at->format("Y-m-d H:i") }}</td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-danger btn-remove" data-id="{{ $contact->id }}">削除</button>
