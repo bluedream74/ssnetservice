@@ -19,7 +19,7 @@
                             <th style="max-width: 400px;">送信済み</th>
                             <th style="max-width: 200px;width: 160px;">配信予定日時</th>
                             <th style="max-width: 140px;width: 140px;">登録日時</th>
-                            <th style="width: 100px;"></th>
+                            <th style="width: 150px;"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,6 +34,10 @@
                             <td style="width: 140px;">{{ $contact->date . " " . $contact->time }}</td>
                             <td style="width: 140px;">{{ $contact->created_at->format("Y-m-d H:i") }}</td>
                             <td>
+                                @if ($contact->isEditable == true)
+                                    <a href="{{ route('admin.contact.edit', $contact->id) }}"
+                                        class="btn btn-sm btn-primary">編集</a>
+                                @endif
                                 <button type="button" class="btn btn-sm btn-danger btn-remove" data-id="{{ $contact->id }}">削除</button>
                             </td>
                         </tr>

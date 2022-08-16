@@ -41,7 +41,10 @@ Route::group(['middleware' => 'auth.admin'], function () { //middleware?auth????
 
     Route::get('contact', 'DashboardController@contact')->name('contact');
     Route::get('contact/{contact}/show', 'DashboardController@contactShow')->name('contact.show');
+    Route::get('contact/{contact}/edit', 'DashboardController@contactEdit')->name('contact.edit');
+    Route::post('contact/{contact}/edit', 'DashboardController@contactUpdate')->name('contact.update');
     Route::post('contact/delete', 'DashboardController@deleteContact')->name('contact.delete');
+    
     Route::get('contact/{contact}/export/csv', 'DashboardController@exportContactCSV')->name('contact.export');
     Route::post('contact/{contact}/send', 'DashboardController@sendShowContact')->name('contact.show.send');
 
