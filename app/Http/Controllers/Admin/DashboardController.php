@@ -862,7 +862,7 @@ class DashboardController extends BaseController
     {
         try {
             $password = $request->get('password') ?? "";
-            if ($password != "Plusidea-Partners@20160210") {
+            if ($password != "Syota3110") {
                 return back()->with(['system.message.info' => 'rootパスワードが間違いました。']);
             }
             exec('sudo systemctl restart mysql');
