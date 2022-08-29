@@ -153,7 +153,7 @@ class SendEmails1Command extends Command
                         $footerhtml = "";
                         $charset = 'UTF-8';
 
-                        if ($company->contact_form_url == '' || $company->status = '拒絶') {
+                        if ($company->contact_form_url == '' || $company->status == '拒絶') {
                             $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, '');
                             continue;
                         }
