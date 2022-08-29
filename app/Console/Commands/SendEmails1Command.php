@@ -118,8 +118,8 @@ class SendEmails1Command extends Command
                                 ->lockForUpdate()
                                 ->where('contact_id', $contact->id)
                                 ->where('is_delivered', self::STATUS_SENDING)
-                                ->where('updated_at', '<=', $selectedTime->modify('-' . strval($limit * 10) . ' minutes')->format('Y-m-d H:i:s'))
-                                ->where('updated_at', '>=', $selectedTime->modify('-3 day')->format('Y-m-d H:i:s'))
+                                ->where('updated_at', '<=', $selectedTime->modify('-' . strval($limit * 20) . ' minutes')->format('Y-m-d H:i:s'))
+                                ->where('updated_at', '>=', $selectedTime->modify('-2 day')->format('Y-m-d H:i:s'))
                                 ->get();
                         if (count($companyContacts)) {
                             $companyContacts->toQuery()->update(['is_delivered' => 0]);
