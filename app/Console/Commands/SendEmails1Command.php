@@ -122,7 +122,7 @@ class SendEmails1Command extends Command
                                 ->where('updated_at', '>=', $selectedTime->modify('-3 day')->format('Y-m-d H:i:s'))
                                 ->get();
                         if (count($companyContacts)) {
-                            $companyContacts->toQuery()->update(['is_delivered' => 1]);
+                            $companyContacts->toQuery()->update(['is_delivered' => 0]);
                         }
 
                         DB::commit();
