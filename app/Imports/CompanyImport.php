@@ -18,7 +18,7 @@ class CompanyImport implements ToCollection
                 continue;
             }
             try {
-                $category = \App\Models\Source::where('name', $row[0])->first();
+                $category = \App\Models\Source::where('name', strval($row[0]))->first();
                 
                 if (empty($category)) {
                     $lastCategory = \App\Models\Source::orderByDesc('sort_no')->first();
@@ -36,7 +36,7 @@ class CompanyImport implements ToCollection
                     
                 }
                 if($row[1]){
-                    $child_category = \App\Models\SubSource::where('name', $row[1])->first();
+                    $child_category = \App\Models\SubSource::where('name', strval($row[1]))->first();
 
                     if(empty($child_category)&&isset($category)) {
     
