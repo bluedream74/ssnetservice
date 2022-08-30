@@ -100,8 +100,8 @@ class deleteDuplicate implements ShouldQueue
                             SubSource::where('name', $company->subsource)->delete();
                         }
                         Company::where('url', 'LIKE', "%{$host}%")
-                    ->where('id', '!=', $company->id)
-                    ->delete();
+                            ->where('id', '!=', $company->id)
+                            ->delete();
                     }
                 } catch (\Throwable $e) {
                     print_r($e->getMessage());
