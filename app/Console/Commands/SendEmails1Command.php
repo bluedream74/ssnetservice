@@ -59,6 +59,18 @@ class SendEmails1Command extends Command
     protected $isDebug = false;
     protected $isShowUnsubscribe;
     protected $isClient;
+    protected $requestOptions = [
+            'verify_peer' => false,
+            'verify_host' => false,
+            "headers" => [
+                "User-Agent" => "Mozilla/5.0",
+            ],
+            // "http_errors" => false,
+            // "allow_redirects" => true,
+            "max_duration" => 10,
+            // "connect_timeout" => 5,  // <= サーバーへの接続を5秒まで待機
+            "timeout" => 30,  // <= レスポンスを10秒まで待機
+        ];
 
     /**
      * Create a new command instance.
@@ -69,7 +81,7 @@ class SendEmails1Command extends Command
     {
         parent::__construct();
 
-        $this->client = new Client(HttpClient::create(['verify_peer' => false, 'verify_host' => false]));
+        $this->client = new Client(HttpClient::create($this->requestOptions));
     }
 
     /**
@@ -91,14 +103,6 @@ class SendEmails1Command extends Command
         $now = Carbon::now();
         $startTimeCheck = $now->gte($startTimeStamp);
         $endTimeCheck = $now->lte($endTimeStamp);
-        $requestOptions = [
-            "headers" => [
-                "User-Agent" => "Mozilla/5.0",
-            ],
-            "http_errors" => false,
-            "connect_timeout" => 5,  // <= サーバーへの接続を5秒まで待機
-            "timeout" => 10,  // <= レスポンスを10秒まで待機
-        ];
 
         $output = new \Symfony\Component\Console\Output\ConsoleOutput();
         $output->writeln("<info>start</info>");
@@ -158,7 +162,7 @@ class SendEmails1Command extends Command
                             continue;
                         }
                         $output->writeln("company url : ".$company->contact_form_url);
-                        $crawler = $this->client->request('GET', $company->contact_form_url, $requestOptions);
+                        $crawler = $this->client->request('GET', $company->contact_form_url, $this->requestOptions);
 
                         $charset = $this->getCharset($crawler->html());
                         try {
@@ -184,7 +188,7 @@ class SendEmails1Command extends Command
                                 $iframes = array_merge($crawler->filter('iframe')->extract(['src']), $crawler->filter('iframe')->extract(['data-src']));
                                 foreach ($iframes as $i => $iframeURL) {
                                     try {
-                                        $frameResponse = $this->client->request('GET', $iframeURL, $requestOptions);
+                                        $frameResponse = $this->client->request('GET', $iframeURL, $this->requestOptions);
                                         $hasFrameContactForm = $this->findContactForm($frameResponse);
                                         if ($hasFrameContactForm) {
                                             $hasContactForm = true;
@@ -1253,7 +1257,7 @@ class SendEmails1Command extends Command
                                         $iframes = array_merge($crawler->filter('iframe')->extract(['src']), $crawler->filter('iframe')->extract(['data-src']));
                                         foreach ($iframes as $i => $iframeURL) {
                                             try {
-                                                $frameResponse = $this->client->request('GET', $iframeURL, $requestOptions);
+                                                $frameResponse = $this->client->request('GET', $iframeURL, $this->requestOptions);
                                                 if ($this->findContactForm($frameResponse)) {
                                                     $this->checkform = $this->form;
                                                     break;
@@ -1447,7 +1451,7 @@ class SendEmails1Command extends Command
             $iframes = $response->filter('iframe')->extract(['src']);
             foreach ($iframes as $iframeURL) {
                 try {
-                    $frameResponse = $this->client->request('GET', $iframeURL, $requestOptions);
+                    $frameResponse = $this->client->request('GET', $iframeURL, $this->requestOptions);
                     $response->filter('form')->each(function ($form) use (&$confirmForm) {
                         $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
                         if ($isConfirmForm) {
@@ -1483,7 +1487,7 @@ class SendEmails1Command extends Command
     {
         try {
             $this->data = array_map('strval', $this->data);
-            $response = $this->client->submit($this->form, $this->data);
+            $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
             $responseHTML = $response->html();
 
             if ($this->isDebug) {
