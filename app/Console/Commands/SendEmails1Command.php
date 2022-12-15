@@ -257,56 +257,56 @@ class SendEmails1Command extends Command
                                         continue;
                                     }
                                     switch ($type) {
-                                            case 'select':
-                                                $areaCheck=true;
-                                                foreach ($val->getOptions() as $value) {
-                                                    if ($value['value'] == $contact->area) {
-                                                        $data[$key] = $contact->area;
-                                                        $areaCheck=false;
+                                        case 'select':
+                                            $areaCheck=true;
+                                            foreach ($val->getOptions() as $value) {
+                                                if ($value['value'] == $contact->area) {
+                                                    $data[$key] = $contact->area;
+                                                    $areaCheck=false;
+                                                }
+                                            }
+                                            if ($areaCheck) {
+                                                $size = sizeof($this->form[$key]->getOptions());
+                                                $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
+                                            }
+                                            break;
+                                        case 'radio':
+                                            if (in_array('その他', $this->form[$key]->getOptions())) {
+                                                foreach ($this->form[$key]->getOptions() as $item) {
+                                                    if ($item['value']== 'その他') {
+                                                        $data[$key] = $item['value'];
                                                     }
                                                 }
-                                                if ($areaCheck) {
+                                            } else {
+                                                if (($key=="性別")||(($key=="sex"))) {
+                                                    $data[$key] = $this->form[$key]->getOptions()[0]['value'];
+                                                } elseif ($value=="男性") {
+                                                    $data[$key] = "男性";
+                                                } else {
                                                     $size = sizeof($this->form[$key]->getOptions());
                                                     $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
                                                 }
-                                                break;
-                                            case 'radio':
-                                                if (in_array('その他', $this->form[$key]->getOptions())) {
-                                                    foreach ($this->form[$key]->getOptions() as $item) {
-                                                        if ($item['value']== 'その他') {
-                                                            $data[$key] = $item['value'];
-                                                        }
-                                                    }
-                                                } else {
-                                                    if (($key=="性別")||(($key=="sex"))) {
-                                                        $data[$key] = $this->form[$key]->getOptions()[0]['value'];
-                                                    } elseif ($value=="男性") {
-                                                        $data[$key] = "男性";
-                                                    } else {
-                                                        $size = sizeof($this->form[$key]->getOptions());
-                                                        $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
-                                                    }
+                                            }
+                                            break;
+                                        case 'checkbox':
+                                            $data[$key] = $this->form[$key]->getOptions()[0]['value'];
+                                            break;
+                                        case 'textarea':
+                                            if ((strpos($key, 'captcha') === false) && (strpos($key, 'address') === false)) {
+                                                $content = str_replace('%company_name%', $company->name, $contact->content);
+                                                $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
+                                                $data[$key] = $content;
+                                                if ($this->isShowUnsubscribe) {
+                                                    $data[$key] .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
                                                 }
-                                                break;
-                                            case 'checkbox':
-                                                $data[$key] = $this->form[$key]->getOptions()[0]['value'];
-                                                break;
-                                            case 'textarea':
-                                                if ((strpos($key, 'captcha') === false) && (strpos($key, 'address') === false)) {
-                                                    $content = str_replace('%company_name%', $company->name, $contact->content);
-                                                    $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
-                                                    $data[$key] = $content;
-                                                    if ($this->isShowUnsubscribe) {
-                                                        $data[$key] .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
-                                                    }
-                                                }
-                                                break;
-                                            case 'email':
-                                                $data[$key] = $contact->email;
-                                                break;
-                                            default:
-                                                break;
-                                        }
+                                            }
+                                            break;
+                                        case 'email':
+                                            $data[$key] = $contact->email;
+                                            break;
+                                        default:
+                                            break;
+                                    }
                                 } catch (\Throwable $e) {
                                     $output->writeln($e);
                                     continue;
@@ -470,9 +470,9 @@ class SendEmails1Command extends Command
                                 }
                                 // else if(strpos($key,'姓')!==false){
                                     //     $data[$key] = $contact->surname;
-                                    // }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
+                                // }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
                                     //     $data[$key] = $contact->lastname;
-                                    // }
+                                // }
                             }
                         }
                         $nonPatterns = array('部署');
@@ -1087,20 +1087,20 @@ class SendEmails1Command extends Command
                                 try {
                                     $type = $val->getType();
                                     switch ($type) {
-                                            case 'number':
-                                                $data[$key] = 1;
-                                                break;
-                                            case 'date':
-                                                $data[$key] = date("Y-m-d", strtotime("+1 day"));
-                                                break;
-                                            case 'select':
-                                                $size = sizeof($this->form[$key]->getOptions());
-                                                $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
-                                                break;
-                                            case 'default':
-                                                $data[$key] = "きょうわ";
-                                                break;
-                                        }
+                                        case 'number':
+                                            $data[$key] = 1;
+                                            break;
+                                        case 'date':
+                                            $data[$key] = date("Y-m-d", strtotime("+1 day"));
+                                            break;
+                                        case 'select':
+                                            $size = sizeof($this->form[$key]->getOptions());
+                                            $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
+                                            break;
+                                        case 'default':
+                                            $data[$key] = "きょうわ";
+                                            break;
+                                    }
                                 } catch (\Throwable $e) {
                                     $output->writeln($e);
                                 }
@@ -1283,8 +1283,7 @@ class SendEmails1Command extends Command
                                     // }
                                     // var_dump($this->checkform);
                                     if (isset($this->checkform) && is_object($this->checkform) && !empty($this->checkform->all())) {
-    
-                                            // $this->checkform->setValues($data);
+                                        // $this->checkform->setValues($data);
                                         $crawler = $this->client->submit($this->checkform);
                                         // var_dump($crawler);
 
@@ -1487,17 +1486,18 @@ class SendEmails1Command extends Command
     {
         try {
             $this->data = array_map('strval', $this->data);
-            $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
-            $responseHTML = $response->html();
+            // $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
+            // $responseHTML = $response->html();
 
             if ($this->isDebug) {
                 file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
             }
-            $isSuccess = $this->hasSuccessMessage($responseHTML);
+            // $isSuccess = $this->hasSuccessMessage($responseHTML);
 
-            if ($isSuccess) {
-                return;
-            }
+            // if ($isSuccess) {
+            //     return;
+            // }
+            return;
         } catch (\Exception $e) {
         }
 
@@ -1585,16 +1585,16 @@ class SendEmails1Command extends Command
         do {
             $confirmStep++;
             try {
-                $isSuccess = $this->confirmByUsingBrowser($this->driver);
+                // $isSuccess = $this->confirmByUsingBrowser($this->driver);
                 if ($this->isDebug) {
                     $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
                 }
 
-                if ($isSuccess) {
-                    $this->closeBrowser();
+                // if ($isSuccess) {
+                $this->closeBrowser();
 
-                    return;
-                }
+                return;
+                // }
             } catch (\Exception $e) {
                 continue;
             }
