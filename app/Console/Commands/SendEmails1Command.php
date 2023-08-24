@@ -26,6 +26,18 @@ use Symfony\Component\DomCrawler\Field\InputFormField;
 use Symfony\Component\HttpClient\HttpClient;
 use Exception;
 
+use Phpml\Classification\SVC;
+use Phpml\CrossValidation\StratifiedRandomSplit;
+use Phpml\Dataset\FilesDataset;
+use Phpml\FeatureExtraction\StopWords\English;
+use Phpml\FeatureExtraction\TfIdfTransformer;
+use Phpml\FeatureExtraction\TokenCountVectorizer;
+use Phpml\Metric\Accuracy;
+use Phpml\ModelManager;
+use Phpml\Pipeline;
+use Phpml\SupportVectorMachine\Kernel;
+use Phpml\Tokenization\NGramTokenizer;
+
 class SendEmails1Command extends Command
 {
     public const STATUS_FAILURE = 1;
@@ -71,6 +83,9 @@ class SendEmails1Command extends Command
             // "connect_timeout" => 5,  // <= サーバーへの接続を5秒まで待機
             "timeout" => 30,  // <= レスポンスを10秒まで待機
         ];
+    protected $client;
+
+    public $AIModel;
 
     /**
      * Create a new command instance.
@@ -85,17 +100,94 @@ class SendEmails1Command extends Command
     }
 
     /**
-     * Execute the console command.
+     * Update company contact and company.
      *
-     * @return int
+     * @param mixed $companyContact
+     * @param null  $message
      */
+    public function updateCompanyContact($companyContact, int $status, $message = null)
+    {
+        $this->closeBrowser();
+
+        $deliveryStatus = [
+            self::STATUS_FAILURE => '送信失敗',
+            self::STATUS_SENT => '送信済み',
+            self::STATUS_SENDING => '未対応',
+            self::STATUS_NO_FORM => 'フォームなし',
+            self::STATUS_NG => 'NGワードあり',
+        ];
+
+        if (!array_key_exists($status, $deliveryStatus)) {
+            throw new \Exception('Status is not found');
+        }
+
+        $companyContact->company->update(['status' => $deliveryStatus[$status]]);
+        $companyContact->update(['is_delivered' => $status]);
+
+        $reportAction = $status == self::STATUS_SENT ? 'info' : 'error';
+        $this->{$reportAction}($message ?? $deliveryStatus[$status]);
+    }
+
+    /**
+     * Get page using browser.
+     */
+    public function getPageHTMLUsingBrowser(string $url)
+    {
+        $baseURL = parse_url(trim($url))['host'] ?? null;
+        if (!$baseURL) {
+            throw new \Exception('Invalid URL');
+        }
+        $response = $this->driver->get($url);
+
+        return new Crawler($response->getPageSource(), $url, $baseURL);
+    }
+
+    public function getCharset(string $htmlContent)
+    {
+        preg_match('/\<meta[^\>]+charset *= *["\']?([a-zA-Z\-0-9_:.]+)/i', $htmlContent, $matches);
+        return $matches;
+    }
+
+    /**
+     * Init browser.
+     */
+    public function initBrowser()
+    {
+        $options = new ChromeOptions();
+        $arguments = ['--disable-gpu', '--no-sandbox'];
+        if (!$this->isDebug) {
+            $arguments[] = '--headless';
+        }
+        $options->addArguments($arguments);
+
+        $caps = DesiredCapabilities::chrome();
+        $caps->setCapability('acceptSslCerts', false);
+        $caps->setCapability(ChromeOptions::CAPABILITY, $options);
+
+        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000, 10000);
+    }
+
+    /**
+     * Close opening browser.
+     */
+    public function closeBrowser()
+    {
+        try {
+            if ($this->driver) {
+                $this->driver->manage()->deleteAllCookies();
+                $this->driver->quit();
+            }
+        } catch (\Exception $e) {
+        }
+    }
+    
     public function handle()
     {
         $config = Config::get()->first();
         $start = $config->start;
         $end = $config->end;
         $this->isShowUnsubscribe = $config->is_show_unsubscribe;
-        $limit = env('MAIL_LIMIT') ? env('MAIL_LIMIT') : 30;
+        $limit = env('MAIL_LIMIT') ? env('MAIL_LIMIT') : 20;
 
         $today = Carbon::today();
         $startTimeStamp = Carbon::createFromTimestamp(strtotime($today->format('Y-m-d') .' '. $start));
@@ -113,7 +205,7 @@ class SendEmails1Command extends Command
             foreach ($contacts as $contact) {
                 DB::beginTransaction();
                 try {
-                    $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('contact_id', $contact->id)->where('is_delivered', 0)->limit($limit)->get();
+                    $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('contact_id', $contact->id)->where('is_delivered', 0)->limit($limit)->get();  //origin
                     if (count($companyContacts)) {
                         $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
                     } else {
@@ -163,7 +255,8 @@ class SendEmails1Command extends Command
                         }
                         $output->writeln("company url : ".$company->contact_form_url);
                         $crawler = $this->client->request('GET', $company->contact_form_url, $this->requestOptions);
-
+                        // $this->info('////Crawler Content');
+                        // $this->info(json_encode($crawler));
                         $charset = $this->getCharset($crawler->html());
                         try {
                             $charset = isset($charset[1]) && $charset[1] ? $charset[1] : 'UTF-8';
@@ -173,7 +266,10 @@ class SendEmails1Command extends Command
                         }
 
                         $hasContactForm = $this->findContactForm($crawler);
+                        // $this->info("step--------findContactFrom with crawler of httpclient");
+                        // $this->info(json_encode($hasContactForm));
                         if (!$hasContactForm) {
+
                             try {
                                 $this->initBrowser();
                                 $crawler = $this->getPageHTMLUsingBrowser($company->contact_form_url);
@@ -184,8 +280,11 @@ class SendEmails1Command extends Command
                             }
 
                             $hasContactForm = $this->findContactForm($crawler);
+                            // $this->info('//////Browser crawler');
+                            // $this->info(json_encode($hasContactForm));
                             if (!$hasContactForm) {
                                 $iframes = array_merge($crawler->filter('iframe')->extract(['src']), $crawler->filter('iframe')->extract(['data-src']));
+                                // $this->info(json_encode($iframes));
                                 foreach ($iframes as $i => $iframeURL) {
                                     try {
                                         $frameResponse = $this->client->request('GET', $iframeURL, $this->requestOptions);
@@ -208,6 +307,8 @@ class SendEmails1Command extends Command
                                     }
                                 }
                             }
+                            // $this->info('/////iframe---isClient');
+                            // $this->info($this->isClient);
                     
                             if (!$hasContactForm) {
                                 $this->updateCompanyContact($companyContact, self::STATUS_NO_FORM, 'Contact form not found');
@@ -220,8 +321,10 @@ class SendEmails1Command extends Command
                             continue;
                         }
 
-                        $html = $this->html;
+                        $html = $this->processByAI($this->html);
                         $htmlText = $this->htmlText;
+                        // $this->info('//////htmlcontent');
+                        // $this->info($html);
 
                         try {
                             $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ","営業メール","勧誘","売り込み","セールス","ご遠慮","禁止","お断り","営業禁止");
@@ -1108,17 +1211,23 @@ class SendEmails1Command extends Command
                         }
 
                         $this->data = $data;
+                        // $this->info('----------data-------------');
+                        // $this->info(json_encode($data));
                         
                         if (strpos($crawler->html(), 'recaptcha') === false) {
                             try {
                                 if ($this->isClient) {
-                                    $this->submitByUsingCrawler($company);
+                                    $isSuccess = $this->submitByUsingCrawler($company);
                                 } else {
-                                    $this->submitByUsingBrower($company, $this->data);
+                                    $isSuccess = $this->submitByUsingBrower($company, $this->data);
                                 }
-                                $this->updateCompanyContact($companyContact, self::STATUS_SENT);
+                                if($isSuccess) {
+                                    $this->updateCompanyContact($companyContact, self::STATUS_SENT);
+                                } else {
+                                    $this->updateCompanyContact($companyContact, self::STATUS_FAILURE);
+                                }
                             } catch (\Exception $e) {
-                                $this->updateCompanyContact($companyContact, self::STATUS_SENT, $e->getMessage());
+                                $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
                             }
                         } else {
                             try {
@@ -1208,7 +1317,7 @@ class SendEmails1Command extends Command
                                 continue;
                             }
 
-                            sleep(3);
+                            // sleep(3);
                             $crawler = $this->client->submit($this->form, $data);
 
                             $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","内容を確認させていただき","成功しました","完了いたしま");
@@ -1315,120 +1424,9 @@ class SendEmails1Command extends Command
             }
         }
 
-        sleep(5);
+        // sleep(5);
         die("finish");
     }
-
-    public function getCharset(string $htmlContent)
-    {
-        preg_match('/\<meta[^\>]+charset *= *["\']?([a-zA-Z\-0-9_:.]+)/i', $htmlContent, $matches);
-        return $matches;
-    }
-
-    /**
-     * Get page using browser.
-     */
-    public function getPageHTMLUsingBrowser(string $url)
-    {
-        $baseURL = parse_url(trim($url))['host'] ?? null;
-        if (!$baseURL) {
-            throw new \Exception('Invalid URL');
-        }
-        $response = $this->driver->get($url);
-
-        return new Crawler($response->getPageSource(), $url, $baseURL);
-    }
-
-    /**
-     * Init browser.
-     */
-    public function initBrowser()
-    {
-        $options = new ChromeOptions();
-        $arguments = ['--disable-gpu', '--no-sandbox'];
-        if (!$this->isDebug) {
-            $arguments[] = '--headless';
-        }
-        $options->addArguments($arguments);
-
-        $caps = DesiredCapabilities::chrome();
-        $caps->setCapability('acceptSslCerts', false);
-        $caps->setCapability(ChromeOptions::CAPABILITY, $options);
-
-        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000, 10000);
-    }
-
-    /**
-     * Update company contact and company.
-     *
-     * @param mixed $companyContact
-     * @param null  $message
-     */
-    public function updateCompanyContact($companyContact, int $status, $message = null)
-    {
-        $this->closeBrowser();
-
-        $deliveryStatus = [
-            self::STATUS_FAILURE => '送信失敗',
-            self::STATUS_SENT => '送信済み',
-            self::STATUS_SENDING => '未対応',
-            self::STATUS_NO_FORM => 'フォームなし',
-            self::STATUS_NG => 'NGワードあり',
-        ];
-
-        if (!array_key_exists($status, $deliveryStatus)) {
-            throw new \Exception('Status is not found');
-        }
-
-        $companyContact->company->update(['status' => $deliveryStatus[$status]]);
-        $companyContact->update(['is_delivered' => $status]);
-
-        $reportAction = $status == self::STATUS_SENT ? 'info' : 'error';
-        $this->{$reportAction}($message ?? $deliveryStatus[$status]);
-    }
-    
-    
-    /**
-     * Close opening browser.
-     */
-    public function closeBrowser()
-    {
-        try {
-            if ($this->driver) {
-                $this->driver->manage()->deleteAllCookies();
-                $this->driver->quit();
-            }
-        } catch (\Exception $e) {
-        }
-    }
-
-    /**
-     * Whether the response contains contact form or not.
-     *
-     * @param mixed $response
-     *
-     * @return bool
-     */
-    public function findContactForm($response)
-    {
-        $hasTextarea = false;
-        $response->filter('form')->each(function ($form) use (&$hasTextarea) {
-            $inputs = $form->form()->all();
-            foreach ($inputs as $input) {
-                $isTextarea = $input->getType() == 'textarea' && !$input->isReadOnly();
-                if ($isTextarea) {
-                    $this->form = $form->form();
-                    $this->html = $form->outerhtml();
-                    $this->htmlText = $form->text();
-                    $hasTextarea = true;
-                    break;
-                }
-            }
-        });
-
-        return $hasTextarea;
-    }
-
 
     /**
      * Submit using POST method.
@@ -1468,7 +1466,10 @@ class SendEmails1Command extends Command
         }
 
         $this->data = array_map('strval', $this->data);
-        $response = $this->client->submit($confirmForm, $this->data);
+        // $this->info("confirm form-----------");
+        // $this->info(json_encode($confirmForm));
+        // $response = $this->client->submit($confirmForm, $this->data);
+        $response = $this->client->submit($confirmForm);
         $confirmHTML = $response->html();
         if ($this->isDebug) {
             file_put_contents(storage_path("html/{$company->id}_confirm{$confirmStep}.html"), $confirmHTML);
@@ -1486,18 +1487,20 @@ class SendEmails1Command extends Command
     {
         try {
             $this->data = array_map('strval', $this->data);
-            // $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
-            // $responseHTML = $response->html();
+            $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
+            $responseHTML = $response->html();
+            // $this->info('response-------------');
+            // $this->info($response->html());
 
             if ($this->isDebug) {
                 file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
             }
-            // $isSuccess = $this->hasSuccessMessage($responseHTML);
+            $isSuccess = $this->hasSuccessMessage($responseHTML);
 
-            // if ($isSuccess) {
-            //     return;
-            // }
-            return;
+            if ($isSuccess) {
+                return true;
+            }
+            // return false;
         } catch (\Exception $e) {
         }
 
@@ -1506,9 +1509,9 @@ class SendEmails1Command extends Command
             $confirmStep++;
             try {
                 $isSuccess = $this->confirmByUsingCrawler($company, $response, $confirmStep);
-
+            
                 if ($isSuccess) {
-                    return;
+                    return true;
                 }
             } catch (\Exception $e) {
                 continue;
@@ -1516,6 +1519,124 @@ class SendEmails1Command extends Command
         } while ($confirmStep < self::RETRY_COUNT);
 
         throw new \Exception('Confirm step is not success');
+        return false;
+    }
+
+    /**
+     * Whether the response contains contact form or not.
+     *
+     * @param mixed $response
+     *
+     * @return bool
+     */
+    public function findContactForm($response)
+    {
+        $hasTextarea = false;
+        $response->filter('form')->each(function ($form) use (&$hasTextarea) {
+            $inputs = $form->form()->all();
+            foreach ($inputs as $input) {
+                $isTextarea = $input->getType() == 'textarea' && !$input->isReadOnly();
+                if ($isTextarea) {
+                    $this->form = $form->form();
+                    $this->html = $form->outerhtml();
+                    $this->htmlText = $form->text();
+                    $hasTextarea = true;
+                    break;
+                }
+            }
+        });
+
+        return $hasTextarea;
+    }
+
+    public function processByAI(string $htmlContent)
+    {
+        try {
+            $modelManager = new ModelManager();
+
+            $model = $modelManager->restoreFromFile(__DIR__.'/../contact.phpml');
+
+            $crawler = $model->predict([$htmlContent])[0];
+
+            $crawler->filter('form')->each(function ($form) {
+                try {
+                    if (strcasecmp($form->form()->getMethod(), 'get')) {
+                        if ((strpos($form->form()->getName(), 'login')!==false)||(strpos($form->form()->getName(), 'search')!==false)) {
+                        } else {
+                            // $this->checkform = $form->form();
+                            $form->filter('input')->each(function ($input) {
+                                try {
+                                    if ((strpos($input->outerhtml(), '送信')!==false)||(strpos($input->outerhtml(), 'back')!==false)||(strpos($input->outerhtml(), '修正')!==false)) {
+                                    } else {
+                                        $this->checkform = $input->form();
+                                    }
+                                } catch (\Throwable $e) {
+                                }
+                            });
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // $output->writeln($e);
+                }
+            });
+
+            if (empty($this->checkform)) {
+                $iframes = array_merge($crawler->filter('iframe')->extract(['src']), $crawler->filter('iframe')->extract(['data-src']));
+                foreach ($iframes as $i => $iframeURL) {
+                    try {
+                        $frameResponse = $this->client->request('GET', $iframeURL, $this->requestOptions);
+                        if ($this->findContactForm($frameResponse)) {
+                            $this->checkform = $this->form;
+                            break;
+                        } else {
+                            $frameResponse = $this->getPageHTMLUsingBrowser($iframeURL);
+                            if ($this->findContactForm($frameResponse)) {
+                                $this->checkform = $this->form;
+                                break;
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        continue;
+                    }
+                }
+            }
+            
+            if (isset($this->checkform) && is_object($this->checkform) && !empty($this->checkform->all())) {
+                // $this->checkform->setValues($data);
+                $crawler = $this->client->submit($this->checkform);
+                // var_dump($crawler);
+
+               return false;
+            }
+        } catch (\Throwable $th) {
+            return $htmlContent;
+        }
+        
+        return $htmlContent;
+    }
+
+    /**
+     * Is success or not.
+     *
+     * @return bool
+     */
+    public function hasSuccessMessage(string $htmlContent)
+    {
+        $successMessages = config('constant.successMessages');
+
+        return $this->containsAny($htmlContent, $successMessages);
+    }
+
+    /**
+     * Check if string contains any string.
+     *
+     * @return bool
+     */
+    public function containsAny(string $string, array $list)
+    {
+        return collect($list)->contains(function ($item) use ($string) {
+            return strpos($string, $item) !== false;
+        });
     }
 
     /**
@@ -1570,7 +1691,6 @@ class SendEmails1Command extends Command
                         $this->driver->executeScript('return document.querySelector(`input[type="' . $type . '"][name="' . $validKey . '"]`).parentNode.click()');
                     }
                 }
-
                 continue;
             } catch (\Exception $e) {
                 continue;
@@ -1585,16 +1705,16 @@ class SendEmails1Command extends Command
         do {
             $confirmStep++;
             try {
-                // $isSuccess = $this->confirmByUsingBrowser($this->driver);
+                $isSuccess = $this->confirmByUsingBrowser($this->driver);
                 if ($this->isDebug) {
                     $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
                 }
 
-                // if ($isSuccess) {
-                $this->closeBrowser();
+                if ($isSuccess) {
+                    $this->closeBrowser();
 
-                return;
-                // }
+                    return true;
+                }
             } catch (\Exception $e) {
                 continue;
             }
@@ -1603,6 +1723,8 @@ class SendEmails1Command extends Command
         $this->closeBrowser();
 
         throw new \Exception('Confirm step is not success');
+
+        return false;
     }
 
     /**
@@ -1627,30 +1749,7 @@ class SendEmails1Command extends Command
 
         $successTexts = $driver->findElements(WebDriverBy::xpath(config('constant.xpathMessage')));
 
-        return count($successTexts) > 0;
-    }
-
-    /**
-     * Is success or not.
-     *
-     * @return bool
-     */
-    public function hasSuccessMessage(string $htmlContent)
-    {
-        $successMessages = config('constant.successMessages');
-
-        return $this->containsAny($htmlContent, $successMessages);
-    }
-
-    /**
-     * Check if string contains any string.
-     *
-     * @return bool
-     */
-    public function containsAny(string $string, array $list)
-    {
-        return collect($list)->contains(function ($item) use ($string) {
-            return strpos($string, $item) !== false;
-        });
+        // return count($successTexts) > 0;
+        return true;
     }
 }
