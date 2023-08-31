@@ -869,7 +869,7 @@ class DashboardController extends BaseController
             exec('sudo systemctl restart mysqld');
             exec('sudo supervisorctl restart all');
         }catch (\Throwable $e) {
-            dd($e);
+            // dd($e)
         }
         return back()->with(['system.message.info' => 'MySQLを再起動しました。']);
     }
@@ -1033,7 +1033,7 @@ class DashboardController extends BaseController
         try{
             return Excel::download(new CompanyExport(request()->all()), '会社一覧.csv', \Maatwebsite\Excel\Excel::CSV);
         }catch (\Throwable $e) {
-            dd($e->getMessage());
+            // dd($e->getMessage());
         }
     }
     public function exportContactCSV(Contact $contact)
@@ -1056,7 +1056,7 @@ class DashboardController extends BaseController
            }
            Excel::import(new CompanyImport, $path);
 	} catch (\Throwable $e) {
-	    dd($e);
+	    // dd($e);
         return back()->with(['system.message.info' => __('CSVファイルのアップロードに失敗しました')]);
     }
         
