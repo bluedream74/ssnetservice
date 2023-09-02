@@ -187,7 +187,7 @@ class SendEmails1Command extends Command
         $start = $config->start;
         $end = $config->end;
         $this->isShowUnsubscribe = $config->is_show_unsubscribe;
-        $limit = env('MAIL_LIMIT') ? env('MAIL_LIMIT') : 20;
+        $limit = env('MAIL_LIMIT') ? env('MAIL_LIMIT') : 12;
 
         $today = Carbon::today();
         $startTimeStamp = Carbon::createFromTimestamp(strtotime($today->format('Y-m-d') .' '. $start));
