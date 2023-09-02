@@ -1280,6 +1280,7 @@ class SendEmails1Command extends Command
                                         $api->setWebsiteKey($captcha_sitekey);
                                         try {
                                             if (!$api->createTask()) {
+                                                $this->closeBrowser();
                                                 continue;
                                             }
                                         } catch (\Throwable $e) {
@@ -1290,6 +1291,7 @@ class SendEmails1Command extends Command
                                         $taskId = $api->getTaskId();
                                         
                                         if (!$api->waitForResult()) {
+                                            $this->closeBrowser();
                                             continue;
                                         } else {
                                             $recaptchaToken = $api->getTaskSolution();
