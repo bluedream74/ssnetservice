@@ -255,8 +255,6 @@ class SendEmails1Command extends Command
                         }
                         $output->writeln("company url : ".$company->contact_form_url);
                         $crawler = $this->client->request('GET', $company->contact_form_url, $this->requestOptions);
-                        // $this->info('////Crawler Content');
-                        // $this->info(json_encode($crawler));
                         $charset = $this->getCharset($crawler->html());
                         try {
                             $charset = isset($charset[1]) && $charset[1] ? $charset[1] : 'UTF-8';
@@ -266,8 +264,6 @@ class SendEmails1Command extends Command
                         }
 
                         $hasContactForm = $this->findContactForm($crawler);
-                        // $this->info("step--------findContactFrom with crawler of httpclient");
-                        // $this->info(json_encode($hasContactForm));
                         if (!$hasContactForm) {
 
                             try {
@@ -280,11 +276,8 @@ class SendEmails1Command extends Command
                             }
 
                             $hasContactForm = $this->findContactForm($crawler);
-                            // $this->info('//////Browser crawler');
-                            // $this->info(json_encode($hasContactForm));
                             if (!$hasContactForm) {
                                 $iframes = array_merge($crawler->filter('iframe')->extract(['src']), $crawler->filter('iframe')->extract(['data-src']));
-                                // $this->info(json_encode($iframes));
                                 foreach ($iframes as $i => $iframeURL) {
                                     try {
                                         $frameResponse = $this->client->request('GET', $iframeURL, $this->requestOptions);
@@ -307,8 +300,6 @@ class SendEmails1Command extends Command
                                     }
                                 }
                             }
-                            // $this->info('/////iframe---isClient');
-                            // $this->info($this->isClient);
                     
                             if (!$hasContactForm) {
                                 $this->updateCompanyContact($companyContact, self::STATUS_NO_FORM, 'Contact form not found');
@@ -323,8 +314,6 @@ class SendEmails1Command extends Command
 
                         $html = $this->processByAI($this->html);
                         $htmlText = $this->htmlText;
-                        // $this->info('//////htmlcontent');
-                        // $this->info($html);
 
                         try {
                             $nonStrings = array("営業お断り","サンプル","有料","代引き","着払い","資料請求","カタログ","営業メール","勧誘","売り込み","セールス","ご遠慮","禁止","お断り","営業禁止");
@@ -1211,8 +1200,6 @@ class SendEmails1Command extends Command
                         }
 
                         $this->data = $data;
-                        // $this->info('----------data-------------');
-                        // $this->info(json_encode($data));
                         
                         if (strpos($crawler->html(), 'recaptcha') === false) {
                             try {
@@ -1468,9 +1455,6 @@ class SendEmails1Command extends Command
         }
 
         $this->data = array_map('strval', $this->data);
-        // $this->info("confirm form-----------");
-        // $this->info(json_encode($confirmForm));
-        // $response = $this->client->submit($confirmForm, $this->data);
         $response = $this->client->submit($confirmForm);
         $confirmHTML = $response->html();
         if ($this->isDebug) {
@@ -1491,8 +1475,6 @@ class SendEmails1Command extends Command
             $this->data = array_map('strval', $this->data);
             $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
             $responseHTML = $response->html();
-            // $this->info('response-------------');
-            // $this->info($response->html());
 
             if ($this->isDebug) {
                 file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
