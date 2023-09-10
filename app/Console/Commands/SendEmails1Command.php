@@ -312,7 +312,8 @@ class SendEmails1Command extends Command
                             continue;
                         }
 
-                        $html = $this->processByAI($this->html);
+                        // $html = $this->processByAI($this->html);
+                        $html = $this->html;
                         $htmlText = $this->htmlText;
 
                         try {
@@ -1267,7 +1268,7 @@ class SendEmails1Command extends Command
                                         $api->setWebsiteKey($captcha_sitekey);
                                         try {
                                             if (!$api->createTask()) {
-                                                $this->closeBrowser();
+                                                // $this->closeBrowser();
                                                 continue;
                                             }
                                         } catch (\Throwable $e) {
@@ -1278,7 +1279,7 @@ class SendEmails1Command extends Command
                                         $taskId = $api->getTaskId();
                                         
                                         if (!$api->waitForResult()) {
-                                            $this->closeBrowser();
+                                            // $this->closeBrowser();
                                             continue;
                                         } else {
                                             $recaptchaToken = $api->getTaskSolution();
@@ -1381,7 +1382,7 @@ class SendEmails1Command extends Command
                                     // }
                                     // var_dump($this->checkform);
                                     if (isset($this->checkform) && is_object($this->checkform) && !empty($this->checkform->all())) {
-                                        // $this->checkform->setValues($data);
+                                        $this->checkform->setValues($data);
                                         $crawler = $this->client->submit($this->checkform);
                                         // var_dump($crawler);
 
@@ -1426,6 +1427,7 @@ class SendEmails1Command extends Command
     public function confirmByUsingCrawler($company, $response, int $confirmStep)
     {
         $confirmForm = null;
+
         $response->filter('form')->each(function ($form) use (&$confirmForm) {
             $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
             if ($isConfirmForm) {
