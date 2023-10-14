@@ -26,18 +26,6 @@ use Symfony\Component\DomCrawler\Field\InputFormField;
 use Symfony\Component\HttpClient\HttpClient;
 use Exception;
 
-use Phpml\Classification\SVC;
-use Phpml\CrossValidation\StratifiedRandomSplit;
-use Phpml\Dataset\FilesDataset;
-use Phpml\FeatureExtraction\StopWords\English;
-use Phpml\FeatureExtraction\TfIdfTransformer;
-use Phpml\FeatureExtraction\TokenCountVectorizer;
-use Phpml\Metric\Accuracy;
-use Phpml\ModelManager;
-use Phpml\Pipeline;
-use Phpml\SupportVectorMachine\Kernel;
-use Phpml\Tokenization\NGramTokenizer;
-
 class SendEmails1Command extends Command
 {
     public const STATUS_FAILURE = 1;
@@ -83,9 +71,6 @@ class SendEmails1Command extends Command
             // "connect_timeout" => 5,  // <= サーバーへの接続を5秒まで待機
             "timeout" => 30,  // <= レスポンスを10秒まで待機
         ];
-    protected $client;
-
-    public $AIModel;
 
     /**
      * Create a new command instance.
@@ -100,94 +85,17 @@ class SendEmails1Command extends Command
     }
 
     /**
-     * Update company contact and company.
+     * Execute the console command.
      *
-     * @param mixed $companyContact
-     * @param null  $message
+     * @return int
      */
-    public function updateCompanyContact($companyContact, int $status, $message = null)
-    {
-        $this->closeBrowser();
-
-        $deliveryStatus = [
-            self::STATUS_FAILURE => '送信失敗',
-            self::STATUS_SENT => '送信済み',
-            self::STATUS_SENDING => '未対応',
-            self::STATUS_NO_FORM => 'フォームなし',
-            self::STATUS_NG => 'NGワードあり',
-        ];
-
-        if (!array_key_exists($status, $deliveryStatus)) {
-            throw new \Exception('Status is not found');
-        }
-
-        $companyContact->company->update(['status' => $deliveryStatus[$status]]);
-        $companyContact->update(['is_delivered' => $status]);
-
-        $reportAction = $status == self::STATUS_SENT ? 'info' : 'error';
-        $this->{$reportAction}($message ?? $deliveryStatus[$status]);
-    }
-
-    /**
-     * Get page using browser.
-     */
-    public function getPageHTMLUsingBrowser(string $url)
-    {
-        $baseURL = parse_url(trim($url))['host'] ?? null;
-        if (!$baseURL) {
-            throw new \Exception('Invalid URL');
-        }
-        $response = $this->driver->get($url);
-
-        return new Crawler($response->getPageSource(), $url, $baseURL);
-    }
-
-    public function getCharset(string $htmlContent)
-    {
-        preg_match('/\<meta[^\>]+charset *= *["\']?([a-zA-Z\-0-9_:.]+)/i', $htmlContent, $matches);
-        return $matches;
-    }
-
-    /**
-     * Init browser.
-     */
-    public function initBrowser()
-    {
-        $options = new ChromeOptions();
-        $arguments = ['--disable-gpu', '--no-sandbox'];
-        if (!$this->isDebug) {
-            $arguments[] = '--headless';
-        }
-        $options->addArguments($arguments);
-
-        $caps = DesiredCapabilities::chrome();
-        $caps->setCapability('acceptSslCerts', false);
-        $caps->setCapability(ChromeOptions::CAPABILITY, $options);
-
-        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000, 10000);
-    }
-
-    /**
-     * Close opening browser.
-     */
-    public function closeBrowser()
-    {
-        try {
-            if ($this->driver) {
-                $this->driver->manage()->deleteAllCookies();
-                $this->driver->quit();
-            }
-        } catch (\Exception $e) {
-        }
-    }
-    
     public function handle()
     {
         $config = Config::get()->first();
         $start = $config->start;
         $end = $config->end;
         $this->isShowUnsubscribe = $config->is_show_unsubscribe;
-        $limit = env('MAIL_LIMIT') ? env('MAIL_LIMIT') : 12;
+        $limit = env('MAIL_LIMIT') ? env('MAIL_LIMIT') : 30;
 
         $today = Carbon::today();
         $startTimeStamp = Carbon::createFromTimestamp(strtotime($today->format('Y-m-d') .' '. $start));
@@ -205,7 +113,7 @@ class SendEmails1Command extends Command
             foreach ($contacts as $contact) {
                 DB::beginTransaction();
                 try {
-                    $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('contact_id', $contact->id)->where('is_delivered', 0)->limit($limit)->get();  //origin
+                    $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('contact_id', $contact->id)->where('is_delivered', 0)->limit($limit)->get();
                     if (count($companyContacts)) {
                         $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
                     } else {
@@ -255,6 +163,7 @@ class SendEmails1Command extends Command
                         }
                         $output->writeln("company url : ".$company->contact_form_url);
                         $crawler = $this->client->request('GET', $company->contact_form_url, $this->requestOptions);
+
                         $charset = $this->getCharset($crawler->html());
                         try {
                             $charset = isset($charset[1]) && $charset[1] ? $charset[1] : 'UTF-8';
@@ -265,7 +174,6 @@ class SendEmails1Command extends Command
 
                         $hasContactForm = $this->findContactForm($crawler);
                         if (!$hasContactForm) {
-
                             try {
                                 $this->initBrowser();
                                 $crawler = $this->getPageHTMLUsingBrowser($company->contact_form_url);
@@ -312,7 +220,6 @@ class SendEmails1Command extends Command
                             continue;
                         }
 
-                        // $html = $this->processByAI($this->html);
                         $html = $this->html;
                         $htmlText = $this->htmlText;
 
@@ -350,56 +257,56 @@ class SendEmails1Command extends Command
                                         continue;
                                     }
                                     switch ($type) {
-                                        case 'select':
-                                            $areaCheck=true;
-                                            foreach ($val->getOptions() as $value) {
-                                                if ($value['value'] == $contact->area) {
-                                                    $data[$key] = $contact->area;
-                                                    $areaCheck=false;
-                                                }
-                                            }
-                                            if ($areaCheck) {
-                                                $size = sizeof($this->form[$key]->getOptions());
-                                                $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
-                                            }
-                                            break;
-                                        case 'radio':
-                                            if (in_array('その他', $this->form[$key]->getOptions())) {
-                                                foreach ($this->form[$key]->getOptions() as $item) {
-                                                    if ($item['value']== 'その他') {
-                                                        $data[$key] = $item['value'];
+                                            case 'select':
+                                                $areaCheck=true;
+                                                foreach ($val->getOptions() as $value) {
+                                                    if ($value['value'] == $contact->area) {
+                                                        $data[$key] = $contact->area;
+                                                        $areaCheck=false;
                                                     }
                                                 }
-                                            } else {
-                                                if (($key=="性別")||(($key=="sex"))) {
-                                                    $data[$key] = $this->form[$key]->getOptions()[0]['value'];
-                                                } elseif ($value=="男性") {
-                                                    $data[$key] = "男性";
-                                                } else {
+                                                if ($areaCheck) {
                                                     $size = sizeof($this->form[$key]->getOptions());
                                                     $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
                                                 }
-                                            }
-                                            break;
-                                        case 'checkbox':
-                                            $data[$key] = $this->form[$key]->getOptions()[0]['value'];
-                                            break;
-                                        case 'textarea':
-                                            if ((strpos($key, 'captcha') === false) && (strpos($key, 'address') === false)) {
-                                                $content = str_replace('%company_name%', $company->name, $contact->content);
-                                                $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
-                                                $data[$key] = $content;
-                                                if ($this->isShowUnsubscribe) {
-                                                    $data[$key] .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+                                                break;
+                                            case 'radio':
+                                                if (in_array('その他', $this->form[$key]->getOptions())) {
+                                                    foreach ($this->form[$key]->getOptions() as $item) {
+                                                        if ($item['value']== 'その他') {
+                                                            $data[$key] = $item['value'];
+                                                        }
+                                                    }
+                                                } else {
+                                                    if (($key=="性別")||(($key=="sex"))) {
+                                                        $data[$key] = $this->form[$key]->getOptions()[0]['value'];
+                                                    } elseif ($value=="男性") {
+                                                        $data[$key] = "男性";
+                                                    } else {
+                                                        $size = sizeof($this->form[$key]->getOptions());
+                                                        $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
+                                                    }
                                                 }
-                                            }
-                                            break;
-                                        case 'email':
-                                            $data[$key] = $contact->email;
-                                            break;
-                                        default:
-                                            break;
-                                    }
+                                                break;
+                                            case 'checkbox':
+                                                $data[$key] = $this->form[$key]->getOptions()[0]['value'];
+                                                break;
+                                            case 'textarea':
+                                                if ((strpos($key, 'captcha') === false) && (strpos($key, 'address') === false)) {
+                                                    $content = str_replace('%company_name%', $company->name, $contact->content);
+                                                    $content = str_replace('%myurl%', route('web.read', [$contact->id,$company->id]), $content);
+                                                    $data[$key] = $content;
+                                                    if ($this->isShowUnsubscribe) {
+                                                        $data[$key] .= PHP_EOL . PHP_EOL . PHP_EOL . PHP_EOL . '※※※※※※※※' . PHP_EOL . '配信停止希望の方は ' . route('web.stop.receive', 'ajgm2a3jag' . $company->id . '25hgj') . '   こちら' . PHP_EOL . '※※※※※※※※';
+                                                    }
+                                                }
+                                                break;
+                                            case 'email':
+                                                $data[$key] = $contact->email;
+                                                break;
+                                            default:
+                                                break;
+                                        }
                                 } catch (\Throwable $e) {
                                     $output->writeln($e);
                                     continue;
@@ -563,9 +470,9 @@ class SendEmails1Command extends Command
                                 }
                                 // else if(strpos($key,'姓')!==false){
                                     //     $data[$key] = $contact->surname;
-                                // }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
+                                    // }else if((strpos($key,'名')!==false)&&(strpos($key,'名前')===false)&&(strpos($key,'氏名')===false)){
                                     //     $data[$key] = $contact->lastname;
-                                // }
+                                    // }
                             }
                         }
                         $nonPatterns = array('部署');
@@ -1180,20 +1087,20 @@ class SendEmails1Command extends Command
                                 try {
                                     $type = $val->getType();
                                     switch ($type) {
-                                        case 'number':
-                                            $data[$key] = 1;
-                                            break;
-                                        case 'date':
-                                            $data[$key] = date("Y-m-d", strtotime("+1 day"));
-                                            break;
-                                        case 'select':
-                                            $size = sizeof($this->form[$key]->getOptions());
-                                            $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
-                                            break;
-                                        case 'default':
-                                            $data[$key] = "きょうわ";
-                                            break;
-                                    }
+                                            case 'number':
+                                                $data[$key] = 1;
+                                                break;
+                                            case 'date':
+                                                $data[$key] = date("Y-m-d", strtotime("+1 day"));
+                                                break;
+                                            case 'select':
+                                                $size = sizeof($this->form[$key]->getOptions());
+                                                $data[$key] = $this->form[$key]->getOptions()[$size-1]['value'];
+                                                break;
+                                            case 'default':
+                                                $data[$key] = "きょうわ";
+                                                break;
+                                        }
                                 } catch (\Throwable $e) {
                                     $output->writeln($e);
                                 }
@@ -1205,17 +1112,13 @@ class SendEmails1Command extends Command
                         if (strpos($crawler->html(), 'recaptcha') === false) {
                             try {
                                 if ($this->isClient) {
-                                    $isSuccess = $this->submitByUsingCrawler($company);
+                                    $this->submitByUsingCrawler($company);
                                 } else {
-                                    $isSuccess = $this->submitByUsingBrower($company, $this->data);
+                                    $this->submitByUsingBrower($company, $this->data);
                                 }
-                                if($isSuccess) {
-                                    $this->updateCompanyContact($companyContact, self::STATUS_SENT);
-                                } else {
-                                    $this->updateCompanyContact($companyContact, self::STATUS_FAILURE);
-                                }
+                                $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                             } catch (\Exception $e) {
-                                $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
+                                $this->updateCompanyContact($companyContact, self::STATUS_SENT, $e->getMessage());
                             }
                         } else {
                             try {
@@ -1268,7 +1171,6 @@ class SendEmails1Command extends Command
                                         $api->setWebsiteKey($captcha_sitekey);
                                         try {
                                             if (!$api->createTask()) {
-                                                // $this->closeBrowser();
                                                 continue;
                                             }
                                         } catch (\Throwable $e) {
@@ -1279,7 +1181,6 @@ class SendEmails1Command extends Command
                                         $taskId = $api->getTaskId();
                                         
                                         if (!$api->waitForResult()) {
-                                            // $this->closeBrowser();
                                             continue;
                                         } else {
                                             $recaptchaToken = $api->getTaskSolution();
@@ -1307,7 +1208,7 @@ class SendEmails1Command extends Command
                                 continue;
                             }
 
-                            // sleep(3);
+                            sleep(3);
                             $crawler = $this->client->submit($this->form, $data);
 
                             $checkMessages = array("ありがとうございま","有難うございま","送信されました","送信しました","送信いたしました","自動返信メール","内容を確認させていただき","成功しました","完了いたしま");
@@ -1382,7 +1283,8 @@ class SendEmails1Command extends Command
                                     // }
                                     // var_dump($this->checkform);
                                     if (isset($this->checkform) && is_object($this->checkform) && !empty($this->checkform->all())) {
-                                        $this->checkform->setValues($data);
+    
+                                            // $this->checkform->setValues($data);
                                         $crawler = $this->client->submit($this->checkform);
                                         // var_dump($crawler);
 
@@ -1414,98 +1316,91 @@ class SendEmails1Command extends Command
             }
         }
 
-        // sleep(5);
+        sleep(5);
         die("finish");
     }
 
-    /**
-     * Submit using POST method.
-     *
-     * @param mixed $company
-     * @param mixed $response
-     */
-    public function confirmByUsingCrawler($company, $response, int $confirmStep)
+    public function getCharset(string $htmlContent)
     {
-        $confirmForm = null;
-
-        $response->filter('form')->each(function ($form) use (&$confirmForm) {
-            $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
-            if ($isConfirmForm) {
-                $confirmForm = $form->form();
-            }
-        });
-
-        if (!$confirmForm) {
-            $iframes = $response->filter('iframe')->extract(['src']);
-            foreach ($iframes as $iframeURL) {
-                try {
-                    $frameResponse = $this->client->request('GET', $iframeURL, $this->requestOptions);
-                    $response->filter('form')->each(function ($form) use (&$confirmForm) {
-                        $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
-                        if ($isConfirmForm) {
-                            $confirmForm = $form->form();
-                        }
-                    });
-                } catch (\Exception $e) {
-                    continue;
-                }
-            }
-        }
-
-        if (!$confirmForm) {
-            throw new \Exception('Confirm form not found');
-        }
-
-        $this->data = array_map('strval', $this->data);
-        $response = $this->client->submit($confirmForm);
-        $confirmHTML = $response->html();
-        if ($this->isDebug) {
-            file_put_contents(storage_path("html/{$company->id}_confirm{$confirmStep}.html"), $confirmHTML);
-        }
-
-        return $this->hasSuccessMessage($confirmHTML);
+        preg_match('/\<meta[^\>]+charset *= *["\']?([a-zA-Z\-0-9_:.]+)/i', $htmlContent, $matches);
+        return $matches;
     }
 
     /**
-     * Submit using POST method.
-     *
-     * @param mixed $company
+     * Get page using browser.
      */
-    public function submitByUsingCrawler($company)
+    public function getPageHTMLUsingBrowser(string $url)
     {
-        try {
-            $this->data = array_map('strval', $this->data);
-            $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
-            $responseHTML = $response->html();
+        $baseURL = parse_url(trim($url))['host'] ?? null;
+        if (!$baseURL) {
+            throw new \Exception('Invalid URL');
+        }
+        $response = $this->driver->get($url);
 
-            if ($this->isDebug) {
-                file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
-            }
-            $isSuccess = $this->hasSuccessMessage($responseHTML);
+        return new Crawler($response->getPageSource(), $url, $baseURL);
+    }
 
-            if ($isSuccess) {
-                return true;
-            }
-            // return false;
-        } catch (\Exception $e) {
+    /**
+     * Init browser.
+     */
+    public function initBrowser()
+    {
+        $options = new ChromeOptions();
+        $arguments = ['--disable-gpu', '--no-sandbox'];
+        if (!$this->isDebug) {
+            $arguments[] = '--headless';
+        }
+        $options->addArguments($arguments);
+
+        $caps = DesiredCapabilities::chrome();
+        $caps->setCapability('acceptSslCerts', false);
+        $caps->setCapability(ChromeOptions::CAPABILITY, $options);
+
+        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000, 10000);
+    }
+
+    /**
+     * Update company contact and company.
+     *
+     * @param mixed $companyContact
+     * @param null  $message
+     */
+    public function updateCompanyContact($companyContact, int $status, $message = null)
+    {
+        $this->closeBrowser();
+
+        $deliveryStatus = [
+            self::STATUS_FAILURE => '送信失敗',
+            self::STATUS_SENT => '送信済み',
+            self::STATUS_SENDING => '未対応',
+            self::STATUS_NO_FORM => 'フォームなし',
+            self::STATUS_NG => 'NGワードあり',
+        ];
+
+        if (!array_key_exists($status, $deliveryStatus)) {
+            throw new \Exception('Status is not found');
         }
 
-        $confirmStep = 0;
-        do {
-            $confirmStep++;
-            try {
-                $isSuccess = $this->confirmByUsingCrawler($company, $response, $confirmStep);
-            
-                if ($isSuccess) {
-                    return true;
-                }
-            } catch (\Exception $e) {
-                continue;
-            }
-        } while ($confirmStep < self::RETRY_COUNT);
+        $companyContact->company->update(['status' => $deliveryStatus[$status]]);
+        $companyContact->update(['is_delivered' => $status]);
 
-        throw new \Exception('Confirm step is not success');
-        return false;
+        $reportAction = $status == self::STATUS_SENT ? 'info' : 'error';
+        $this->{$reportAction}($message ?? $deliveryStatus[$status]);
+    }
+    
+    
+    /**
+     * Close opening browser.
+     */
+    public function closeBrowser()
+    {
+        try {
+            if ($this->driver) {
+                $this->driver->manage()->deleteAllCookies();
+                $this->driver->quit();
+            }
+        } catch (\Exception $e) {
+        }
     }
 
     /**
@@ -1535,94 +1430,92 @@ class SendEmails1Command extends Command
         return $hasTextarea;
     }
 
-    public function processByAI(string $htmlContent)
+
+    /**
+     * Submit using POST method.
+     *
+     * @param mixed $company
+     * @param mixed $response
+     */
+    public function confirmByUsingCrawler($company, $response, int $confirmStep)
+    {
+        $confirmForm = null;
+        $response->filter('form')->each(function ($form) use (&$confirmForm) {
+            $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
+            if ($isConfirmForm) {
+                $confirmForm = $form->form();
+            }
+        });
+
+        if (!$confirmForm) {
+            $iframes = $response->filter('iframe')->extract(['src']);
+            foreach ($iframes as $iframeURL) {
+                try {
+                    $frameResponse = $this->client->request('GET', $iframeURL, $this->requestOptions);
+                    $response->filter('form')->each(function ($form) use (&$confirmForm) {
+                        $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
+                        if ($isConfirmForm) {
+                            $confirmForm = $form->form();
+                        }
+                    });
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+
+        if (!$confirmForm) {
+            throw new \Exception('Confirm form not found');
+        }
+
+        $this->data = array_map('strval', $this->data);
+        $response = $this->client->submit($confirmForm, $this->data);
+        $confirmHTML = $response->html();
+        if ($this->isDebug) {
+            file_put_contents(storage_path("html/{$company->id}_confirm{$confirmStep}.html"), $confirmHTML);
+        }
+
+        return $this->hasSuccessMessage($confirmHTML);
+    }
+
+    /**
+     * Submit using POST method.
+     *
+     * @param mixed $company
+     */
+    public function submitByUsingCrawler($company)
     {
         try {
-            $modelManager = new ModelManager();
+            $this->data = array_map('strval', $this->data);
+            $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
+            $responseHTML = $response->html();
 
-            $model = $modelManager->restoreFromFile(__DIR__.'/../contact.phpml');
-
-            $crawler = $model->predict([$htmlContent])[0];
-
-            $crawler->filter('form')->each(function ($form) {
-                try {
-                    if (strcasecmp($form->form()->getMethod(), 'get')) {
-                        if ((strpos($form->form()->getName(), 'login')!==false)||(strpos($form->form()->getName(), 'search')!==false)) {
-                        } else {
-                            // $this->checkform = $form->form();
-                            $form->filter('input')->each(function ($input) {
-                                try {
-                                    if ((strpos($input->outerhtml(), '送信')!==false)||(strpos($input->outerhtml(), 'back')!==false)||(strpos($input->outerhtml(), '修正')!==false)) {
-                                    } else {
-                                        $this->checkform = $input->form();
-                                    }
-                                } catch (\Throwable $e) {
-                                }
-                            });
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    // $output->writeln($e);
-                }
-            });
-
-            if (empty($this->checkform)) {
-                $iframes = array_merge($crawler->filter('iframe')->extract(['src']), $crawler->filter('iframe')->extract(['data-src']));
-                foreach ($iframes as $i => $iframeURL) {
-                    try {
-                        $frameResponse = $this->client->request('GET', $iframeURL, $this->requestOptions);
-                        if ($this->findContactForm($frameResponse)) {
-                            $this->checkform = $this->form;
-                            break;
-                        } else {
-                            $frameResponse = $this->getPageHTMLUsingBrowser($iframeURL);
-                            if ($this->findContactForm($frameResponse)) {
-                                $this->checkform = $this->form;
-                                break;
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        continue;
-                    }
-                }
+            if ($this->isDebug) {
+                file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
             }
-            
-            if (isset($this->checkform) && is_object($this->checkform) && !empty($this->checkform->all())) {
-                // $this->checkform->setValues($data);
-                $crawler = $this->client->submit($this->checkform);
-                // var_dump($crawler);
+            $isSuccess = $this->hasSuccessMessage($responseHTML);
 
-               return false;
+            if ($isSuccess) {
+                return;
             }
-        } catch (\Throwable $th) {
-            return $htmlContent;
+        } catch (\Exception $e) {
         }
-        
-        return $htmlContent;
-    }
 
-    /**
-     * Is success or not.
-     *
-     * @return bool
-     */
-    public function hasSuccessMessage(string $htmlContent)
-    {
-        $successMessages = config('constant.successMessages');
+        $confirmStep = 0;
+        do {
+            $confirmStep++;
+            try {
+                $isSuccess = $this->confirmByUsingCrawler($company, $response, $confirmStep);
 
-        return $this->containsAny($htmlContent, $successMessages);
-    }
+                if ($isSuccess) {
+                    return;
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        } while ($confirmStep < self::RETRY_COUNT);
 
-    /**
-     * Check if string contains any string.
-     *
-     * @return bool
-     */
-    public function containsAny(string $string, array $list)
-    {
-        return collect($list)->contains(function ($item) use ($string) {
-            return strpos($string, $item) !== false;
-        });
+        throw new \Exception('Confirm step is not success');
     }
 
     /**
@@ -1677,6 +1570,7 @@ class SendEmails1Command extends Command
                         $this->driver->executeScript('return document.querySelector(`input[type="' . $type . '"][name="' . $validKey . '"]`).parentNode.click()');
                     }
                 }
+
                 continue;
             } catch (\Exception $e) {
                 continue;
@@ -1699,7 +1593,7 @@ class SendEmails1Command extends Command
                 if ($isSuccess) {
                     $this->closeBrowser();
 
-                    return true;
+                    return;
                 }
             } catch (\Exception $e) {
                 continue;
@@ -1709,8 +1603,6 @@ class SendEmails1Command extends Command
         $this->closeBrowser();
 
         throw new \Exception('Confirm step is not success');
-
-        return false;
     }
 
     /**
@@ -1735,7 +1627,30 @@ class SendEmails1Command extends Command
 
         $successTexts = $driver->findElements(WebDriverBy::xpath(config('constant.xpathMessage')));
 
-        // return count($successTexts) > 0;
-        return true;
+        return count($successTexts) > 0;
+    }
+
+    /**
+     * Is success or not.
+     *
+     * @return bool
+     */
+    public function hasSuccessMessage(string $htmlContent)
+    {
+        $successMessages = config('constant.successMessages');
+
+        return $this->containsAny($htmlContent, $successMessages);
+    }
+
+    /**
+     * Check if string contains any string.
+     *
+     * @return bool
+     */
+    public function containsAny(string $string, array $list)
+    {
+        return collect($list)->contains(function ($item) use ($string) {
+            return strpos($string, $item) !== false;
+        });
     }
 }
