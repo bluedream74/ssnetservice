@@ -173,6 +173,27 @@ class SendEmails1Command extends Command
                         }
 
                         $hasContactForm = $this->findContactForm($crawler);
+
+                        if (!$hasContactForm) {
+                            $embededSrc = $this->findGoogleFormURL($crawler->html());
+                            if (!$embededSrc) {
+                                $embededSrc = $this->findEmbededIFrame($crawler->html());
+                            }
+                            if ($embededSrc) {
+                                try {
+                                    $frameResponse = $this->client->request('GET', $embededSrc, $this->requestOptions);
+                                    $hasFrameContactForm = $this->findContactForm($frameResponse);
+                                    if ($hasFrameContactForm) {
+                                        $hasContactForm = true;
+                                        $this->isClient = true;
+                                    }
+                                } catch (\Exception $e) {
+                                    echo $e;
+                                    continue;
+                                }
+                            }                                
+                        }
+
                         if (!$hasContactForm) {
                             try {
                                 $this->initBrowser();
@@ -1430,6 +1451,59 @@ class SendEmails1Command extends Command
         return $hasTextarea;
     }
 
+    /**
+     * Whether the response contains embeded iframe or not.
+     *
+     * @param mixed $response
+     *
+     * @return bool If contains, iframe src, else null
+     */
+    public function findEmbededIFrame($response)
+    {
+        $pattern = '/\\\\u([0-9a-fA-F]{4})/';
+        $decodedString = preg_replace_callback($pattern, function ($matches) {
+            return mb_convert_encoding(pack('H*', $matches[1]), 'UTF-8', 'UTF-16BE');
+        }, $response);
+
+        $decodedString = htmlspecialchars_decode($decodedString, ENT_QUOTES);
+        // $decodedString = html_entity_decode($decodedString);
+        $decodedString = str_replace('\/', '/', $decodedString);
+        $decodedString = stripcslashes($decodedString);
+
+        // Use preg_match to extract the src attribute value
+        preg_match('/<iframe[^>]+src="([^"]+)"/', $decodedString, $matches);
+
+        // Check if a match is found
+        if (isset($matches[1])) {
+            // Output the src attribute value
+            return $matches[1];
+        }
+        
+        return null;
+    }
+
+    /**
+     * Whether the response contains Google form iframe or not.
+     *
+     * @param mixed $response
+     *
+     * @return bool If contains, google form src, else null
+     */
+    public function findGoogleFormURL($response)
+    {
+        // Check if the HTML contents contain a Google Form URL
+        if (strpos($response, 'https://docs.google.com/forms/') !== false) {
+            // Extract the Google Form URL from the HTML contents
+            preg_match('/https:\/\/docs.google.com\/forms\/[^\s"]+/', $response, $matches);
+            $googleFormUrl = $matches[0];
+            
+            // Output the Google Form URL
+            return $googleFormUrl;
+        }
+
+        // The HTML contents do not contain a Google Form URL
+        return null;
+    }
 
     /**
      * Submit using POST method.
