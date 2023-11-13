@@ -33,6 +33,7 @@ class SendEmails1Command extends Command
     public const STATUS_SENDING = 3;
     public const STATUS_NO_FORM = 4;
     public const STATUS_NG = 5;
+    public const STATUS_REPLY_CONFIRM = 6;
 
     public const RETRY_COUNT = 1;
 
@@ -108,8 +109,8 @@ class SendEmails1Command extends Command
         $output->writeln("<info>start</info>");
         if ($startTimeCheck && $endTimeCheck) {
             $contacts = Contact::whereRaw("(`date` is NULL OR `time` is NULL OR (CURDATE() > `date` OR (CURDATE() = `date` AND CURTIME() >= `time`)))")
-                                ->whereHas('reserve_companies')->get();
-
+            ->whereHas('reserve_companies')->get();
+            
             foreach ($contacts as $contact) {
                 DB::beginTransaction();
                 try {
@@ -419,16 +420,16 @@ class SendEmails1Command extends Command
                                     }
                                 }
 
-                                $urlTexts = array('郵便番号');
-                                foreach ($urlTexts as $text) {
-                                    if (strpos($key, $text)!==false) {
-                                        if (isset($data[$key]) && !empty($data[$key])) {
-                                            continue;
-                                        }
-                                        $data[$key] = $contact->postalCode1.$contact->postalCode2;
-                                        break;
-                                    }
-                                }
+                                // $urlTexts = array('郵便番号');
+                                // foreach ($urlTexts as $text) {
+                                //     if (strpos($key, $text)!==false) {
+                                //         if (isset($data[$key]) && !empty($data[$key])) {
+                                //             continue;
+                                //         }
+                                //         $data[$key] = $contact->postalCode1.$contact->postalCode2;
+                                //         break;
+                                //     }
+                                // }
 
                                 $urlTexts = array('市区町村');
                                 foreach ($urlTexts as $text) {
@@ -1133,13 +1134,15 @@ class SendEmails1Command extends Command
                         if (strpos($crawler->html(), 'recaptcha') === false) {
                             try {
                                 if ($this->isClient) {
-                                    $this->submitByUsingCrawler($company);
+                                    $ret = $this->submitByUsingCrawler($company);
+                                    $this->updateCompanyContact($companyContact, $ret);
                                 } else {
                                     $this->submitByUsingBrower($company, $this->data);
+                                    $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                                 }
-                                $this->updateCompanyContact($companyContact, self::STATUS_SENT);
+                                // $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                             } catch (\Exception $e) {
-                                $this->updateCompanyContact($companyContact, self::STATUS_SENT, $e->getMessage());
+                                $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
                             }
                         } else {
                             try {
@@ -1321,7 +1324,7 @@ class SendEmails1Command extends Command
                                         continue;
                                     }
                                 } catch (\Throwable $e) {
-                                    $this->updateCompanyContact($companyContact, self::STATUS_SENT);
+                                    $this->updateCompanyContact($companyContact, self::STATUS_FAILURE);
                                     $output->writeln($e);
                                     continue;
                                 }
@@ -1396,6 +1399,7 @@ class SendEmails1Command extends Command
             self::STATUS_SENDING => '未対応',
             self::STATUS_NO_FORM => 'フォームなし',
             self::STATUS_NG => 'NGワードあり',
+            self::STATUS_REPLY_CONFIRM => '自動返信確認',
         ];
 
         if (!array_key_exists($status, $deliveryStatus)) {
@@ -1537,11 +1541,11 @@ class SendEmails1Command extends Command
                 }
             }
         }
-
+        
         if (!$confirmForm) {
             throw new \Exception('Confirm form not found');
         }
-
+        
         $this->data = array_map('strval', $this->data);
         $response = $this->client->submit($confirmForm, $this->data);
         $confirmHTML = $response->html();
@@ -1549,7 +1553,21 @@ class SendEmails1Command extends Command
             file_put_contents(storage_path("html/{$company->id}_confirm{$confirmStep}.html"), $confirmHTML);
         }
 
-        return $this->hasSuccessMessage($confirmHTML);
+        $response->filter('form')->each(function ($form) use (&$confirmForm) {
+            $confirmForm = $form->form();
+        });
+
+        $isSuccedded = $this->hasSuccessMessage($confirmHTML);
+        // Successed
+        if ($isSuccedded && $confirmForm) {
+            return self::STATUS_REPLY_CONFIRM;
+        }
+
+        if ($isSuccedded) {
+            return self::STATUS_SENT;
+        }
+
+        return self::STATUS_FAILURE;
     }
 
     /**
@@ -1559,32 +1577,51 @@ class SendEmails1Command extends Command
      */
     public function submitByUsingCrawler($company)
     {
+        $isSuccess = false;
+        $confirmForm = null;
+ 
         try {
             $this->data = array_map('strval', $this->data);
+            echo $this->form->getUri();
             $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
             $responseHTML = $response->html();
 
             if ($this->isDebug) {
                 file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
             }
+
             $isSuccess = $this->hasSuccessMessage($responseHTML);
 
             if ($isSuccess) {
-                return;
+                $response->filter('form')->each(function ($form) use (&$confirmForm) {
+                    // $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
+                    // if ($isConfirmForm) {
+                    //     $confirmForm = $form->form();
+                    // }
+                    $confirmForm = $form->form();
+                    echo $confirmForm->getUri() . " " . $confirmForm->getMethod() . "\r\n";
+                });
+
+                if (!$confirmForm) {
+                    return self::STATUS_SENT;
+                }
             }
         } catch (\Exception $e) {
+            echo $e->getMessage(). "\r\n";
         }
 
         $confirmStep = 0;
         do {
             $confirmStep++;
             try {
-                $isSuccess = $this->confirmByUsingCrawler($company, $response, $confirmStep);
+                $ret = $this->confirmByUsingCrawler($company, $response, $confirmStep);
 
-                if ($isSuccess) {
-                    return;
-                }
+                return $ret;
+                // if ($isSuccess) {
+                //     return;
+                // }
             } catch (\Exception $e) {
+                echo $e->getMessage(). "\r\n";
                 continue;
             }
         } while ($confirmStep < self::RETRY_COUNT);

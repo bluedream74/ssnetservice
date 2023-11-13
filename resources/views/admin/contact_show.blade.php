@@ -124,7 +124,7 @@
             <div class="row mb-3">
                 <label class="col-sm-4">ステータス</label>
                 <div class="col-sm-4">
-                    {{ Form::select('status', ['1' => '送信失敗','2' => '配信済み','3' => '送信予定','4' => 'フォームなし','5' => 'NGワードあり' ], Request::get('status'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'status']) }}
+                    {{ Form::select('status', ['1' => '送信失敗','2' => '配信済み','3' => '送信予定','4' => 'フォームなし','5' => 'NGワードあり','6' => '自動返信確認' ], Request::get('status'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'status']) }}
                 </div>
                 <div class="col-sm-4">
                     {{ Form::submit('検索', ['class' => 'btn btn-sm btn-primary']) }}
@@ -172,6 +172,9 @@
                                     @break
                                 @case(5)
                                     <span class="badge badge-warning">NGワードあり</span>
+                                    @break
+                                @case(6)
+                                    <span class="badge badge-warning">自動返信確認</span>
                                     @break
                                 @default
                                     <span class="badge badge-success">送信予定</span>
