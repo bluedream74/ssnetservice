@@ -37,6 +37,10 @@ class SendEmails1Command extends Command
 
     public const RETRY_COUNT = 1;
 
+    public const FORM_STATUS_TEXT_NO_EXIST = 1;
+    public const FORM_STATUS_TEXT_EXIST_EMPTY = 2;
+    public const FORM_STATUS_TEXT_EXIST_FULL = 3;
+
     /**
      * The name and signature of the console command.
      *
@@ -111,10 +115,17 @@ class SendEmails1Command extends Command
             $contacts = Contact::whereRaw("(`date` is NULL OR `time` is NULL OR (CURDATE() > `date` OR (CURDATE() = `date` AND CURTIME() >= `time`)))")
             ->whereHas('reserve_companies')->get();
             
+            // for test
+            // $contacts = Contact::where('id', 25)->get();
+            
             foreach ($contacts as $contact) {
                 DB::beginTransaction();
                 try {
                     $companyContacts = CompanyContact::with(['contact'])->lockForUpdate()->where('contact_id', $contact->id)->where('is_delivered', 0)->limit($limit)->get();
+                    
+                    // for test
+                    // $companyContacts = CompanyContact::where('id', 1)->limit($limit)->get(); // 10471, 10485
+                    
                     if (count($companyContacts)) {
                         $companyContacts->toQuery()->update(['is_delivered' => self::STATUS_SENDING]);
                     } else {
@@ -173,6 +184,10 @@ class SendEmails1Command extends Command
                             $output->writeln($e);
                         }
 
+                        if ($this->isDebug) {
+                            file_put_contents(storage_path("html/{$company->id}.html"), $crawler->html());
+                        }
+
                         $hasContactForm = $this->findContactForm($crawler);
 
                         if (!$hasContactForm) {
@@ -189,7 +204,7 @@ class SendEmails1Command extends Command
                                         $this->isClient = true;
                                     }
                                 } catch (\Exception $e) {
-                                    echo $e;
+                                    echo $e . "\r\n";
                                     continue;
                                 }
                             }                                
@@ -1134,9 +1149,11 @@ class SendEmails1Command extends Command
                         if (strpos($crawler->html(), 'recaptcha') === false) {
                             try {
                                 if ($this->isClient) {
+                                    echo "submitByUsingCrawler" . "\r\n";
                                     $ret = $this->submitByUsingCrawler($company);
                                     $this->updateCompanyContact($companyContact, $ret);
                                 } else {
+                                    echo "submitByUsingBrower" . "\r\n";
                                     $this->submitByUsingBrower($company, $this->data);
                                     $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                                 }
@@ -1428,6 +1445,37 @@ class SendEmails1Command extends Command
         }
     }
 
+    public function getRedirectURL($response)
+    {
+        $url = null;
+        $pattern = '/<script>window\.location=\'(.+)\'/';
+        $matches = [];
+        if (preg_match($pattern, $response, $matches)) {
+            // The pattern was found in the string.
+            $url = $matches[1]; // Get the URL from the match.
+        }
+        
+        return $url;
+    }
+
+    public function getContactFormStatus($form)
+    {
+        $inputs = $form->all();
+        foreach ($inputs as $input) {
+            $isTextarea = $input->getType() == 'textarea' && !$input->isReadOnly();
+            if ($isTextarea) {
+                $txtContent = $input->getValue();
+                if (empty($txtContent)) {
+                    return self::FORM_STATUS_TEXT_EXIST_EMPTY;
+                }
+                    
+                return self::FORM_STATUS_TEXT_EXIST_FULL;
+            }
+        }
+
+        return self::FORM_STATUS_TEXT_NO_EXIST;
+    }
+
     /**
      * Whether the response contains contact form or not.
      *
@@ -1480,7 +1528,11 @@ class SendEmails1Command extends Command
         // Check if a match is found
         if (isset($matches[1])) {
             // Output the src attribute value
-            return $matches[1];
+            $containsGoogle = strpos($matches[1], "google") !== false;
+
+            if ($containsGoogle) {
+                return $matches[1];
+            }
         }
         
         return null;
@@ -1547,27 +1599,20 @@ class SendEmails1Command extends Command
         }
         
         $this->data = array_map('strval', $this->data);
-        $response = $this->client->submit($confirmForm, $this->data);
+        // $response = $this->client->submit($confirmForm, $this->data);
+        $response = $this->client->submit($confirmForm);
         $confirmHTML = $response->html();
         if ($this->isDebug) {
             file_put_contents(storage_path("html/{$company->id}_confirm{$confirmStep}.html"), $confirmHTML);
         }
 
-        $response->filter('form')->each(function ($form) use (&$confirmForm) {
-            $confirmForm = $form->form();
-        });
-
         $isSuccedded = $this->hasSuccessMessage($confirmHTML);
         // Successed
-        if ($isSuccedded && $confirmForm) {
-            return self::STATUS_REPLY_CONFIRM;
-        }
-
         if ($isSuccedded) {
             return self::STATUS_SENT;
         }
 
-        return self::STATUS_FAILURE;
+        return self::STATUS_REPLY_CONFIRM;
     }
 
     /**
@@ -1582,9 +1627,15 @@ class SendEmails1Command extends Command
  
         try {
             $this->data = array_map('strval', $this->data);
-            echo $this->form->getUri();
+            echo $this->form->getUri() . "\r\n";
             $response = $this->client->submit($this->form, $this->data, $this->requestOptions);
             $responseHTML = $response->html();
+
+            $redirectUrl = $this->getRedirectURL($responseHTML);
+            if ($redirectUrl) {
+                $response = $this->client->request('GET', $redirectUrl, $this->requestOptions);
+                $responseHTML = $response->html();
+            }
 
             if ($this->isDebug) {
                 file_put_contents(storage_path('html') . '/' . $company->id . '_submit.html', $responseHTML);
@@ -1592,19 +1643,31 @@ class SendEmails1Command extends Command
 
             $isSuccess = $this->hasSuccessMessage($responseHTML);
 
-            if ($isSuccess) {
-                $response->filter('form')->each(function ($form) use (&$confirmForm) {
-                    // $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
-                    // if ($isConfirmForm) {
-                    //     $confirmForm = $form->form();
-                    // }
+            $response->filter('form')->each(function ($form) use (&$confirmForm) {
+                $isConfirmForm = !preg_match('/(login|search)/i', $form->form()->getName());
+                if ($isConfirmForm) {
                     $confirmForm = $form->form();
-                    echo $confirmForm->getUri() . " " . $confirmForm->getMethod() . "\r\n";
-                });
-
-                if (!$confirmForm) {
-                    return self::STATUS_SENT;
                 }
+            });
+
+            if (!$confirmForm) {
+                return self::STATUS_SENT;
+            }
+
+            echo $confirmForm->getUri() . " " . $confirmForm->getMethod() . "\r\n";
+
+            $formStatus = $this->getContactFormStatus($confirmForm);
+            echo "Confirm Form Status " . $formStatus . "\r\n";
+
+            switch ($formStatus) {
+                case self::FORM_STATUS_TEXT_EXIST_EMPTY: // new form
+                    return self::STATUS_SENT;
+                case self::FORM_STATUS_TEXT_EXIST_FULL: // input error
+                    return self::STATUS_FAILURE;
+                case self::FORM_STATUS_TEXT_NO_EXIST: // confirm
+                    break;
+                default:
+                    break;
             }
         } catch (\Exception $e) {
             echo $e->getMessage(). "\r\n";
