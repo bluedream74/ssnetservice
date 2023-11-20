@@ -12,6 +12,7 @@ use DB;
 use LaravelAnticaptcha\Anticaptcha\NoCaptchaProxyless;
 use LaravelAnticaptcha\Anticaptcha\ImageToText;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
@@ -112,6 +113,7 @@ class SendEmails1Command extends Command
         $output = new \Symfony\Component\Console\Output\ConsoleOutput();
         $output->writeln("<info>start</info>");
         if ($startTimeCheck && $endTimeCheck) {
+        // if (true) { // for test
             $contacts = Contact::whereRaw("(`date` is NULL OR `time` is NULL OR (CURDATE() > `date` OR (CURDATE() = `date` AND CURTIME() >= `time`)))")
             ->whereHas('reserve_companies')->get();
             
@@ -174,41 +176,41 @@ class SendEmails1Command extends Command
                             continue;
                         }
                         $output->writeln("company url : ".$company->contact_form_url);
-                        $crawler = $this->client->request('GET', $company->contact_form_url, $this->requestOptions);
+                        // $crawler = $this->client->request('GET', $company->contact_form_url, $this->requestOptions);
 
-                        $charset = $this->getCharset($crawler->html());
-                        try {
-                            $charset = isset($charset[1]) && $charset[1] ? $charset[1] : 'UTF-8';
-                        } catch (\Throwable $e) {
-                            $charset = 'UTF-8';
-                            $output->writeln($e);
-                        }
+                        // $charset = $this->getCharset($crawler->html());
+                        // try {
+                        //     $charset = isset($charset[1]) && $charset[1] ? $charset[1] : 'UTF-8';
+                        // } catch (\Throwable $e) {
+                        //     $charset = 'UTF-8';
+                        //     $output->writeln($e);
+                        // }
 
-                        if ($this->isDebug) {
-                            file_put_contents(storage_path("html/{$company->id}.html"), $crawler->html());
-                        }
+                        // if ($this->isDebug) {
+                        //     file_put_contents(storage_path("html/{$company->id}.html"), $crawler->html());
+                        // }
 
-                        $hasContactForm = $this->findContactForm($crawler);
+                        $hasContactForm = null; // $this->findContactForm($crawler);
 
-                        if (!$hasContactForm) {
-                            $embededSrc = $this->findGoogleFormURL($crawler->html());
-                            if (!$embededSrc) {
-                                $embededSrc = $this->findEmbededIFrame($crawler->html());
-                            }
-                            if ($embededSrc) {
-                                try {
-                                    $frameResponse = $this->client->request('GET', $embededSrc, $this->requestOptions);
-                                    $hasFrameContactForm = $this->findContactForm($frameResponse);
-                                    if ($hasFrameContactForm) {
-                                        $hasContactForm = true;
-                                        $this->isClient = true;
-                                    }
-                                } catch (\Exception $e) {
-                                    echo $e . "\r\n";
-                                    continue;
-                                }
-                            }                                
-                        }
+                        // if (!$hasContactForm) {
+                        //     $embededSrc = $this->findGoogleFormURL($crawler->html());
+                        //     if (!$embededSrc) {
+                        //         $embededSrc = $this->findEmbededIFrame($crawler->html());
+                        //     }
+                        //     if ($embededSrc) {
+                        //         try {
+                        //             $frameResponse = $this->client->request('GET', $embededSrc, $this->requestOptions);
+                        //             $hasFrameContactForm = $this->findContactForm($frameResponse);
+                        //             if ($hasFrameContactForm) {
+                        //                 $hasContactForm = true;
+                        //                 $this->isClient = true;
+                        //             }
+                        //         } catch (\Exception $e) {
+                        //             echo $e . "\r\n";
+                        //             continue;
+                        //         }
+                        //     }                                
+                        // }
 
                         if (!$hasContactForm) {
                             try {
@@ -1154,8 +1156,8 @@ class SendEmails1Command extends Command
                                     $this->updateCompanyContact($companyContact, $ret);
                                 } else {
                                     echo "submitByUsingBrower" . "\r\n";
-                                    $this->submitByUsingBrower($company, $this->data);
-                                    $this->updateCompanyContact($companyContact, self::STATUS_SENT);
+                                    $ret = $this->submitByUsingBrower($company, $this->data);
+                                    $this->updateCompanyContact($companyContact, $ret);
                                 }
                                 // $this->updateCompanyContact($companyContact, self::STATUS_SENT);
                             } catch (\Exception $e) {
@@ -1396,8 +1398,7 @@ class SendEmails1Command extends Command
         $caps = DesiredCapabilities::chrome();
         $caps->setCapability('acceptSslCerts', false);
         $caps->setCapability(ChromeOptions::CAPABILITY, $options);
-
-        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000, 10000);
+        $this->driver = RemoteWebDriver::create('http://localhost:4444', $caps, 5000, 100000);
     }
 
     /**
@@ -1458,7 +1459,14 @@ class SendEmails1Command extends Command
         return $url;
     }
 
-    public function getContactFormStatus($form)
+    /**
+     * Whether the form from crawler is confirm form or not.
+     *
+     * @param mixed $form
+     *
+     * @return bool
+     */
+    public function getContactFormStatusUsingCrawler($form)
     {
         $inputs = $form->all();
         foreach ($inputs as $input) {
@@ -1471,6 +1479,32 @@ class SendEmails1Command extends Command
                     
                 return self::FORM_STATUS_TEXT_EXIST_FULL;
             }
+        }
+
+        return self::FORM_STATUS_TEXT_NO_EXIST;
+    }
+
+    /**
+     * Whether the form from browser is confirm form or not.
+     *
+     * @param mixed $form
+     *
+     * @return bool
+     */
+    public function getContactFormStatusUsingBrowser($form)
+    {
+        $textareas = $form->findElements(WebDriverBy::xpath('.//textarea'));
+
+        if ($textareas) {
+            foreach ($textareas as $textarea) {
+                // Get the value of the textarea element
+                $textareaValue = $textarea->getAttribute('value');
+                if (!empty($textareaValue)) {
+                    return self::FORM_STATUS_TEXT_EXIST_FULL;
+                }
+            }
+    
+            return self::FORM_STATUS_TEXT_EXIST_EMPTY;
         }
 
         return self::FORM_STATUS_TEXT_NO_EXIST;
@@ -1656,7 +1690,7 @@ class SendEmails1Command extends Command
 
             echo $confirmForm->getUri() . " " . $confirmForm->getMethod() . "\r\n";
 
-            $formStatus = $this->getContactFormStatus($confirmForm);
+            $formStatus = $this->getContactFormStatusUsingCrawler($confirmForm);
             echo "Confirm Form Status " . $formStatus . "\r\n";
 
             switch ($formStatus) {
@@ -1735,14 +1769,17 @@ class SendEmails1Command extends Command
                 }
             } catch (\Facebook\WebDriver\Exception\ElementNotInteractableException $e) {
                 if (isset($elementInput)) {
-                    if ($elementInput->getAttribute('id')) {
-                        $elementLabel = $this->driver->findElement(WebDriverBy::cssSelector("label[for=\"{$elementInput->getAttribute('id')}\"]"));
-                        if ($elementLabel) {
-                            $elementLabel->click();
+                    try {
+                        if ($elementInput->getAttribute('id')) {
+                            $elementLabel = $this->driver->findElement(WebDriverBy::cssSelector("label[for=\"{$elementInput->getAttribute('id')}\"]"));
+                            if ($elementLabel) {
+                                $elementLabel->click();
+                            }
+                        } else {
+                            $this->driver->executeScript('return document.querySelector(`input[type="' . $type . '"][name="' . $validKey . '"]`).parentNode.click()');
                         }
-                    } else {
-                        $this->driver->executeScript('return document.querySelector(`input[type="' . $type . '"][name="' . $validKey . '"]`).parentNode.click()');
-                    }
+                    } catch (\Exception $e1) {
+                    }                    
                 }
 
                 continue;
@@ -1755,20 +1792,110 @@ class SendEmails1Command extends Command
             $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_fill.jpg"));
         }
 
+        // Get submit elements from form
+
+        $forms = $this->driver->findElements(WebDriverBy::xpath('//form'));
+
+        $contactForm = null;
+        foreach ($forms as $form) {
+            $formStatus = $this->getContactFormStatusUsingBrowser($form);
+    
+            if ($formStatus === self::FORM_STATUS_TEXT_EXIST_FULL) {
+                $contactForm = $form;
+                break;
+            }
+        }
+
+        // $submitElements = $this->driver->findElements(WebDriverBy::xpath(config('constant.xpathButton')));
+        // $submitElements = $contactForm->findElements(WebDriverBy::xpath('.//input[@type="submit"] | .//button'));
+        $submitElements = $contactForm->findElements(WebDriverBy::xpath('.//input[@type="submit"] | .//input[@type="button"] | .//button'));
+        if (!$submitElements) {
+            $submitElements = $this->driver->findElements(WebDriverBy::xpath(config('constant.xpathButton')));
+        }
+        foreach ($submitElements as $element) {
+            try {
+                echo "submit element type ".$element->getAttribute("type")." \r\n";
+                echo "submit element value ".$element->getAttribute("value")." \r\n";
+                echo "submit element value ".$element->getText()." \r\n";
+
+                $element->click();
+                
+                // Accept alert confirm
+                $driver->switchTo()->alert()->accept();
+            } catch (\Exception $exception) {
+                // Do nothing
+            }
+        }
+
+        // Check if exist confirm form
+        
+        // Extract the base URL
+        $currentUrl = $this->driver->getCurrentURL();
+        $parsedUrl = parse_url($currentUrl);
+        $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+
+        $forms = $this->driver->findElements(WebDriverBy::xpath('//form'));
+
+        $confirmForm = null;
+        foreach ($forms as $form) {
+            $formMethod = strtolower($form->getAttribute('method'));
+            if ($formMethod !== 'post') {
+                continue;
+            }
+
+            // $confirmForm = $form;
+            // break;
+
+            // Get the HTML string of the form element
+            $formHtml = $form->getText();
+            // Check if the HTML string contains the desired string
+            $isContactFound = (strpos($formHtml, 'お問') !== false);
+            if ($isContactFound) {
+                $confirmForm = $form;
+                break;
+            }
+
+            // $formAction = $form->getAttribute('action');
+            // // Check if the form action starts with the base URL
+            // $actionStartsWithBaseUrl = Str::startsWith($formAction, $baseUrl);
+            // if (empty($formAction) || $actionStartsWithBaseUrl) {
+            //     $confirmForm = $form;
+            //     break;
+            // }
+        }
+
+        if (!$confirmForm) {
+            return self::STATUS_SENT;
+        }
+
+        // Check if form is confirm form
+        $formStatus = $this->getContactFormStatusUsingBrowser($confirmForm);
+        echo "Confirm Form Status " . $formStatus . "\r\n";
+
+        switch ($formStatus) {
+            case self::FORM_STATUS_TEXT_EXIST_EMPTY: // new form
+                return self::STATUS_SENT;
+            case self::FORM_STATUS_TEXT_EXIST_FULL: // input error form
+                return self::STATUS_FAILURE;
+            case self::FORM_STATUS_TEXT_NO_EXIST: // confirm form
+                break;
+            default:
+                break;
+        }
+        
+        // If confirm form exist
+
         $confirmStep = 0;
         do {
             $confirmStep++;
             try {
-                $isSuccess = $this->confirmByUsingBrowser($this->driver);
+                // $ret = $this->confirmByUsingBrowser($this->driver);
+                $ret = $this->confirmByUsingBrowserWithForm($this->driver, $confirmForm);
                 if ($this->isDebug) {
                     $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_confirm{$confirmStep}.jpg"));
-                }
+                }                
 
-                if ($isSuccess) {
-                    $this->closeBrowser();
-
-                    return;
-                }
+                return $ret;
             } catch (\Exception $e) {
                 continue;
             }
@@ -1787,10 +1914,12 @@ class SendEmails1Command extends Command
     public function confirmByUsingBrowser($driver)
     {
         $confirmElements = $driver->findElements(WebDriverBy::xpath(config('constant.xpathButton')));
-
         foreach ($confirmElements as $element) {
             try {
-                $element->click();
+                echo "confirm element type ".$element->getAttribute("type")." \r\n";
+                echo "confirm element value ".$element->getAttribute("value")." \r\n";
+
+                $element->click();                
 
                 // Accept alert confirm
                 $driver->switchTo()->alert()->accept();
@@ -1801,7 +1930,55 @@ class SendEmails1Command extends Command
 
         $successTexts = $driver->findElements(WebDriverBy::xpath(config('constant.xpathMessage')));
 
-        return count($successTexts) > 0;
+        if (count($successTexts) > 0) {
+            return self::STATUS_SENT;
+        }
+
+        return self::STATUS_REPLY_CONFIRM;
+    }
+
+    public function confirmByUsingBrowserWithForm($driver, $confirmForm)
+    {
+        $confirmElements = $confirmForm->findElements(WebDriverBy::xpath('.//input[@type="submit"] | .//input[@type="button"] | .//button'));
+        if (!$confirmElements) {
+            $confirmElements = $driver->findElements(WebDriverBy::xpath(config('constant.xpathButton')));
+        }
+        foreach ($confirmElements as $element) {
+            try {
+                $elementType = $element->getAttribute("type");
+                $elementValue = $element->getAttribute("value");
+                $elementText = $element->getText();
+
+                $isBackFound = (strpos($elementValue, '戻る') !== false);
+                if ($isBackFound) {
+                    continue;
+                }
+
+                $isBackFound = (strpos($elementText, '戻る') !== false);
+                if ($isBackFound) {
+                    continue;
+                }
+                
+                echo "confirm element type ".$element->getAttribute("type")." \r\n";
+                echo "confirm element value ".$element->getAttribute("value")." \r\n";
+                echo "confirm element value ".$element->getText()." \r\n";
+
+                $element->click();                
+
+                // Accept alert confirm
+                $driver->switchTo()->alert()->accept();
+            } catch (\Exception $exception) {
+                // Do nothing
+            }
+        }
+
+        $successTexts = $driver->findElements(WebDriverBy::xpath(config('constant.xpathMessage')));
+
+        if (count($successTexts) > 0) {
+            return self::STATUS_SENT;
+        }
+
+        return self::STATUS_REPLY_CONFIRM;
     }
 
     /**
