@@ -1053,12 +1053,12 @@ class DashboardController extends BaseController
            $enc = mb_detect_encoding($content, mb_list_encodings(), true);
            if (strtolower($enc) !== 'utf-8') {
                return back()->with(['system.message.info' => __('アップロードしたファイルの文字コードは、「' . $enc . '」です。UTF-8でアップロードしてください。')]);
-           }
-           Excel::import(new CompanyImport, $path);
-	} catch (\Throwable $e) {
-	    // dd($e);
-        return back()->with(['system.message.info' => __('CSVファイルのアップロードに失敗しました')]);
-    }
+            }
+            Excel::import(new CompanyImport, $path);
+        } catch (\Throwable $e) {
+            // dd($e);
+            return back()->with(['system.message.info' => __('CSVファイルのアップロードに失敗しました')]);
+        }
         
         return back()->with(['system.message.success' => __(':itemが完了しました。', ['item' => __('アップロード(CSV)')])]);
     }
