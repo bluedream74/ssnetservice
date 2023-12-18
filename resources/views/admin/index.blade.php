@@ -191,6 +191,12 @@
                                 <div class="col-sm-6">{{ Form::text('fu_lastname', old('fu_lastname'), ['class' => 'form-control', 'id' => 'fu_lastname']) }}</div>
                             </div>
 
+                            <label class="col-sm-12">ふりがな</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-6">{{ Form::text('hi_surname', old('hi_surname'), ['class' => 'form-control', 'id' => 'hi_surname']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('hi_lastname', old('hi_lastname'), ['class' => 'form-control', 'id' => 'hi_lastname']) }}</div>
+                            </div>
+
                             <label class="col-sm-12">会社名<span class="essential">*</span></label>
                             <div class="col-sm-12 form-group">
                                 {{ Form::text('company', old('company'), ['class' => 'form-control','id' => 'company']) }}
@@ -236,6 +242,14 @@
                             <label class="col-sm-12">住所</label>
                             <div class="col-sm-12 form-group">
                                 {{ Form::text('address', old('address'), ['class' => 'form-control','id' => 'address']) }}
+                            </div>
+
+                            <label class="col-sm-12">市町村区</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-6">{{ Form::text('address1', old('address1'), ['class' => 'form-control','id' =>
+                                'address1']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('address2', old('address2'), ['class' => 'form-control','id' =>
+                                'address2']) }}</div>
                             </div>
 
                             <label class="col-sm-12">電話番号</label>

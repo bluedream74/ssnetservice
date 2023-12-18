@@ -48,7 +48,7 @@ class ContactTemplateController extends BaseController
             'company'           => 'required',
         ]);
 
-        $data = $request->only('template_title', 'surname', 'lastname', 'fu_surname', 'fu_lastname', 'email', 'title', 'myurl', 'content', 'homepageUrl', 'area', 'postalCode1', 'postalCode2', 'address', 'phoneNumber1', 'phoneNumber2', 'phoneNumber3', 'company');
+        $data = $request->only('template_title', 'surname', 'lastname', 'fu_surname', 'fu_lastname', 'hi_surname', 'hi_lastname', 'email', 'title', 'myurl', 'content', 'homepageUrl', 'area', 'postalCode1', 'postalCode2', 'address', 'address1', 'address2', 'phoneNumber1', 'phoneNumber2', 'phoneNumber3', 'company');
 
         $contactTemplate = ContactTemplate::create($data);
 

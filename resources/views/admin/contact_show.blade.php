@@ -41,6 +41,16 @@
                 </div>
             </div>
             <div class="row mb-3">
+                <label class="col-sm-4">ふりがな</label>
+                <div class="col-sm-8 pre-wrap">
+                    @if (isset($contact->hi_surname))
+                        {!! $contact->hi_surname !!} &nbsp; {!! $contact->hi_lastname !!}
+                    @else
+                        なし
+                    @endif
+                </div>
+            </div>
+            <div class="row mb-3">
                 <label class="col-sm-4">会社名</label>
                 <div class="col-sm-8 pre-wrap">{!! $contact->company !!}</div>
             </div>
@@ -86,6 +96,26 @@
                 <div class="col-sm-8 pre-wrap">
                     @if (isset($contact->address))
                         {!! $contact->address !!}
+                    @else
+                        なし
+                    @endif
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-sm-4">市区町村</label>
+                <div class="col-sm-8 pre-wrap">
+                    @if (isset($contact->address1))
+                        {!! $contact->address1 !!}
+                    @else
+                        なし
+                    @endif
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-sm-4">番地</label>
+                <div class="col-sm-8 pre-wrap">
+                    @if (isset($contact->address2))
+                        {!! $contact->address2 !!}
                     @else
                         なし
                     @endif
@@ -218,6 +248,12 @@
                                 <div class="col-sm-6">{{ Form::text('fu_lastname', old('fu_lastname'), ['class' => 'form-control', 'id' => 'fu_lastname']) }}</div>
                             </div>
 
+                            <label class="col-sm-12">ふりがな</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-6">{{ Form::text('hi_surname', old('hi_surname'), ['class' => 'form-control', 'id' => 'hi_surname']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('hi_lastname', old('hi_lastname'), ['class' => 'form-control', 'id' => 'hi_lastname']) }}</div>
+                            </div>
+
                             <label class="col-sm-12">会社名<span class="essential">*</span></label>
                             <div class="col-sm-12 form-group">
                                 {{ Form::text('company', old('company'), ['class' => 'form-control','id' => 'company']) }}
@@ -263,6 +299,14 @@
                             <label class="col-sm-12">住所</label>
                             <div class="col-sm-12 form-group">
                                 {{ Form::text('address', old('address'), ['class' => 'form-control','id' => 'address']) }}
+                            </div>
+
+                            <label class="col-sm-12">市町村区</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-6">{{ Form::text('address1', old('address1'), ['class' => 'form-control','id' =>
+                                'address1']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('address2', old('address2'), ['class' => 'form-control','id' =>
+                                'address2']) }}</div>
                             </div>
 
                             <label class="col-sm-12">電話番号</label>
