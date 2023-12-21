@@ -63,8 +63,9 @@ class SendContactCommand extends Command
      */
     protected $description = 'Command description';
     protected $form;
+    protected $topNodes;
+    protected $checkTextarea;
     protected $formHtml;
-    protected $checkform;
     protected $driver;
     protected $html;
     protected $htmlText;
@@ -184,8 +185,8 @@ class SendContactCommand extends Command
                             continue;
                         }
 
-                        // $company->contact_form_url = "https://makotohome.co.jp/%e5%95%8f%e3%81%84%e5%90%88%e3%82%8f%e3%81%9b/";
-                        $company->contact_form_url = "https://address.zendesk.com/hc/ja/requests/new";
+                        // $company->contact_form_url = "https://address.zendesk.com/hc/ja/requests/new";
+                        $company->contact_form_url = "http://sanukikanzume.co.jp/contact/index.cgi";
                         $output->writeln("company url : ".$company->contact_form_url);
 
                         $this->initBrowser();
@@ -206,8 +207,11 @@ class SendContactCommand extends Command
 
                         // Check the contact form fields
                         sleep(1);
+                        $this->checkContactType($contact);
                         $this->checkName($contact);
                         $this->checkFuName($contact);
+                        $this->checkHiName($contact);
+                        $this->checkAge($contact);
                         $this->checkCompany($contact);
                         $this->checkEmail($contact);
                         $this->checkConfirmEmail($contact);
@@ -215,8 +219,8 @@ class SendContactCommand extends Command
                         $this->checkPhoneNumber($contact);
                         $this->checkFaxNumber($contact);
                         $this->checkAddress($contact);
-                        $this->checkPostalCode($contact);
                         $this->checkArea($contact);
+                        $this->checkPostalCode($contact);
                         $this->checkStreet1($contact);
                         $this->checkStreet2($contact);
                         $this->checkTimezone($contact);
@@ -326,6 +330,8 @@ class SendContactCommand extends Command
      */
     public function findContactForm($url)
     {
+        $this->checkTextarea = false;
+        
         $existForm = false;
         $contactForm = NULL;
         
@@ -334,7 +340,11 @@ class SendContactCommand extends Command
             throw new \Exception('Invalid URL');
         }
 
-        $response = $this->driver->get($url);
+        try {
+            $response = $this->driver->get($url);
+        } catch (\Throwable $e) {
+            return $contactForm;
+        }
 
         // Wait for the page to load completely
         $this->driver->wait()->until(
@@ -346,8 +356,19 @@ class SendContactCommand extends Command
         foreach ($forms as $form) {
             try {
                 $formMethod = strtolower($form->getAttribute('method'));
-                $textarea = $form->findElement(WebDriverBy::xpath('.//textarea'));
+
+                try {
+                    $textarea = $form->findElement(WebDriverBy::xpath('.//textarea'));
+                    $this->checkTextarea = true;
+                } catch (\Throwable $e) {
+                    // $inputs = $form->findElements(WebDriverBy::xpath(".//input[@type='text']"));
+                    // if (count($inputs) >= 3) {
+                    //     $textarea = true; 
+                    // }
+                }
+
                 if (strcmp($formMethod, 'get') !== 0 && $textarea) {
+                // if ($textarea) {
                     $contactForm = $form;
                     $existForm = true;
                     break;
@@ -357,9 +378,11 @@ class SendContactCommand extends Command
         }
 
         if (!$existForm) {
-            sleep(5);
             $iframes = $this->driver->findElements(WebDriverBy::tagName('iframe'));
             if (count($iframes)) {
+                // Wait util frame loaded
+                sleep(8);
+
                 foreach ($iframes as $iframe) {
                     $this->driver->switchTo()->frame($iframe);
 
@@ -372,16 +395,16 @@ class SendContactCommand extends Command
 
                     // Check if there is a frame within a frame
                     if (!$contactForm) {
-                        $iframes1 = $this->driver->findElements(WebDriverBy::xpath('.//iframe'));
-                        foreach ($iframes1 as $iframe1) {
-                            $this->driver->switchTo()->frame($iframe1);
+                        $innerIframes = $this->driver->findElements(WebDriverBy::xpath('.//iframe'));
+                        foreach ($innerIframes as $innerIfram) {
+                            $this->driver->switchTo()->frame($innerIfram);
 
                             // Wait for the page to load completely
                             $this->driver->wait()->until(
                                 WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::tagName('body'))
                             );
 
-                            $contactForm = $this->findContactFormInIFrame($iframe1);
+                            $contactForm = $this->findContactFormInIFrame($innerIfram);
 
                             if ($contactForm) {
                                 break;
@@ -413,7 +436,12 @@ class SendContactCommand extends Command
 
             $formMethod = strtolower($form->getAttribute('method'));
 
-            $textarea = $form->findElement(WebDriverBy::xpath('.//textarea'));
+            try {
+                $textarea = $form->findElement(WebDriverBy::xpath('.//textarea'));
+            } catch (\Throwable $e) {
+                $textarea = $this->driver->findElement(WebDriverBy::xpath('.//textarea'));
+            }
+
             if (strcmp($formMethod, 'get') !== 0 && $textarea) {
                 $contactForm = $form;
             }
@@ -431,10 +459,25 @@ class SendContactCommand extends Command
      */
     public function findTopNode()
     {
-        $textareaElement = $this->form->findElement(WebDriverBy::xpath('.//textarea'));
+        $textareaElement = null;
+
+        if ($this->checkTextarea) {
+            $textareaElement = $this->form->findElement(WebDriverBy::xpath('.//textarea'));
+        }
+        else {
+            $textareaElement = $this->form->findElement(WebDriverBy::xpath(".//input[@type='text']"));
+        }
+        
+        $name = $textareaElement->getAttribute("name");
         // Get the parent node that contains textarea
         $parentNode = $textareaElement->findElement(WebDriverBy::xpath(".."));
+        $tag = $parentNode->getTagName();
         $class = $parentNode->getAttribute("class");
+
+        if ($tag === "form") {
+            return $parentNode;
+        }
+
         $inputNode = $this->findNodeWithInputTag($parentNode);
 
         // Get top node including all input elements
@@ -458,8 +501,9 @@ class SendContactCommand extends Command
         $sameLevelNodes = array_merge($precedingSiblings, $followingSiblings);
 
         foreach ($sameLevelNodes as $node) {
+            $tag = $node->getTagName();
             $class = $node->getAttribute("class");
-            $inputTags = $node->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel']"));
+            $inputTags = $node->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel' or @type='textbox']"));
 
             // If a node with an input tag is found, return it
             if ($inputTags) {
@@ -469,6 +513,7 @@ class SendContactCommand extends Command
 
         // If the current node does not contain an input tag, get the parent node
         $parentNode = $currentNode->findElement(WebDriverBy::xpath(".."));
+        $tag = $parentNode->getTagName();
         $class = $parentNode->getAttribute("class");
 
         if ($parentNode) {
@@ -487,7 +532,7 @@ class SendContactCommand extends Command
      *
      * @return $status
      */
-    public function getContactFormStatus()
+    public function getContactFormStatus($matchText)
     {
         try {
             $textareas = $this->driver->findElements(WebDriverBy::xpath('//textarea'));
@@ -496,7 +541,7 @@ class SendContactCommand extends Command
                 foreach ($textareas as $textarea) {
                     // Get the value of the textarea element
                     $textareaValue = $textarea->getAttribute('value');
-                    if (!empty($textareaValue)) {
+                    if (!empty($textareaValue) && strpos($textareaValue, $matchText) !== false) {
                         return self::FORM_STATUS_TEXT_EXIST_FULL;
                     }
                 }
@@ -522,7 +567,8 @@ class SendContactCommand extends Command
     public function submitContactForm($company, $content)
     {
         // Get all elements in the form
-        $formElements = $this->form->findElements(WebDriverBy::xpath('.//*'));
+        // $formElements = $this->form->findElements(WebDriverBy::xpath('.//*'));
+        $formElements = $this->form->findElements(WebDriverBy::xpath(".//textarea | .//input[@type='text' or @type='email' or @type='tel' or @type='textbox' or @type='radio' or @type='checkbox'] | .//select | .//div[@role='radio' or @role='checkbox']"));
         foreach ($formElements as $element) {
             try {
                 $tag = $element->getTagName();
@@ -538,37 +584,56 @@ class SendContactCommand extends Command
                         }
                         break;
                     case 'select':
-                        $select = new WebDriverSelect($element);
-                        $select->selectByIndex(1);
+                        if ($name) {
+                            $selectBox = new WebDriverSelect($element);
+                            $isSelect = $this->selectSelectboxByText($selectBox, ["その他"]);
+
+                            if (!$isSelect) {
+                                $selectBox->selectByIndex(1);
+                            }
+                        }
+                        
                         break;
                     case 'textarea':
                         $element->sendKeys($content);
                         break;
                     case 'input':
                         if ($type === "radio") {
-                            try {
-                                $radio = new WebDriverRadios($element);
-                                if (strpos($value, "mail") !== false || strpos($value, "メール") !== false) {
-                                    $radio->selectByValue($value);
-                                }
-                                else if (strpos($value, "その他") !== false) {
-                                    $radio->selectByValue($value);
-                                }
-                                else {
-                                    $radio->selectByIndex(0);
+                            if ($name) {
+                                $this->visibleElement($name);
+                                $radiobox = new WebDriverRadios($element);
+
+                                $isSelect = $this->selectRadioboxByValue($radiobox, ["その他", "メール", "mail"]);
+                                
+                                if (!$isSelect) {
+                                    $radiobox->selectByIndex(0);
                                 }
                             }
-                            catch(\Exception $e) {
+                            else {
                                 $element->click();
-                            }                            
-                            
+                            }
+
                             break;
                         }
                         else if ($type === "checkbox") {
-                            $this->visibleElement($name);
+                            if ($name) {
+                                $this->visibleElement($name);
+                                $checkbox = new WebDriverCheckboxes($element);
 
-                            $checkbox = new WebDriverCheckboxes($element);
-                            $checkbox->selectByIndex(0);
+                                $isSelect = $this->selectCheckboxByValue($checkbox, ["未定", "メール", "mail"]);
+                                
+                                if (!$isSelect) {
+                                    $isSelect = $this->selectCheckboxByText($checkbox, ["未定", "メール", "mail"]);
+                                }
+
+                                if (!$isSelect) {
+                                    $checkbox->selectByIndex(0);
+                                }
+                            }
+                            else {
+                                $element->click();
+                            }
+                            
                             break;
                         }
                         // else if ($type === "text" || $type === "email") { // text input
@@ -600,50 +665,55 @@ class SendContactCommand extends Command
             try {
                 $tag = $element->getTagName();
                 $type = $element->getAttribute("type");
+                $name = $element->getAttribute("name");
                 $value = $element->getAttribute("value");
                 $text = $element->getText();
+                $alt = $element->getAttribute("alt");
+                $id = $element->getAttribute("id");
+                $class = $element->getAttribute("class");
+                $onclick = $element->getAttribute("onclick");
+
+                if ($type === "radio" || $type === "checkbox") {
+                    continue;
+                }
+
+                if ($type !== "submit" && $name !== "submit" && $type !== "image" && 
+                    empty($id) && empty($value) && empty($text) && empty($alt) &&
+                    strpos($onclick, "submit") === false) {
+                    continue;
+                }
+
+                try {
+                    // submit form
+                    $element->click();
+                } catch (\Exception $exception) {
+                    // Scroll to the element
+                    $this->scrollToElement($element);
+                    $element->click();
+                }
+
+                sleep(1);
+                
+                // Accept alert confirm
+                try {
+                    $this->driver->switchTo()->alert()->accept();
+                }
+                catch(\Exception $exception) {
+                    // Do nothing
+                }
+
+                // Wait for the AJAX call to finish
+                $wait = new WebDriverWait($this->driver, 10);
+                
+                // $wait->until(function () use ($beforePageSource) {
+                //     $afterPageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+                //     return ($beforePageSource !== $afterPageSource);
+                // });
+
+                $wait->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::tagName('textarea')));
             } catch (\Exception $exception) {
                 continue;
             }
-            
-
-            if ($type === "radio" || $type === "checkbox") {
-                continue;
-            }
-
-            if (in_array($tag, ["input", "button"]) && empty($value) && empty($text)) {
-                continue;
-            }
-
-            try {
-                // submit form
-                $element->click();
-            } catch (\Exception $exception) {
-                // Scroll to the element
-                $this->scrollToElement($element);
-                $element->click();
-            }
-
-            sleep(1);
-            
-            // Accept alert confirm
-            try {
-                $this->driver->switchTo()->alert()->accept();
-            }
-            catch(\Exception $exception) {
-                // Do nothing
-            }
-
-            // Wait for the AJAX call to finish
-            $wait = new WebDriverWait($this->driver, 10);
-            
-            // $wait->until(function () use ($beforePageSource) {
-            //     $afterPageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
-            //     return ($beforePageSource !== $afterPageSource);
-            // });
-
-            $wait->until(WebDriverExpectedCondition::invisibilityOfElementLocated(WebDriverBy::tagName('textarea')));
-
             // break;
         }
 
@@ -660,10 +730,10 @@ class SendContactCommand extends Command
         }
 
         if (!$confirmForm && !$existConfirm) {
-            $formStatus = $this->getContactFormStatus();
+            $formStatus = $this->getContactFormStatus(mb_substr($content, 0, 10));
 
             switch ($formStatus) {
-                case self::FORM_STATUS_TEXT_EXIST_FULL: // 3 - input error form                    
+                case self::FORM_STATUS_TEXT_EXIST_FULL: // 3 - input error form
                 case self::FORM_STATUS_ERROR_FORM: // 4 - not form (contains error)
                     return self::STATUS_FAILURE;
                 case self::FORM_STATUS_TEXT_EXIST_EMPTY: // 2 - new form
@@ -703,63 +773,79 @@ class SendContactCommand extends Command
      */
     public function submitConfirmForm($confirmForm)
     {
-        // Get current page source
-        $beforePageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
-
         // Get submit elements
         $confirmElements = $this->findSumbitElements($confirmForm);
-        if (!$confirmElements) {
-            return self::STATUS_FAILURE;
+        if ($confirmElements) {
+            // Get current page source
+            $beforePageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+
+            foreach ($confirmElements as $element) {
+                try {
+                    $tag = $element->getTagName();
+                    $type = $element->getAttribute("type");
+                    $name = $element->getAttribute("name");
+                    $value = $element->getAttribute("value");
+                    $text = $element->getText();                
+                    $alt = $element->getAttribute("alt");
+                    $id = $element->getAttribute("id");
+                    $class = $element->getAttribute("class");
+                
+                    if ($type === "radio" || $type === "checkbox") {
+                        continue;
+                    }
+
+                    if ($type !== "submit" && $name !== "submit" && in_array($tag, ["input", "button"]) && empty($value) && empty($text) && empty($alt)) {
+                        continue;
+                    }
+
+                    if (strpos($name, "back") !== false || strpos($name, "Back") !== false || 
+                        strpos($value, "もどる") !== false || strpos($text, "もどる") !== false) {
+                        continue;
+                    }
+
+                    try {
+                        // submit form
+                        $element->click();
+                    } catch (\Exception $exception) {
+                        // Scroll to the element
+                        $this->scrollToElement($element);
+                        $element->click();
+                    }
+
+                    sleep(1);
+
+                    // Wait for the AJAX call to finish
+                    $wait = new WebDriverWait($this->driver, 10);
+                    $wait->until(function () use ($beforePageSource) {
+                        $afterPageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+                        return ($beforePageSource !== $afterPageSource);
+                    });
+                    
+                } catch (\Exception $exception) {
+                    continue;
+                }
+            }
+
+            // Wait for the page to load completely
+            $this->driver->wait()->until(
+                WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::tagName('body'))
+            );
+
+            // Get current page source
+            $currentPageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();        
+
+            $successTexts = $this->checkSuccessPage();
+
+            if ($beforePageSource !== $currentPageSource && count($successTexts) > 0) {
+                return self::STATUS_SENT;
+            }
+
+            return self::STATUS_REPLY_CONFIRM;
         }
         
-        foreach ($confirmElements as $element) {
-            try {
-                $tag = $element->getTagName();
-                $type = $element->getAttribute("type");
-                $value = $element->getAttribute("value");
-                $text = $element->getText();
-            } catch (\Exception $exception) {
-                continue;
-            }
-            
-            if ($type === "radio" || $type === "checkbox") {
-                continue;
-            }
-
-            if (in_array($tag, ["input", "button"]) && empty($value) && empty($text)) {
-                continue;
-            }
-
-            try {
-                // submit form
-                $element->click();
-            } catch (\Exception $exception) {
-                // Scroll to the element
-                $this->scrollToElement($element);
-                $element->click();
-            }
-
-            sleep(1);
-
-            // Wait for the AJAX call to finish
-            $wait = new WebDriverWait($this->driver, 10);
-            $wait->until(function () use ($beforePageSource) {
-                $afterPageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
-                return ($beforePageSource !== $afterPageSource);
-            });
-        }
-
-        // Wait for the page to load completely
-        $this->driver->wait()->until(
-            WebDriverExpectedCondition::visibilityOfElementLocated(WebDriverBy::tagName('body'))
-        );
-
-        // Get current page source
-        $currentPageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();        
-
         $successTexts = $this->checkSuccessPage();
 
-        if ($beforePageSource !== $currentPageSource && count($successTexts) > 0) {
+        if (count($successTexts) > 0) {
             return self::STATUS_SENT;
         }
 
@@ -774,7 +860,7 @@ class SendContactCommand extends Command
     function visibleElement($elementName)
     {
         // visible : none => visible: block
-        $this->driver->executeScript("const collections = document.getElementsByName('{$elementName}'); for (let i = 0; i < collections.length; i++) {collections[i].style.display = 'block';}");
+        $this->driver->executeScript("const collections = document.getElementsByName('{$elementName}'); for (let i = 0; i < collections.length; i++) {collections[i].style.display = 'block';collections[i].style.visibility = 'visible';}");
     }
 
     /**
@@ -810,6 +896,7 @@ class SendContactCommand extends Command
         // Get the HTML string of the body
         $body = $this->driver->findElement(WebDriverBy::xpath('//body'));
         $formText = $body->getText();
+        $formText = str_replace("-", "", $formText);
 
         // Check if the HTML string contains the sending data
         $countMatchingData = 0;
@@ -844,25 +931,52 @@ class SendContactCommand extends Command
             foreach ($forms as $form) {
                 // Get the HTML string of the form element
                 $formText = $form->getText();
+                $formText = str_replace("-", "", $formText);
     
                 // Check if the HTML string contains the sending data
-                $countMatchingData = 0;
-                foreach ($this->data as $key => $val) {
-                    $containsSendingData = strpos($formText, $val) !== false;
-                    if ($containsSendingData) {
-                        $countMatchingData ++;
-                    }
-                }
+                $countMatchingData = $this->getMatchPercent($formText);
     
                 // Check if form is confirm
                 if (($countMatchingData / count($this->data)) * 100 > 70) {
                     $confirmForm = $form;
                     break;
                 }
+                else {
+                    try {
+                        $formText = "";
+                        $inputElements = $form->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel' or @type='textbox'][@readonly]"));
+                        foreach($inputElements as $inputElement) {
+                            $formText .= ($inputElement->getAttribute("value") ." ");
+                        }
+                            
+                        // Check if the HTML string contains the sending data
+                        $countMatchingData = $this->getMatchPercent($formText);
+            
+                        // Check if form is confirm
+                        if (($countMatchingData / count($this->data)) * 100 > 70) {
+                            $confirmForm = $form;
+                            break;
+                        }
+                    } catch(\Throwable $e) {}
+
+                }
             }
         }
         
         return $confirmForm;
+    }
+
+    public function getMatchPercent($text)
+    {
+        $countMatchingData = 0;
+        foreach ($this->data as $key => $val) {
+            $containsSendingData = strpos($text, $val) !== false;
+            if ($containsSendingData) {
+                $countMatchingData ++;
+            }
+        }
+
+        return $countMatchingData;
     }
 
     /**
@@ -889,6 +1003,27 @@ class SendContactCommand extends Command
         });
     }
 
+    public function checkContactType($contact)
+    {
+        // Define the array of patterns
+        $patterns = array('お問い合わせ内容');
+
+        list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns, false);
+
+        if ($inputElements) {
+            $element = $inputElements[0];
+            $name = $element->getAttribute("name");
+            if(!$name) {
+                $name = "contacttype";
+            }
+            
+            $this->data[$name] = "お問い合わせ全般";
+
+            $element->clear();
+            $element->sendKeys("お問い合わせ全般");
+        }
+    }
+
     /**
      * Check name field (surname, lastename, name).
      *
@@ -897,8 +1032,8 @@ class SendContactCommand extends Command
     public function checkName($contact)
     {
         // Define the array of patterns
-        // $patterns = array('お名前','名前','担当者','氏名','お名前(かな)','お名前(フルネームで)','ご担当者様名');
-        $patterns = array('お名前','ご氏名','名前','担当者','氏名','ご担当者様名');
+        // $patterns = array('お名前','名前','担当者','氏名','お名前(かな)','お名前(フルネームで)','ご担当者名','ご担当者様名');
+        $patterns = array('お名前','名前','ご氏名','氏名','ご担当者','ご担当者名','ご担当者様名','担当者','NAME');
 
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
@@ -934,6 +1069,25 @@ class SendContactCommand extends Command
                 $surElement->sendKeys($contact->surname);
                 $lastElement->sendKeys($contact->lastname);
             }
+
+            // Get Fu names
+            if ($inputNode) {
+                try {
+                    $nextNode = $this->findNextSiblingNode($inputNode);
+                    $text = $nextNode->getText();
+                    $text = str_replace("必須", "", $text);
+                    $text = str_replace("必 須", "", $text);
+                    $text = str_replace("*", "", $text);
+                    $text = trim($text);
+                    $inputs = $nextNode->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel' or @type='textbox']"));
+                    
+                    if (empty($text) && $inputs) {
+                        $this->checkFuName($contact, $inputs);
+                    }
+                }catch (\Exception $e) {
+                    //
+                }                
+            }
         }
     }
 
@@ -942,12 +1096,17 @@ class SendContactCommand extends Command
      *
      * @return value
      */
-    public function checkFuName($contact)
+    public function checkFuName($contact, $inputs = null)
     {
         // Define the array of patterns
-        $patterns =array('カタカナ','フリガナ','カナ','ふりがな','名前（カナ）','名前カナ','よみがな');
+        $patterns =array('カタカナ','フリガナ','カナ','お名前 (カナ)','名前（カナ）','名前カナ','よみがな');
 
-        list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
+        if (!$inputs) {
+            list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
+        }
+        else {
+            $inputElements = $inputs;
+        }        
 
         if ($inputElements) {
             $countOfInputs = count($inputElements);
@@ -986,6 +1145,54 @@ class SendContactCommand extends Command
     }
 
     /**
+     * Check name field (hi surname, hi lastename, name).
+     *
+     * @return value
+     */
+    public function checkHiName($contact)
+    {
+        // Define the array of patterns
+        $patterns =array('ふりがな','お名前フリガナ');
+
+        list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
+
+        if ($inputElements) {
+            $countOfInputs = count($inputElements);
+            if ($countOfInputs === 1) {
+                $nameElement = $inputElements[0];
+                $name = $nameElement->getAttribute("name");
+                if (!$name) {
+                    $name = "hiname";
+                }
+                
+                $this->data[$name] = $contact->hi_surname . $contact->hi_lastname;
+
+                $nameElement->clear();
+                $nameElement->sendKeys($contact->hi_surname . $contact->hi_lastname);
+            }
+            else if ($countOfInputs === 2) {
+                $surElement = $inputElements[0];
+                $lastElement = $inputElements[1];
+                $usrName = $surElement->getAttribute("name");
+                $lastName = $lastElement->getAttribute("name");
+
+                if(!$usrName) {
+                    $usrName = "hifirstname";
+                    $lastName = "hilastname";
+                }
+                
+                $this->data[$usrName] = $contact->hi_surname;
+                $this->data[$lastName] = $contact->hi_lastname;
+
+                $surElement->clear();
+                $lastElement->clear();
+                $surElement->sendKeys($contact->hi_surname);
+                $lastElement->sendKeys($contact->hi_lastname);
+            }
+        }
+    }
+
+    /**
      * Check email field (email, confirm).
      *
      * @return value
@@ -993,7 +1200,7 @@ class SendContactCommand extends Command
     public function checkEmail($contact)
     {
         // Define the array of patterns
-        $patterns = array('メール', 'Eメール', '確認のためもう一度', 'E-mail', 'Email', 'ご連絡先');
+        $patterns = array('メール', 'Eメール', '確認のためもう一度', 'E-mail', 'E-Mail', 'e-mail', 'Email', 'EMAIL', 'ご連絡先');
         
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
@@ -1009,6 +1216,32 @@ class SendContactCommand extends Command
                 $inputElement->clear();
                 $inputElement->sendKeys($contact->email);
             }
+
+            $text = $inputNode->getText();
+            if (strpos($text, "電話番号") !== false) {
+                $prefix = "";
+                $inputElements[0]->clear();
+                $inputElements[0]->sendKeys($contact->phoneNumber1 . $prefix . $contact->phoneNumber2 . $prefix . $contact->phoneNumber3);
+            }
+        }
+
+        // Get confirm email
+        if ($inputNode) {
+            try {
+                $nextNode = $this->findNextSiblingNode($inputNode);
+                $text = $nextNode->getText();
+                $text = str_replace("必須", "", $text);
+                $text = str_replace("必 須", "", $text);
+                $text = str_replace("*", "", $text);
+                $text = trim($text);
+                $inputs = $nextNode->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel' or @type='textbox']"));
+                
+                if (empty($text) && $inputs) {
+                    $this->checkConfirmEmail($contact, $inputs);
+                }
+            }catch (\Exception $e) {
+                //
+            }                
         }
     }
 
@@ -1017,12 +1250,17 @@ class SendContactCommand extends Command
      *
      * @return value
      */
-    public function checkConfirmEmail($contact)
+    public function checkConfirmEmail($contact, $inputs = null)
     {
         // Define the array of patterns
-        $patterns = array('メールアドレス（確認）', '確認のためもう一度', 'E-mail(確認)');
+        $patterns = array('メールアドレス 確認', 'メールアドレス（確認', 'メールアドレス(確認', 'Eメールアドレス(確認', 'メールアドレス確認', 'メールアドレスの確認', '確認用メールアドレス', '確認のためもう一度', 'E-mail(確認', 'E-Mail（確認');
         
-        list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
+        if (!$inputs) {
+            list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
+        }
+        else {
+            $inputElements = $inputs;
+        }
 
         if ($inputElements) {
             foreach ($inputElements as $inputElement) {
@@ -1074,7 +1312,7 @@ class SendContactCommand extends Command
     public function checkTitle($contact)
     {
         // Define the array of patterns
-        $patterns = array('件名', '題名', '用件名');
+        $patterns = array('件名', '題名', 'ご用件', '用件名');
         
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
@@ -1101,7 +1339,7 @@ class SendContactCommand extends Command
     public function checkPhoneNumber($contact)
     {
         // Define the array of patterns
-        $patterns = array('電話番号', 'お電話番号', '携帯電話', '連絡先', 'ＴＥＬ', 'TEL');
+        $patterns = array('電話番号', 'お電話番号', 'ご自宅電話番号', '携帯電話', '連絡先', 'ご連絡先TEL', 'ＴＥＬ', 'TEL', 'PHONE');
         
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
@@ -1117,6 +1355,10 @@ class SendContactCommand extends Command
                 // $count = substr_count($text, "-");
                 if (strpos($text, "-") !== false || strpos($placeholder, "-") !== false || strpos($value, "-") !== false) {
                     $prefix = "-";
+                }
+
+                if (strpos($text, "→") !== false) {
+                    $prefix = "";
                 }
 
                 $telName = $inputElements[0]->getAttribute("name");
@@ -1188,7 +1430,7 @@ class SendContactCommand extends Command
     public function checkFaxNumber($contact)
     {
         // Define the array of patterns
-        $patterns = array('ＦＡＸ', 'FAX');
+        $patterns = array('ＦＡＸ', 'FAX', 'Fax', 'ファックス');
         
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
@@ -1204,6 +1446,10 @@ class SendContactCommand extends Command
                 // $count = substr_count($text, "-");
                 if (strpos($text, "-") !== false || strpos($placeholder, "-") !== false || strpos($value, "-") !== false) {
                     $prefix = "-";
+                }
+
+                if (strpos($text, "→") !== false) {
+                    $prefix = "";
                 }
 
                 $telName = $inputElements[0]->getAttribute("name");
@@ -1302,24 +1548,69 @@ class SendContactCommand extends Command
                 $inputElements[0]->sendKeys($contact->postalCode1 . $prefix . $contact->postalCode2);
             }
             else if ($countOfInputs === 2) { // post and address
-                $zipName1 = $inputElements[0]->getAttribute("name");
-                $zipName2 = $inputElements[1]->getAttribute("name");
-                $zipName = $inputElements[0]->getAttribute("name");
-                if (!$zipName1) {
-                    $zipName1 = "zip1";
-                    $zipName2 = "zip1";
-                }
+                try {
+                    $zipName1 = $inputElements[0]->getAttribute("name");
+                    $zipName2 = $inputElements[1]->getAttribute("name");
+                    $zipName = $inputElements[0]->getAttribute("name");
+                    if (!$zipName1) {
+                        $zipName1 = "zip1";
+                        $zipName2 = "zip1";
+                    }
+    
+                    $this->data[$zipName1] = $contact->postalCode1;
+                    $this->data[$zipName2] = $contact->postalCode2;
+    
+                    $inputElements[0]->clear();
+                    $inputElements[1]->clear();
+    
+                    $inputElements[0]->sendKeys($contact->postalCode1);
+                    $inputElements[1]->sendKeys($contact->postalCode2);
+                } catch(\Exception $e) {
+                    $prefix = "";
+                    $zipName = $inputElements[0]->getAttribute("name");
+                    if (!$zipName) {
+                        $zipName = "zip";
+                    }
 
-                $this->data[$zipName1] = $contact->postalCode1;
-                $this->data[$zipName2] = $contact->postalCode2;
+                    $this->data[$zipName] = $contact->postalCode1 . $prefix . $contact->postalCode2;
 
-                $inputElements[0]->clear();
-                $inputElements[1]->clear();
-
-                $inputElements[0]->sendKeys($contact->postalCode1);
-                $inputElements[1]->sendKeys($contact->postalCode2);
+                    $inputElements[0]->clear();
+                    $inputElements[0]->sendKeys($contact->postalCode1 . $prefix . $contact->postalCode2);
+                 }
             }
         }
+    }
+
+    public function setAddresses($index, $inputElements, $contact)
+    {
+        try {
+            $countOfInputs = count($inputElements) - $index;
+            if ($countOfInputs === 1) {
+                $addrName = $inputElements[$index]->getAttribute("name");
+
+                $this->data[$addrName] = $contact->address;
+
+                $inputElements[$index]->clear();
+                $inputElements[$index]->sendKeys($contact->address);
+            }
+            else if ($countOfInputs > 1) {
+                // address1
+                $addrName1 = $inputElements[$index]->getAttribute("name");
+    
+                $this->data[$addrName1] = $contact->address1;
+    
+                $inputElements[$index]->clear();
+                $inputElements[$index]->sendKeys($contact->address1);
+                
+                // address2
+                $addrName2 = $inputElements[$index+1]->getAttribute("name");
+    
+                $this->data[$addrName2] = $contact->address2;
+    
+                $inputElements[$index+1]->clear();
+                $inputElements[$index+1]->sendKeys($contact->address2);
+            }
+        } catch(\Exception $e) {}
     }
 
     /**
@@ -1330,10 +1621,97 @@ class SendContactCommand extends Command
     public function checkAddress($contact)
     {
         // Define the array of patterns
-        $patterns = array('住所','ご住所','ご　住　所','住　所', '所在地');
+        $patterns = array('住所','ご住所', '所在地'); //,'ご　住　所','住　所'
         
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
+        if ($inputElements) { // address
+            $text = $inputNode->getText();
+            $placeholder = $inputElements[0]->getAttribute("placeholder");
+            $value = $inputElements[0]->getAttribute("value");
+
+            $index = 0;
+
+            // Check if exist zip inputs
+            if (strpos($text, "郵便番号") !== false || strpos($text, "〒") !== false ||
+                strpos($value, "郵便番号") !== false || strpos($value, "〒") !== false ||
+                strpos($placeholder, "郵便番号") !== false || strpos($placeholder, "〒") !== false) {
+                
+                $nextInput = null;
+                try {
+                    $nextInput = $inputElements[0]->findElement(WebDriverBy::xpath("following-sibling::input"));
+                } catch(\Exception $e) {}
+                
+                if ($nextInput) {
+                    $index = 2;
+
+                    $zipName1 = $inputElements[0]->getAttribute("name");
+                    $zipName2 = $inputElements[1]->getAttribute("name");
+
+                    $this->data[$zipName1] = $contact->postalCode1;
+                    $this->data[$zipName2] = $contact->postalCode2;
+
+                    $inputElements[0]->clear();
+                    $inputElements[1]->clear();
+                    $inputElements[0]->sendKeys($contact->postalCode1);
+                    $inputElements[1]->sendKeys($contact->postalCode2);
+                }
+                else {
+                    $index = 1;
+                    $prefix = "";
+                    // Check if The text or placeholder contains a hyphen.
+                    if (strpos($placeholder, "-") !== false) {
+                        $prefix = "-";
+                    }
+
+                    $zipName = $inputElements[0]->getAttribute("name");
+                    if (!$zipName) {
+                        $zipName = "zip";
+                    }
+
+                    $this->data[$zipName] = $contact->postalCode1 . $prefix . $contact->postalCode2;
+
+                    $inputElements[0]->clear();
+                    $inputElements[0]->sendKeys($contact->postalCode1 . $prefix . $contact->postalCode2);
+                }
+            }
+
+            // Check if exist area select
+            $areaSelect = null;
+            try {
+                $areaSelect = $inputNode->findElement(WebDriverBy::xpath(".//select"));
+            } catch(\Exception $e) {}
+            
+            if ($areaSelect) {
+                $this->setAddresses($index, $inputElements, $contact);
+            }
+            else {
+                try {
+                    // Check if exist area input
+                    $areaInput = $inputElements[$index];
+                    $placeholder = $areaInput->getAttribute("placeholder");
+
+                    if (strpos($text, "都道府県") !== false || strpos($placeholder, "都道府県") !== false) {
+                        $areaName = $inputElements[$index]->getAttribute("name");
+
+                        $this->data[$areaName] = $contact->area;
+
+                        $inputElements[$index]->clear();
+                        $inputElements[$index]->sendKeys($contact->area);
+
+                        $index ++;
+                    }
+                    
+                    $this->setAddresses($index, $inputElements, $contact);
+                } catch(\Exception $e) {
+                    $k = 0;
+                }
+            }
+        }
+
+
+
+/*
         if ($inputElements) { // address
             $countOfInputs = count($inputElements);
             if ($countOfInputs === 1) {
@@ -1351,37 +1729,7 @@ class SendContactCommand extends Command
                 $text = $inputNode->getText();
                 $value = $inputElements[0]->getAttribute("value");
 
-                if ((strpos($text, "郵便番号") !== false || strpos($text, "〒") !== false || strpos($value, "〒") !== false) && 
-                    strpos($text, "-") !== false && strpos($text, "—") === false && strpos($text, "---") === false) {
-                    // zip code (include '-')
-                    $zipName1 = $inputElements[0]->getAttribute("name");
-                    $zipName2 = $inputElements[1]->getAttribute("name");
-                    if (!$zipName1) {
-                        $zipName1 = "zip1";
-                        $zipName2 = "zip2";
-                    }
-
-                    $this->data[$zipName1] = $contact->postalCode1;
-                    $this->data[$zipName2] = $contact->postalCode2;
-
-                    $inputElements[0]->clear();
-                    $inputElements[1]->clear();
-                    $inputElements[0]->sendKeys($contact->postalCode1);
-                    $inputElements[1]->sendKeys($contact->postalCode2);
-
-                    // address
-                    // $nextElements = $this->findNextSiblingNodeWithInputTag($inputNode);
-                    // $addrName = $nextElements[0]->getAttribute("name");
-                    // if (!$addrName) {
-                    //     $addrName = "address";
-                    // }
-
-                    // $this->data[$addrName] = $contact->address;
-
-                    // $nextElements[0]->clear();
-                    // $nextElements[0]->sendKeys($contact->address);
-                }
-                else {
+                if (strpos($text, "郵便番号") !== false || strpos($text, "〒") !== false || strpos($value, "〒") !== false) {
                     // zip code
                     $prefix = "";
                     $placeholder = $inputElements[0]->getAttribute("placeholder");
@@ -1400,7 +1748,7 @@ class SendContactCommand extends Command
 
                     $inputElements[0]->clear();
                     $inputElements[0]->sendKeys($contact->postalCode1 . $prefix . $contact->postalCode2);
-                    
+
                     // address
                     $addrName = $inputElements[1]->getAttribute("name");
                     if (!$addrName) {
@@ -1412,70 +1760,141 @@ class SendContactCommand extends Command
                     $inputElements[1]->clear();
                     $inputElements[1]->sendKeys($contact->address);
                 }
+                else {
+                    $addrName1 = $inputElements[0]->getAttribute("name");
+                    if (!$addrName1) {
+                        $addrName1 = "address1";
+                    }
+
+                    $this->data[$addrName1] = $contact->address1;
+
+                    $inputElements[0]->clear();
+                    $inputElements[0]->sendKeys($contact->address1);
+                    
+                    // address
+                    $addrName2 = $inputElements[1]->getAttribute("name");
+                    if (!$addrName2) {
+                        $addrName2 = "address2";
+                    }
+
+                    $this->data[$addrName2] = $contact->address2;
+
+                    $inputElements[1]->clear();
+                    $inputElements[1]->sendKeys($contact->address2);
+                }
             }
             else if ($countOfInputs === 3) {
                 $text = $inputNode->getText();
                 $value = $inputElements[0]->getAttribute("value");
 
-                if ((strpos($text, "郵便番号") !== false || strpos($text, "〒") !== false || strpos($value, "〒") !== false) &&
-                     strpos($text, "-") !== false && strpos($text, "—") === false && strpos($text, "---") === false) {
-                    // zip code (include '-')
-                    $zipName1 = $inputElements[0]->getAttribute("name");
-                    $zipName2 = $inputElements[1]->getAttribute("name");
-                    if (!$zipName1) {
-                        $zipName1 = "zip1";
-                        $zipName2 = "zip2";
+                if (strpos($text, "郵便番号") !== false || strpos($text, "〒") !== false || strpos($value, "〒") !== false) {
+                    if (strpos($text, "-") !== false && strpos($text, "—") === false && strpos($text, "---") === false) {
+                        // zip code (include '-')
+                        $zipName1 = $inputElements[0]->getAttribute("name");
+                        $zipName2 = $inputElements[1]->getAttribute("name");
+                        if (!$zipName1) {
+                            $zipName1 = "zip1";
+                            $zipName2 = "zip2";
+                        }
+
+                        $this->data[$zipName1] = $contact->postalCode1;
+                        $this->data[$zipName2] = $contact->postalCode2;
+
+                        $inputElements[0]->clear();
+                        $inputElements[1]->clear();
+                        $inputElements[0]->sendKeys($contact->postalCode1);
+                        $inputElements[1]->sendKeys($contact->postalCode2);
+
+                        // address
+                        $addrName = $inputElements[2]->getAttribute("name");
+                        if (!$addrName) {
+                            $addrName = "address";
+                        }
+
+                        $this->data[$addrName] = $contact->address;
+
+                        $inputElements[2]->clear();
+                        $inputElements[2]->sendKeys($contact->address);
                     }
+                    else {
+                        // zip code
+                        $prefix = "";
+                        $placeholder = $inputElements[0]->getAttribute("placeholder");
 
-                    $this->data[$zipName1] = $contact->postalCode1;
-                    $this->data[$zipName2] = $contact->postalCode2;
+                        // Check if The text or placeholder contains a hyphen.
+                        if (strpos($placeholder, "-") !== false) {
+                            $prefix = "-";
+                        }
 
-                    $inputElements[0]->clear();
-                    $inputElements[1]->clear();
-                    $inputElements[0]->sendKeys($contact->postalCode1);
-                    $inputElements[1]->sendKeys($contact->postalCode2);
+                        $zipName = $inputElements[0]->getAttribute("name");
+                        if (!$zipName) {
+                            $zipName = "zip";
+                        }
 
-                    // address
-                    $addrName = $inputElements[2]->getAttribute("name");
-                    if (!$addrName) {
-                        $addrName = "address";
+                        $this->data[$zipName] = $contact->postalCode1 . $prefix . $contact->postalCode2;
+
+                        $inputElements[0]->clear();
+                        $inputElements[0]->sendKeys($contact->postalCode1 . $prefix . $contact->postalCode2);
+                        
+                        // address1
+                        $addrName = $inputElements[1]->getAttribute("name");
+                        if (!$addrName) {
+                            $addrName = "address1";
+                        }
+
+                        $this->data[$addrName] = $contact->address1;
+
+                        $inputElements[1]->clear();
+                        $inputElements[1]->sendKeys($contact->address1);
+
+                        // address2
+                        $addrName = $inputElements[2]->getAttribute("name");
+                        if (!$addrName) {
+                            $addrName = "address2";
+                        }
+
+                        $this->data[$addrName] = $contact->address2;
+                        
+                        $inputElements[2]->clear();
+                        $inputElements[2]->sendKeys($contact->address2);
                     }
-
-                    $this->data[$addrName] = $contact->address;
-
-                    $inputElements[2]->clear();
-                    $inputElements[2]->sendKeys($contact->address);
                 }
                 else {
-                    // zip code
-                    $prefix = "";
+                    $name1 = $inputElements[0]->getAttribute("name");
                     $placeholder = $inputElements[0]->getAttribute("placeholder");
 
-                    // Check if The text or placeholder contains a hyphen.
-                    if (strpos($placeholder, "-") !== false) {
-                        $prefix = "-";
+                    if (strpos($placeholder, "郵便番号") !== false || strpos($placeholder, "〒") !== false) {
+                        if (!$name1) {
+                            $name1 = "zip";
+                        }
+                        
+                        $this->data[$name1] = $contact->postalCode1 . $contact->postalCode2;
+                        $inputElements[0]->clear();
+                        $inputElements[0]->sendKeys($contact->postalCode1 . $contact->postalCode2);
                     }
-
-                    $zipName = $inputElements[0]->getAttribute("name");
-                    if (!$zipName) {
-                        $zipName = "zip";
-                    }
-
-                    $this->data[$zipName] = $contact->postalCode1 . $prefix . $contact->postalCode2;
-
-                    $inputElements[0]->clear();
-                    $inputElements[0]->sendKeys($contact->postalCode1 . $prefix . $contact->postalCode2);
+                    else {
+                        // area
+                        $areaName = $inputElements[0]->getAttribute("name");
+                        if (!$areaName) {
+                            $areaName = "area";
+                        }
                     
+                        $this->data[$areaName] = $contact->area;
+
+                        $inputElements[0]->clear();
+                        $inputElements[0]->sendKeys($contact->area);
+                    }
+
                     // address1
                     $addrName = $inputElements[1]->getAttribute("name");
                     if (!$addrName) {
                         $addrName = "address1";
                     }
 
-                    $this->data[$addrName] = mb_substr($contact->address, 0, 3);
+                    $this->data[$addrName] = $contact->address1;
 
                     $inputElements[1]->clear();
-                    $inputElements[1]->sendKeys($contact->address, 0, 3);
+                    $inputElements[1]->sendKeys($contact->address1);
 
                     // address2
                     $addrName = $inputElements[2]->getAttribute("name");
@@ -1483,13 +1902,13 @@ class SendContactCommand extends Command
                         $addrName = "address2";
                     }
 
-                    $this->data[$addrName] = mb_substr($contact->address, 3);
+                    $this->data[$addrName] = $contact->address2;
                     
                     $inputElements[2]->clear();
-                    $inputElements[2]->sendKeys(mb_substr($contact->address, 3));
+                    $inputElements[2]->sendKeys($contact->address2);
                 }
             }
-        }
+        } */
     }
 
     /**
@@ -1502,7 +1921,7 @@ class SendContactCommand extends Command
         // Define the array of patterns
         $patterns = array('都道府県');
         
-        list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
+        list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns, false);
 
         if ($inputElements) {
             foreach ($inputElements as $inputElement) {
@@ -1516,6 +1935,23 @@ class SendContactCommand extends Command
                 $inputElement->clear();
                 $inputElement->sendKeys($contact->area);
             }
+        }
+        else {
+            try {
+                $inputElement = $this->form->findElement(WebDriverBy::xpath(".//input[@type='text' and @name='pref']"));
+                
+                if ($inputElement && strpos($inputElement->getAttribute("id"), "tel") === false) {
+                    $name = $inputElement->getAttribute("name");
+                    if (!$name) {
+                        $name = "address1";
+                    }
+    
+                    $this->data[$name] = $contact->area;
+    
+                    $inputElement->clear();
+                    $inputElement->sendKeys($contact->area);
+                }
+            } catch(\Exception $e){}
         }
     }
 
@@ -1538,10 +1974,10 @@ class SendContactCommand extends Command
                     $name = "street1";
                 }
 
-                $this->data[$name] = mb_substr($contact->address, 0, 3);
+                $this->data[$name] = $contact->address1;
 
                 $inputElement->clear();
-                $inputElement->sendKeys(mb_substr($contact->address, 0, 3));
+                $inputElement->sendKeys($contact->address1);
             }
         }
     }
@@ -1554,7 +1990,7 @@ class SendContactCommand extends Command
     public function checkStreet2($contact)
     {
         // Define the array of patterns
-        $patterns = array('丁目番地','番地名','建物', 'マンション', 'アパート');
+        $patterns = array('丁目番地','番地名','建物', 'マンション', 'アパート', '町名、番号');
         
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
@@ -1565,10 +2001,37 @@ class SendContactCommand extends Command
                     $name = "street2";
                 }
 
-                $this->data[$name] = mb_substr($contact->address, 3);
+                $this->data[$name] = $contact->address2;
 
                 $inputElement->clear();
-                $inputElement->sendKeys(mb_substr($contact->address, 3));
+                $inputElement->sendKeys($contact->address2);
+            }
+        }
+    }
+
+    /**
+     * Check age.
+     *
+     * @return value
+     */
+    public function checkAge($contact)
+    {
+        // Define the array of patterns
+        $patterns = array('ご年齢');
+        
+        list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
+
+        if ($inputElements) {
+            foreach ($inputElements as $inputElement) {
+                $name = $inputElement->getAttribute("name");
+                if (!$name) {
+                    $name = "age";
+                }
+
+                $this->data[$name] = "35";
+
+                $inputElement->clear();
+                $inputElement->sendKeys("35");
             }
         }
     }
@@ -1601,26 +2064,38 @@ class SendContactCommand extends Command
         }
     }
 
-    function findInputElementsWithPatterns($patterns)
+    function findInputElementsWithPatterns($patterns, $findNextNode = true)
     {
         foreach ($this->topNodes as $index => $topNode) {
             $text = $topNode->getText();
             $text = str_replace("必須", "", $text);
+            $text = str_replace("必 須", "", $text);
+            $text = str_replace("*", "", $text);
+            $text = str_replace("※", "", $text);
+            $text = str_replace("◆", "", $text);
+            $text = str_replace("", "", $text);
+            $text = str_replace("　", "", $text);
+            $text = str_replace("物件所在地の", "", $text);
             $text = trim($text);
             foreach ($patterns as $pattern) {
                 if (strpos($text, $pattern) === 0) {
                     $tag = $topNode->getTagName();
                     $inputElements = null;
-                    $inputElements = $topNode->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel']"));
+                    $inputElements = $topNode->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel' or @type='textbox']"));
                     if ($inputElements) {
                         return array(true, $topNode, $inputElements);
                     }
-                    else {
+                    else if ($findNextNode) {
                         // get next top node
-                        $nextNode = $this->topNodes[$index+1];
+                        try {
+                            $nextNode = $this->topNodes[$index+1];
+                        } catch(Exception $e) {
+                            return array(false, null, null);
+                        }
+                        
                         if ($nextNode) {
                             $tag = $nextNode->getTagName();
-                            $inputElements = $nextNode->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel']"));
+                            $inputElements = $nextNode->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel' or @type='textbox']"));
                         }
                         
                         return array(true, $nextNode, $inputElements);
@@ -1643,7 +2118,7 @@ class SendContactCommand extends Command
     {
         $sameLevelNode = $node->findElement(WebDriverBy::xpath("following-sibling::*"));
         $text = $sameLevelNode->getText();
-        $inputTags = $sameLevelNode->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel']"));
+        $inputTags = $sameLevelNode->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel' or @type='textbox']"));
 
         if (empty($text) && $inputTags) {
             return $inputTags;
@@ -1671,6 +2146,7 @@ class SendContactCommand extends Command
                 | //a[contains(text(),"確認")]
                 | //a[contains(text(),"送信")]
                 | //a[contains(@class,"submit-btn")]
+                | //a[contains(@onclick,"document.form1.submit();")]
                 | //button[@class="nttdatajpn-submit-button"]
                 | //button[@type="submit" and (contains(@name,"unisphere-submit"))]
                 | //button[@type="submit" and (contains(@class,"btn-cmn--red"))]
@@ -1707,12 +2183,14 @@ class SendContactCommand extends Command
                 | //button[span[contains(text(),"送信")]]
                 | //button[span[contains(text(),"確認画面へ")]]
                 | //button[span[contains(text(),"上記内容でお問い合せする")]]
+                | //button[span[contains(text(),"入力内容の確認")]]
                 | //div[@role="button"]
                 | //img[contains(@alt,"この内容で送信する")]
                 | //img[contains(@alt,"内容を確認する")]
                 | //img[contains(@alt,"完了画面へ")]
                 | //img[contains(@alt,"確認画面に進む")]
                 | //img[contains(@alt,"入力確認画面へ")]
+                | //img[contains(@alt,"確認画面へ")]
                 | //img[contains(@alt,"送信する")]
                 | //input[@type="button" and @id="submit_confirm"]
                 | //input[@type="button" and contains(@id,"button_mfp_goconfirm")]
@@ -1729,12 +2207,14 @@ class SendContactCommand extends Command
                 | //input[@type="image"][contains(@alt,"送信") and @type!="hidden"]
                 | //input[@type="image"][contains(@name,"check_entry_button") and @type!="hidden"]
                 | //input[@type="image"][contains(@name,"conf") and @type!="hidden"]
+                | //input[@type="image"][contains(@name,"submit") and @type!="hidden"]
                 | //input[@type="image"][contains(@value,"この内容で登録する") and @type!="hidden"]
                 | //input[@type="image"][contains(@class,"errPosRight") and @type!="hidden"]
                 | //input[@type="image"][contains(@src,"http://www.eisho-sunrise.com/images/inquiry/confirm_button.png") and @type!="hidden"]
                 | //input[@type="image"][contains(@src,"http://www.eisho-sunrise.com/images/inquiry/send_button.png") and @type!="hidden"]
                 | //input[@type="image"][contains(@src,"/images/contact/submit.png") and @type!="hidden"]
                 | //input[@type="image"][contains(@value,"送 信") and @type!="hidden"]
+                | //input[@type="image"][contains(@onclick,"void(this.form.submit());")]
                 | //input[@type="submit" and contains(@name,"sendmail")]
                 | //input[@type="submit" and contains(@name,"submit") and contains(@value, "送信")]
                 | //input[@type="submit" and contains(@name,"submitConfirm")]
@@ -1758,6 +2238,8 @@ class SendContactCommand extends Command
                 | //input[contains(@value,"送　信") and @type!="hidden" and @type!="checkbox" and @type!="radio"]
                 | //input[contains(@value,"送信") and @type!="hidden" and @type!="checkbox" and @type!="radio"]
                 | //label[@for="sf_KojinJouhou__c" and not(contains(@value,"戻る") or contains(@value,"クリア"))]
+                | //span[contains(., "入力確認") or contains(., "送信する")]
+                | //div[contains(@id,"form-submit") and contains(text(),"送信")]
             ';
         
         if ($form) {
@@ -1766,11 +2248,129 @@ class SendContactCommand extends Command
 
         return $this->driver->findElements(WebDriverBy::xpath($xpathButton));
     }
+        
+    // selectbox control
+    public function selectSelectboxByText($selectBox, $textArray)
+    {
+        $isSelected = false;
+        $options = $selectBox->getOptions();
+        foreach($options as $option) {
+            $elementText = $option->getText();
+            if (in_array($elementText, $textArray)) {
+                $selectBox->selectByVisibleText($elementText);
+                $isSelected = true;
+                break;
+            }
+        }
+
+        if (!$isSelected) {
+            $selectBox->selectByIndex(count($options)-1);
+            $isSelected = true;
+        }
+
+        return $isSelected;
+    }
+
+    // selectbox control
+    public function selectSelectboxByValue($selectBox, $values)
+    {
+        $isSelected = false;
+        $options = $selectBox->getOptions();
+        foreach($options as $option) {
+            $elementValue = $option->getAttribute("value");
+            if (in_array($elementValue, $values)) {
+                $selectBox->selectByValue($elementValue);
+                $isSelected = true;
+                break;
+            }
+        }
+
+        return $isSelected;
+    }
+
+    // checkbox control
+    public function selectCheckboxByText($checkBox, $textArray)
+    {
+        $isSelected = false;
+        $options = $checkBox->getOptions();
+        foreach($options as $option) {
+            $elementText = $option->getText();
+            if (in_array($elementText, $textArray)) {
+                $checkBox->selectByVisibleText($elementText);
+                $isSelected = true;
+                break;
+            }
+        }
+
+        return $isSelected;
+    }
+
+    // checkbox control
+    public function selectCheckboxByValue($checkBox, $values)
+    {
+        $isSelected = false;
+        $options = $checkBox->getOptions();
+        foreach($options as $option) {
+            $elementValue = $option->getAttribute("value");
+            if (in_array($elementValue, $values)) {
+                $checkBox->selectByValue($elementValue);
+                $isSelected = true;
+                break;
+            }
+        }
+
+        if (!$isSelected) {
+            $checkBox->selectByIndex(count($options)-1);
+            $isSelected = true;
+        }
+
+        return $isSelected;
+    }
+
+    // radio control
+    public function selectRadioboxByText($radioBox, $textArray)
+    {
+        $isSelected = false;
+        $options = $radioBox->getOptions();
+        foreach($options as $option) {
+            $elementText = $option->getText();
+            if (in_array($elementText, $textArray)) {
+                $radioBox->selectByVisibleText($elementText);
+                $isSelected = true;
+                break;
+            }
+        }
+
+        return $isSelected;
+    }
+
+    // radio control
+    public function selectRadioboxByValue($radioBox, $values)
+    {
+        $isSelected = false;
+        $options = $radioBox->getOptions();
+        foreach($options as $option) {
+            $elementValue = $option->getAttribute("value");
+            if (in_array($elementValue, $values)) {
+                $radioBox->selectByValue($elementValue);
+                $isSelected = true;
+                break;
+            }
+        }
+
+        if (!$isSelected) {
+            $radioBox->selectByIndex(count($options)-1);
+            $isSelected = true;
+        }
+
+        return $isSelected;
+    }
 
     public function checkSuccessPage()
     {
         return $this->driver->findElements(WebDriverBy::xpath(config('constant.xpathMessage')));
     }
+
     public function checkErrorPage()
     {
         $xpathMessage = '
