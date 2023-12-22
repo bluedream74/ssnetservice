@@ -186,7 +186,7 @@ class SendContactCommand extends Command
                         }
 
                         // $company->contact_form_url = "https://address.zendesk.com/hc/ja/requests/new";
-                        $company->contact_form_url = "http://sanukikanzume.co.jp/contact/index.cgi";
+                        $company->contact_form_url = "https://www.qualiahome.com/contact/";
                         $output->writeln("company url : ".$company->contact_form_url);
 
                         $this->initBrowser();
@@ -231,17 +231,11 @@ class SendContactCommand extends Command
 
                         print_r($this->data);
 
-                        $htmlText = $this->form->getText();
-
-                        if (strpos($htmlText, 'recaptcha') === false) {
-                            try {
-                                $ret = $this->submitContactForm($company, $content);
-                                $this->updateCompanyContact($companyContact, $ret);
-                            } catch (\Exception $e) {
-                                $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
-                            }
-                        } else {
-                            // recaptcha
+                        try {
+                            $ret = $this->submitContactForm($company, $content);
+                            $this->updateCompanyContact($companyContact, $ret);
+                        } catch (\Exception $e) {
+                            $this->updateCompanyContact($companyContact, self::STATUS_FAILURE, $e->getMessage());
                         }
                     } catch (\Throwable $e) {
                         $this->updateCompanyContact($companyContact, self::STATUS_FAILURE);
@@ -358,8 +352,17 @@ class SendContactCommand extends Command
                 $formMethod = strtolower($form->getAttribute('method'));
 
                 try {
-                    $textarea = $form->findElement(WebDriverBy::xpath('.//textarea'));
-                    $this->checkTextarea = true;
+                    $textareaArray = $form->findElements(WebDriverBy::xpath('.//textarea'));
+                    foreach ($textareaArray as $textarea) {
+                        $id = $textarea->getAttribute("id");
+                        $name = $textarea->getAttribute("name");
+                        if (strpos($id, "g-recaptcha") !== false || strpos($name, "g-recaptcha") !== false) {
+                            continue;
+                        }
+    
+                        $this->checkTextarea = true;
+                        break;
+                    }
                 } catch (\Throwable $e) {
                     // $inputs = $form->findElements(WebDriverBy::xpath(".//input[@type='text']"));
                     // if (count($inputs) >= 3) {
@@ -367,7 +370,7 @@ class SendContactCommand extends Command
                     // }
                 }
 
-                if (strcmp($formMethod, 'get') !== 0 && $textarea) {
+                if (strcmp($formMethod, 'get') !== 0 && $this->checkTextarea) {
                 // if ($textarea) {
                     $contactForm = $form;
                     $existForm = true;
@@ -437,12 +440,22 @@ class SendContactCommand extends Command
             $formMethod = strtolower($form->getAttribute('method'));
 
             try {
-                $textarea = $form->findElement(WebDriverBy::xpath('.//textarea'));
+                $textareaArray = $form->findElements(WebDriverBy::xpath('.//textarea'));
+                foreach ($textareaArray as $textarea) {
+                    $id = $textarea->getAttribute("id");
+                    $name = $textarea->getAttribute("name");
+                    if (strpos($id, "g-recaptcha") !== false || strpos($name, "g-recaptcha") !== false) {
+                        continue;
+                    }
+
+                    $this->checkTextarea = true;
+                    break;
+                }
             } catch (\Throwable $e) {
-                $textarea = $this->driver->findElement(WebDriverBy::xpath('.//textarea'));
+                // $textarea = $this->driver->findElement(WebDriverBy::xpath('.//textarea'));
             }
 
-            if (strcmp($formMethod, 'get') !== 0 && $textarea) {
+            if (strcmp($formMethod, 'get') !== 0 && $this->checkTextarea) {
                 $contactForm = $form;
             }
         } catch (\Throwable $e) {
@@ -473,11 +486,6 @@ class SendContactCommand extends Command
         $parentNode = $textareaElement->findElement(WebDriverBy::xpath(".."));
         $tag = $parentNode->getTagName();
         $class = $parentNode->getAttribute("class");
-
-        if ($tag === "form") {
-            return $parentNode;
-        }
-
         $inputNode = $this->findNodeWithInputTag($parentNode);
 
         // Get top node including all input elements
@@ -551,8 +559,8 @@ class SendContactCommand extends Command
         }
         catch(\Exception $e) {}        
 
-        $errorMessages = $this->checkErrorPage();
-        if (count($errorMessages)) {
+        $isEerror = $this->checkErrorPage();
+        if ($isEerror) {
             return self::FORM_STATUS_ERROR_FORM;
         }
 
@@ -595,12 +603,19 @@ class SendContactCommand extends Command
                         
                         break;
                     case 'textarea':
+                        $id = $element->getAttribute("id");
+                        $name = $element->getAttribute("name");
+                        if (strpos($id, "g-recaptcha") !== false || strpos($name, "g-recaptcha") !== false) {
+                            break;
+                        }
+
                         $element->sendKeys($content);
                         break;
                     case 'input':
                         if ($type === "radio") {
                             if ($name) {
-                                $this->visibleElement($name);
+                                // $this->visibleElement($name);
+                                $this->visibleElement($element);
                                 $radiobox = new WebDriverRadios($element);
 
                                 $isSelect = $this->selectRadioboxByValue($radiobox, ["その他", "メール", "mail"]);
@@ -617,7 +632,8 @@ class SendContactCommand extends Command
                         }
                         else if ($type === "checkbox") {
                             if ($name) {
-                                $this->visibleElement($name);
+                                // $this->visibleElement($name);
+                                $this->visibleElement($element);
                                 $checkbox = new WebDriverCheckboxes($element);
 
                                 $isSelect = $this->selectCheckboxByValue($checkbox, ["未定", "メール", "mail"]);
@@ -654,6 +670,12 @@ class SendContactCommand extends Command
             $this->driver->takeScreenshot(storage_path("screenshots/{$company->id}_fill.jpg"));
         }
 
+        // Check reCAPTCHA
+        $solved = $this->checkReCAPTCHA();
+        if (!$solved) {
+            return self::STATUS_FAILURE;
+        }
+
         // Get submit elements from form
         $submitElements = $this->findSumbitElements($this->form);
 
@@ -671,20 +693,21 @@ class SendContactCommand extends Command
                 $alt = $element->getAttribute("alt");
                 $id = $element->getAttribute("id");
                 $class = $element->getAttribute("class");
-                $onclick = $element->getAttribute("onclick");
 
                 if ($type === "radio" || $type === "checkbox") {
                     continue;
                 }
 
-                if ($type !== "submit" && $name !== "submit" && $type !== "image" && 
-                    empty($id) && empty($value) && empty($text) && empty($alt) &&
-                    strpos($onclick, "submit") === false) {
+                if ($type !== "submit" && $name !== "submit" && $type !== "image" && empty($id) && empty($value) && empty($text) && empty($alt)) {
                     continue;
                 }
 
                 try {
                     // submit form
+                    $isDisplayed = $element->isDisplayed();
+                    if (!$isDisplayed) {
+                        $this->visibleElement($element);
+                    }
                     $element->click();
                 } catch (\Exception $exception) {
                     // Scroll to the element
@@ -773,6 +796,12 @@ class SendContactCommand extends Command
      */
     public function submitConfirmForm($confirmForm)
     {
+        // Check reCAPTCHA
+        $solved = $this->checkReCAPTCHA();
+        if (!$solved) {
+            return self::STATUS_FAILURE;
+        }
+
         // Get submit elements
         $confirmElements = $this->findSumbitElements($confirmForm);
         if ($confirmElements) {
@@ -805,6 +834,10 @@ class SendContactCommand extends Command
 
                     try {
                         // submit form
+                        $isDisplayed = $element->isDisplayed();
+                        if (!$isDisplayed) {
+                            $this->visibleElement($element);
+                        }
                         $element->click();
                     } catch (\Exception $exception) {
                         // Scroll to the element
@@ -813,6 +846,14 @@ class SendContactCommand extends Command
                     }
 
                     sleep(1);
+
+                    // Accept alert confirm
+                    try {
+                        $this->driver->switchTo()->alert()->accept();
+                    }
+                    catch(\Exception $exception) {
+                        // Do nothing
+                    }
 
                     // Wait for the AJAX call to finish
                     $wait = new WebDriverWait($this->driver, 10);
@@ -832,7 +873,7 @@ class SendContactCommand extends Command
             );
 
             // Get current page source
-            $currentPageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();        
+            $currentPageSource = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
 
             $successTexts = $this->checkSuccessPage();
 
@@ -857,11 +898,20 @@ class SendContactCommand extends Command
      *
      * @return void
      */
-    function visibleElement($elementName)
+    // function visibleElement($elementName)
+    // {
+    //     // visible : none => visible: block
+    //     $this->driver->executeScript("const collections = document.getElementsByName('{$elementName}'); for (let i = 0; i < collections.length; i++) {collections[i].style.display = 'block';collections[i].style.visibility = 'visible';}");
+    // }
+
+    function visibleElement($element)
     {
         // visible : none => visible: block
-        $this->driver->executeScript("const collections = document.getElementsByName('{$elementName}'); for (let i = 0; i < collections.length; i++) {collections[i].style.display = 'block';collections[i].style.visibility = 'visible';}");
+        // $this->driver->executeScript("const collections = document.getElementsByName('{$elementName}'); for (let i = 0; i < collections.length; i++) {collections[i].style.display = 'block';collections[i].style.visibility = 'visible';}");
+        $this->driver->executeScript('arguments[0].style.display = "block";', [$element]);
+        $this->driver->executeScript('arguments[0].style.visibility = "visible";', [$element]);
     }
+
 
     /**
      *  To enable a disabled element.
@@ -1033,7 +1083,7 @@ class SendContactCommand extends Command
     {
         // Define the array of patterns
         // $patterns = array('お名前','名前','担当者','氏名','お名前(かな)','お名前(フルネームで)','ご担当者名','ご担当者様名');
-        $patterns = array('お名前','名前','ご氏名','氏名','ご担当者','ご担当者名','ご担当者様名','担当者','NAME');
+        $patterns = array('お名前','名前','ご氏名','氏名','ご担当者名','ご担当者様名','担当者','NAME');
 
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
@@ -1253,7 +1303,7 @@ class SendContactCommand extends Command
     public function checkConfirmEmail($contact, $inputs = null)
     {
         // Define the array of patterns
-        $patterns = array('メールアドレス 確認', 'メールアドレス（確認', 'メールアドレス(確認', 'Eメールアドレス(確認', 'メールアドレス確認', 'メールアドレスの確認', '確認用メールアドレス', '確認のためもう一度', 'E-mail(確認', 'E-Mail（確認');
+        $patterns = array('メールアドレス 確認', 'メールアドレス（確認', 'Eメールアドレス(確認', 'メールアドレス確認', 'メールアドレスの確認', '確認用メールアドレス', '確認のためもう一度', 'E-mail(確認)');
         
         if (!$inputs) {
             list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
@@ -1430,7 +1480,7 @@ class SendContactCommand extends Command
     public function checkFaxNumber($contact)
     {
         // Define the array of patterns
-        $patterns = array('ＦＡＸ', 'FAX', 'Fax', 'ファックス');
+        $patterns = array('ＦＡＸ', 'FAX', 'Fax');
         
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
@@ -2064,6 +2114,79 @@ class SendContactCommand extends Command
         }
     }
 
+    public function checkReCAPTCHA()
+    {
+        try {
+            $url = $this->driver->getCurrentURL();
+            $html = $this->driver->getPageSource();
+            $recaptchaDiv = null;
+
+            try {
+                $recaptchaDiv = $this->driver->findElement(WebDriverBy::xpath("//div[contains(@class, 'g-recaptcha') or contains(@class, 'recaptcha')]"));
+            } catch(Exception $e) { }
+            
+            if (!$recaptchaDiv) {
+                return true;
+            }
+            
+            preg_match('/\bsitekey=["\']([^"\']+)["\']/', $html, $matches);
+            $siteKey = $matches[1];
+            if ($siteKey) {
+                $api = new NoCaptchaProxyless();
+                $api->setVerboseMode(true);
+
+                //your anti-captcha.com account key
+                $api->setKey(config('anticaptcha.key'));
+                
+                //recaptcha key from target website
+                $api->setWebsiteURL($url);
+                $api->setWebsiteKey($siteKey);
+                
+                if (!$api->createTask()) {
+                    $api->debout("API v2 send failed - ".$api->getErrorMessage(), "red");
+                    return false;
+                }
+                
+                $taskId = $api->getTaskId();
+                
+                if (!$api->waitForResult()) {
+                    $api->debout("could not solve captcha", "red");
+                    $api->debout($api->getErrorMessage());
+                    
+                    return false;
+                }
+                else {
+                    $recaptchaToken = $api->getTaskSolution();
+
+                    $textareaResponse = null;
+                    try {
+                        $textareaResponse = $this->driver->findElement(WebDriverBy::xpath(".//textarea[contains(@id, 'g-recaptcha-response') or contains(@name, 'g-recaptcha-response')]"));
+                    } catch(Exception $e) {}
+
+                    if (!$textareaResponse) {
+                        // Create a recaptcha input element and add it to the form
+                        // $textareaResponse = $this->driver->executeScript("var newInput = document.createElement('input'); newInput.setAttribute('type', 'text'); newInput.setAttribute('name', 'g-recaptcha-response'); newInput.setAttribute('value', '{$recaptchaToken}'); arguments[0].appendChild(newInput);", [$this->form]);
+                        $textareaResponse = $this->driver->executeScript("var newInput = document.createElement('input'); newInput.setAttribute('type', 'text'); newInput.setAttribute('name', 'g-recaptcha-response'); arguments[0].appendChild(newInput);", [$this->form]);
+                    }
+
+                    $data["recaptcha"] = $recaptchaToken;
+
+                    if (!$textareaResponse->isDisplayed()) {
+                        $this->visibleElement($textareaResponse);
+                    }
+
+                    $textareaResponse->clear();
+                    $textareaResponse->sendKeys($recaptchaToken);
+                }
+            }
+            return true;
+        } catch(Exception $e) {
+            $k = 0;
+        }
+
+        return false;
+    }
+
     function findInputElementsWithPatterns($patterns, $findNextNode = true)
     {
         foreach ($this->topNodes as $index => $topNode) {
@@ -2071,7 +2194,6 @@ class SendContactCommand extends Command
             $text = str_replace("必須", "", $text);
             $text = str_replace("必 須", "", $text);
             $text = str_replace("*", "", $text);
-            $text = str_replace("※", "", $text);
             $text = str_replace("◆", "", $text);
             $text = str_replace("", "", $text);
             $text = str_replace("　", "", $text);
@@ -2087,12 +2209,7 @@ class SendContactCommand extends Command
                     }
                     else if ($findNextNode) {
                         // get next top node
-                        try {
-                            $nextNode = $this->topNodes[$index+1];
-                        } catch(Exception $e) {
-                            return array(false, null, null);
-                        }
-                        
+                        $nextNode = $this->topNodes[$index+1];
                         if ($nextNode) {
                             $tag = $nextNode->getTagName();
                             $inputElements = $nextNode->findElements(WebDriverBy::xpath(".//input[@type='text' or @type='email' or @type='tel' or @type='textbox']"));
@@ -2146,7 +2263,6 @@ class SendContactCommand extends Command
                 | //a[contains(text(),"確認")]
                 | //a[contains(text(),"送信")]
                 | //a[contains(@class,"submit-btn")]
-                | //a[contains(@onclick,"document.form1.submit();")]
                 | //button[@class="nttdatajpn-submit-button"]
                 | //button[@type="submit" and (contains(@name,"unisphere-submit"))]
                 | //button[@type="submit" and (contains(@class,"btn-cmn--red"))]
@@ -2378,7 +2494,18 @@ class SendContactCommand extends Command
             | //*[contains(text(),"入力下さい")]
         ';
 
-        return $this->driver->findElements(WebDriverBy::xpath($xpathMessage));
+        $title = strtolower($this->driver->getTitle());
+        if (strpos($title, "bad request") !== false || 
+            strpos($title, "unauthorized") !== false || 
+            strpos($title, "not found") !== false || 
+            strpos($title, "forbidden") !== false ||
+            strpos($title, "timeout") !== false) {
+            return true;
+        }
+
+        $countOfErrors = $this->driver->findElements(WebDriverBy::xpath($xpathMessage));
+
+        return (count($countOfErrors) > 0);
     }
 
     public function getCharset(string $htmlContent)
