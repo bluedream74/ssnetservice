@@ -100,6 +100,7 @@ class DashboardController extends BaseController
         }
 
         if (!empty($value = Arr::get($attributes, 'subsource'))) {
+            $value = Source::where('name',$value)->where('source_id',Arr::get($attributes, 'source'))->first()->id;
             $query->where('subsource', $value);
         }
 
