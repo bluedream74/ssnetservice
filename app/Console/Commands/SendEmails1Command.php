@@ -705,6 +705,11 @@ class SendEmails1Command extends Command
                     continue;
                 }
 
+                // test
+                if (strpos($value, "検索") !== false) {
+                    continue;
+                }
+
                 try {
                     // submit form
                     $isDisplayed = $element->isDisplayed();
@@ -727,12 +732,6 @@ class SendEmails1Command extends Command
                 }
                 catch(\Exception $exception) {
                     // Do nothing
-                }
-
-                // Check reCAPTCHA
-                $solved = $this->checkReCAPTCHA();
-                if (!$solved) {
-                    return self::STATUS_FAILURE;
                 }
 
                 // Wait for the AJAX call to finish
@@ -1198,7 +1197,7 @@ class SendEmails1Command extends Command
     public function checkFuName($contact, $inputs = null)
     {
         // Define the array of patterns
-        $patterns =array('カタカナ','フリガナ','カナ','お名前 (カナ)','名前（カナ）','名前カナ','よみがな');
+        $patterns =array('カタカナ','フリガナ','カナ','お名前 (カナ)','名前（カナ）','名前カナ','よみがな','お名前(フリガナ)');
 
         if (!$inputs) {
             list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
@@ -1251,7 +1250,7 @@ class SendEmails1Command extends Command
     public function checkHiName($contact)
     {
         // Define the array of patterns
-        $patterns =array('ふりがな','お名前フリガナ');
+        $patterns =array('ふりがな','お名前(かな)');
 
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
@@ -1417,7 +1416,7 @@ class SendEmails1Command extends Command
     public function checkTitle($contact)
     {
         // Define the array of patterns
-        $patterns = array('件名', '題名', 'ご用件', '用件名', 'Toipic');
+        $patterns = array('件名', '題名', 'ご用件', '用件名', 'Toipic', 'タイトル', 'Title');
         
         list($isFound, $inputNode, $inputElements) = $this->findInputElementsWithPatterns($patterns);
 
