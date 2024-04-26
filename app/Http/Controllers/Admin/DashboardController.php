@@ -100,6 +100,7 @@ class DashboardController extends BaseController
         }
 
         if (!empty($value = Arr::get($attributes, 'subsource'))) {
+            $value = Source::where('name',$value)->where('source_id',Arr::get($attributes, 'source'))->first()->id;
             $query->where('subsource', $value);
         }
 
@@ -526,6 +527,8 @@ class DashboardController extends BaseController
                 'lastname'          => request()->get('lastname'),
                 'fu_surname'        => request()->get('fu_surname'),
                 'fu_lastname'       => request()->get('fu_lastname'),
+                'hi_surname'        => request()->get('hi_surname'),
+                'hi_lastname'       => request()->get('hi_lastname'),
                 'email'             => request()->get('email'),
                 'title'             => request()->get('title'),
                 'myurl'             => request()->get('myurl'),
@@ -535,6 +538,8 @@ class DashboardController extends BaseController
                 'postalCode1'       => request()->get('postalCode1'),
                 'postalCode2'       => request()->get('postalCode2'),
                 'address'           => request()->get('address'),
+                'address1'          => request()->get('address1'),
+                'address2'          => request()->get('address2'),
                 'phoneNumber1'      => request()->get('phoneNumber1'),
                 'phoneNumber2'      => request()->get('phoneNumber2'),
                 'phoneNumber3'      => request()->get('phoneNumber3'),
@@ -652,6 +657,8 @@ class DashboardController extends BaseController
                 'lastname'          => request()->get('lastname'),
                 'fu_surname'        => request()->get('fu_surname'),
                 'fu_lastname'       => request()->get('fu_lastname'),
+                'hi_surname'        => request()->get('hi_surname'),
+                'hi_lastname'       => request()->get('hi_lastname'),
                 'email'             => request()->get('email'),
                 'title'             => request()->get('title'),
                 'myurl'             => request()->get('myurl'),
@@ -661,6 +668,8 @@ class DashboardController extends BaseController
                 'postalCode1'       => request()->get('postalCode1'),
                 'postalCode2'       => request()->get('postalCode2'),
                 'address'           => request()->get('address'),
+                'address1'          => request()->get('address1'),
+                'address2'          => request()->get('address2'),
                 'phoneNumber1'      => request()->get('phoneNumber1'),
                 'phoneNumber2'      => request()->get('phoneNumber2'),
                 'phoneNumber3'      => request()->get('phoneNumber3'),
@@ -1053,12 +1062,12 @@ class DashboardController extends BaseController
            $enc = mb_detect_encoding($content, mb_list_encodings(), true);
            if (strtolower($enc) !== 'utf-8') {
                return back()->with(['system.message.info' => __('アップロードしたファイルの文字コードは、「' . $enc . '」です。UTF-8でアップロードしてください。')]);
-           }
-           Excel::import(new CompanyImport, $path);
-	} catch (\Throwable $e) {
-	    // dd($e);
-        return back()->with(['system.message.info' => __('CSVファイルのアップロードに失敗しました')]);
-    }
+            }
+            Excel::import(new CompanyImport, $path);
+        } catch (\Throwable $e) {
+            // dd($e);
+            return back()->with(['system.message.info' => __('CSVファイルのアップロードに失敗しました')]);
+        }
         
         return back()->with(['system.message.success' => __(':itemが完了しました。', ['item' => __('アップロード(CSV)')])]);
     }

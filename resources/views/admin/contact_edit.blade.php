@@ -35,6 +35,16 @@
             'fu_lastname']) }}</div>
         </div>
 
+        <label class="col-sm-12">ふりがな</label>
+        <div class="col-sm-12 form-group row">
+          <div class="col-sm-6">{{ Form::text('hi_surname', $contact->hi_surname, ['class' => 'form-control',
+            'id' =>
+            'hi_surname']) }}</div>
+          <div class="col-sm-6">{{ Form::text('hi_lastname', $contact->hi_lastname, ['class' => 'form-control',
+            'id' =>
+            'hi_lastname']) }}</div>
+        </div>
+
         <label class="col-sm-12">会社名<span class="essential">*</span></label>
         <div class="col-sm-12 form-group">
           {{ Form::text('company', $contact->company, ['class' => 'form-control','id' => 'company']) }}
@@ -86,6 +96,14 @@
         <label class="col-sm-12">住所</label>
         <div class="col-sm-12 form-group">
           {{ Form::text('address', $contact->address, ['class' => 'form-control','id' => 'address']) }}
+        </div>
+
+        <label class="col-sm-12">市町村区</label>
+        <div class="col-sm-12 form-group row">
+          <div class="col-sm-6">{{ Form::text('address1', $contact->address1, ['class' => 'form-control','id' =>
+            'address1']) }}</div>
+          <div class="col-sm-6">{{ Form::text('address2', $contact->address2, ['class' => 'form-control','id' =>
+            'address2']) }}</div>
         </div>
 
         <label class="col-sm-12">電話番号</label>

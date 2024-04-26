@@ -41,6 +41,16 @@
                 </div>
             </div>
             <div class="row mb-3">
+                <label class="col-sm-4">ふりがな</label>
+                <div class="col-sm-8 pre-wrap">
+                    @if (isset($contact->hi_surname))
+                        {!! $contact->hi_surname !!} &nbsp; {!! $contact->hi_lastname !!}
+                    @else
+                        なし
+                    @endif
+                </div>
+            </div>
+            <div class="row mb-3">
                 <label class="col-sm-4">会社名</label>
                 <div class="col-sm-8 pre-wrap">{!! $contact->company !!}</div>
             </div>
@@ -92,6 +102,26 @@
                 </div>
             </div>
             <div class="row mb-3">
+                <label class="col-sm-4">市区町村</label>
+                <div class="col-sm-8 pre-wrap">
+                    @if (isset($contact->address1))
+                        {!! $contact->address1 !!}
+                    @else
+                        なし
+                    @endif
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-sm-4">番地</label>
+                <div class="col-sm-8 pre-wrap">
+                    @if (isset($contact->address2))
+                        {!! $contact->address2 !!}
+                    @else
+                        なし
+                    @endif
+                </div>
+            </div>
+            <div class="row mb-3">
                 <label class="col-sm-4">電話番号</label>
                 <div class="col-sm-8 pre-wrap">
                     @if (isset($contact->phoneNumber1))
@@ -124,7 +154,7 @@
             <div class="row mb-3">
                 <label class="col-sm-4">ステータス</label>
                 <div class="col-sm-4">
-                    {{ Form::select('status', ['1' => '送信失敗','2' => '配信済み','3' => '送信予定','4' => 'フォームなし','5' => 'NGワードあり' ], Request::get('status'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'status']) }}
+                    {{ Form::select('status', ['1' => '送信失敗','2' => '配信済み','3' => '送信予定','4' => 'フォームなし','5' => 'NGワードあり','6' => '自動返信確認' ], Request::get('status'), ['class' => 'form-control', 'placeholder' => 'すべて', 'id' => 'status']) }}
                 </div>
                 <div class="col-sm-4">
                     {{ Form::submit('検索', ['class' => 'btn btn-sm btn-primary']) }}
@@ -173,6 +203,9 @@
                                 @case(5)
                                     <span class="badge badge-warning">NGワードあり</span>
                                     @break
+                                @case(6)
+                                    <span class="badge badge-warning">自動返信確認</span>
+                                    @break
                                 @default
                                     <span class="badge badge-success">送信予定</span>
                                     @break
@@ -213,6 +246,12 @@
                             <div class="col-sm-12 form-group row">
                                 <div class="col-sm-6">{{ Form::text('fu_surname', old('fu_surname'), ['class' => 'form-control', 'id' => 'fu_surname']) }}</div>
                                 <div class="col-sm-6">{{ Form::text('fu_lastname', old('fu_lastname'), ['class' => 'form-control', 'id' => 'fu_lastname']) }}</div>
+                            </div>
+
+                            <label class="col-sm-12">ふりがな</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-6">{{ Form::text('hi_surname', old('hi_surname'), ['class' => 'form-control', 'id' => 'hi_surname']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('hi_lastname', old('hi_lastname'), ['class' => 'form-control', 'id' => 'hi_lastname']) }}</div>
                             </div>
 
                             <label class="col-sm-12">会社名<span class="essential">*</span></label>
@@ -260,6 +299,14 @@
                             <label class="col-sm-12">住所</label>
                             <div class="col-sm-12 form-group">
                                 {{ Form::text('address', old('address'), ['class' => 'form-control','id' => 'address']) }}
+                            </div>
+
+                            <label class="col-sm-12">市町村区</label>
+                            <div class="col-sm-12 form-group row">
+                                <div class="col-sm-6">{{ Form::text('address1', old('address1'), ['class' => 'form-control','id' =>
+                                'address1']) }}</div>
+                                <div class="col-sm-6">{{ Form::text('address2', old('address2'), ['class' => 'form-control','id' =>
+                                'address2']) }}</div>
                             </div>
 
                             <label class="col-sm-12">電話番号</label>

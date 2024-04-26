@@ -27,6 +27,7 @@ class SubmitContact extends Command
     public const STATUS_SENDING = 3;
     public const STATUS_NO_FORM = 4;
     public const STATUS_NG = 5;
+    public const STATUS_REPLY_CONFIRM = 6;
 
     public const RETRY_COUNT = 4;
 
@@ -417,6 +418,7 @@ class SubmitContact extends Command
             self::STATUS_SENDING => '未対応',
             self::STATUS_NO_FORM => 'フォームなし',
             self::STATUS_NG => 'NGワードあり',
+            self::STATUS_REPLY_CONFIRM => '自動返信確認',
         ];
 
         if (!array_key_exists($status, $deliveryStatus)) {
